@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "153229951872",
+    "project_id": "yathrikan-mini",
+    "storage_bucket": "yathrikan-mini.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:153229951872:android:5494d6c467ddc40846b765",
+        "android_client_info": {
+          "package_name": "com.example.busway"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "153229951872-2pah3mphjv1n5ajjhf89embq4c1epu33.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhGRfieuFymjiPUV1GxhJgB9akS6w1H8c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "153229951872-2pah3mphjv1n5ajjhf89embq4c1epu33.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "153229951872-09v5mc9hssvr24oinka5s8c7qf3oju58.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.busway"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
