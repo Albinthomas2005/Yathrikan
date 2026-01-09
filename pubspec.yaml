@@ -21,6 +21,7 @@ dependencies:
   latlong2: ^0.9.1
   geolocator: ^14.0.2
   flutter_animate: ^4.5.2
+<<<<<<< HEAD
   geocoding: ^4.0.0
   image_picker: ^1.2.1
   permission_handler: ^12.0.1
@@ -29,6 +30,8 @@ dependencies:
   provider: ^6.1.5+1
   flutter_localizations:
     sdk: flutter
+=======
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
 
 dev_dependencies:
   flutter_test:

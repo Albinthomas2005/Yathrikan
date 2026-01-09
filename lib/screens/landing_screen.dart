@@ -53,11 +53,18 @@ class LandingScreen extends StatelessWidget {
                         .fadeIn(duration: 400.ms),
                     const SizedBox(height: 24),
                     Text(
+<<<<<<< HEAD
                       'YATHRIKAN',
                       style: AppTextStyles.heading1.copyWith(
                         fontSize: 40,
                         color: Colors.black,
                         letterSpacing: 1.5,
+=======
+                      'Yathrikan',
+                      style: AppTextStyles.heading1.copyWith(
+                        fontSize: 40,
+                        color: Colors.black,
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                       ),
                     )
                         .animate()
@@ -65,9 +72,15 @@ class LandingScreen extends StatelessWidget {
                         .slideY(begin: -0.3, end: 0, curve: Curves.easeOut),
                     const SizedBox(height: 12),
                     Text(
+<<<<<<< HEAD
                       'Smart Public Transport Assistant',
                       style: AppTextStyles.bodyBold.copyWith(
                         fontSize: 16,
+=======
+                      'Live buses near you',
+                      style: AppTextStyles.bodyBold.copyWith(
+                        fontSize: 18,
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                         color: Colors.black54,
                       ),
                     )

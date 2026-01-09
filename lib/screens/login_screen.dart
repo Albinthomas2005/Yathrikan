@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+<<<<<<< HEAD
 import 'package:google_fonts/google_fonts.dart';
+=======
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
 import '../utils/constants.dart';
 import '../utils/validators.dart';
 import '../widgets/custom_text_field.dart';
 import '../services/auth_service.dart';
 import '../widgets/animated_notification.dart';
+<<<<<<< HEAD
 import '../widgets/social_login_button.dart';
+=======
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -46,8 +52,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
             await Future.delayed(const Duration(milliseconds: 500));
 
+<<<<<<< HEAD
             if (!mounted) return;
 
+=======
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
             // Navigate to admin page
             Navigator.pushNamedAndRemoveUntil(
               context,
@@ -79,8 +88,11 @@ class _LoginScreenState extends State<LoginScreen> {
           // Small delay to show the notification before navigating
           await Future.delayed(const Duration(milliseconds: 500));
 
+<<<<<<< HEAD
           if (!mounted) return;
 
+=======
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
           // Navigate to home and remove all previous routes
           Navigator.pushNamedAndRemoveUntil(
             context,
@@ -125,8 +137,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
         await Future.delayed(const Duration(milliseconds: 500));
 
+<<<<<<< HEAD
         if (!mounted) return;
 
+=======
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
         Navigator.pushNamedAndRemoveUntil(
           context,
           '/home',
@@ -170,6 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+<<<<<<< HEAD
       backgroundColor: AppColors.primaryYellow,
       body: SafeArea(
         bottom: false,
@@ -239,6 +255,76 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _emailController,
                           hintText: 'Email Address',
                           prefixIcon: CupertinoIcons.mail_solid,
+=======
+      backgroundColor: AppColors.primaryYellow, // Yellow Background
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 40),
+            // App Logo
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: Transform.scale(
+                  scale: 1.1,
+                  child: Image.asset(
+                    'assets/images/logo_circle.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Yathrikan',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const Text(
+              'Smart Public Transport Assistant',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 40),
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24.0, vertical: 30),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                  ),
+                ),
+                child: SingleChildScrollView(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomTextField(
+                          controller: _emailController,
+                          hintText: 'Email address',
+                          prefixIcon: CupertinoIcons.mail,
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                           validator: Validators.validateEmail,
                           keyboardType: TextInputType.emailAddress,
                         ),
@@ -246,7 +332,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         CustomTextField(
                           controller: _passwordController,
                           hintText: 'Password',
+<<<<<<< HEAD
                           prefixIcon: CupertinoIcons.lock_fill,
+=======
+                          prefixIcon: CupertinoIcons.lock,
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                           obscureText: _obscurePassword,
                           validator: Validators.validatePassword,
                           suffixIcon: GestureDetector(
@@ -257,8 +347,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             },
                             child: Icon(
                               _obscurePassword
+<<<<<<< HEAD
                                   ? CupertinoIcons.eye_slash_fill
                                   : CupertinoIcons.eye_fill,
+=======
+                                  ? CupertinoIcons.eye_slash
+                                  : CupertinoIcons.eye,
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                               color: AppColors.greyText,
                               size: 20,
                             ),
@@ -274,7 +369,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               'Forgot Password?',
                               style: AppTextStyles.caption.copyWith(
                                 color: AppColors.greyText,
+<<<<<<< HEAD
                                 fontWeight: FontWeight.w500,
+=======
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                               ),
                             ),
                           ),
@@ -286,12 +384,19 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: _isLoading ? null : _handleLogin,
                             style: ElevatedButton.styleFrom(
                               backgroundColor:
+<<<<<<< HEAD
                                   const Color(0xFF0F172A), // Dark blue/black
                               foregroundColor: AppColors.primaryYellow,
+=======
+                                  AppColors.darkBlack, // Black Button
+                              foregroundColor:
+                                  AppColors.primaryYellow, // Yellow Text
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                               padding: const EdgeInsets.symmetric(vertical: 18),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(30),
                               ),
+<<<<<<< HEAD
                               elevation: 0,
                             ),
                             child: _isLoading
@@ -349,24 +454,113 @@ class _LoginScreenState extends State<LoginScreen> {
                               iconData: CupertinoIcons.xmark,
                             ),
                           ],
+=======
+                              elevation: 5,
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.primaryYellow))
+                                : const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        'Sign In',
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      SizedBox(width: 8),
+                                      Icon(
+                                        Icons.arrow_forward_rounded,
+                                        size: 20,
+                                      )
+                                    ],
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            const Expanded(child: Divider()),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text('OR',
+                                  style: AppTextStyles.caption.copyWith(
+                                      fontSize: 10, letterSpacing: 1.2)),
+                            ),
+                            const Expanded(child: Divider()),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        // Google Sign-In Button
+                        Center(
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : signInWithGoogle,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 12, horizontal: 16),
+                              backgroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              elevation: 2,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Image.asset(
+                                  'assets/images/google_logo.png',
+                                  height: 24,
+                                  width: 24,
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Sign in with Google',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                         ),
                         const SizedBox(height: 40),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text("Don't have an account? ",
+<<<<<<< HEAD
                                 style: TextStyle(
                                     color: Colors.grey.shade600, fontSize: 14)),
+=======
+                                style: AppTextStyles.caption),
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                             GestureDetector(
                               onTap: () {
                                 Navigator.pushNamed(context, '/signup');
                               },
+<<<<<<< HEAD
                               child: const Text(
                                 "Sign Up",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.black,
                                   fontSize: 14,
+=======
+                              child: Text(
+                                "Sign Up",
+                                style: AppTextStyles.caption.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                                 ),
                               ),
                             ),

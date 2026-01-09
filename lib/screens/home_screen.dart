@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+<<<<<<< HEAD
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 import '../utils/constants.dart';
 import 'profile_screen.dart';
 import 'route_screen.dart';
 import '../utils/app_localizations.dart';
+=======
+import '../utils/constants.dart';
+import 'profile_screen.dart';
+import 'route_screen.dart';
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,10 +33,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     final loc = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+=======
+    return Scaffold(
+      backgroundColor: Colors.white,
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
       body: IndexedStack(
         index: _selectedIndex,
         children: const [
@@ -41,10 +52,17 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
+<<<<<<< HEAD
           color: Theme.of(context).cardColor,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),
+=======
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withValues(alpha: 0.2),
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),
@@ -53,13 +71,20 @@ class _HomeScreenState extends State<HomeScreen> {
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
+<<<<<<< HEAD
           selectedItemColor: Theme.of(context).primaryColor,
           unselectedItemColor: Colors.grey,
           backgroundColor: Theme.of(context).cardColor,
+=======
+          selectedItemColor: Colors.black,
+          unselectedItemColor: Colors.grey,
+          backgroundColor: Colors.white,
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
           showSelectedLabels: true,
           showUnselectedLabels: true,
           type: BottomNavigationBarType.fixed,
           elevation: 0,
+<<<<<<< HEAD
           items: [
             BottomNavigationBarItem(
               icon: const Icon(Icons.home_filled),
@@ -72,6 +97,20 @@ class _HomeScreenState extends State<HomeScreen> {
             BottomNavigationBarItem(
               icon: const Icon(Icons.person_outline),
               label: loc.translate('profile'),
+=======
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_filled),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.map_outlined),
+              label: 'Route',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              label: 'Profile',
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
             ),
           ],
         ),
@@ -80,6 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+<<<<<<< HEAD
 class _HomeView extends StatefulWidget {
   const _HomeView();
 
@@ -230,6 +270,73 @@ class _HomeViewState extends State<_HomeView> {
         children: [
           // Header
           _buildHeader(loc),
+=======
+class _HomeView extends StatelessWidget {
+  const _HomeView();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Column(
+        children: [
+          // Yellow Header
+          Container(
+            padding:
+                const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 30),
+            decoration: const BoxDecoration(
+              color: AppColors.primaryYellow,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(40),
+                bottomRight: Radius.circular(40),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                          ),
+                          child: ClipOval(
+                            child: Image.asset(
+                              'assets/images/logo_circle.png',
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Yathrikan',
+                          style: AppTextStyles.heading2,
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.notifications_none),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Live buses near you',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+          ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.2, end: 0),
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
 
           // Scrollable Content
           Expanded(
@@ -238,6 +345,7 @@ class _HomeViewState extends State<_HomeView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+<<<<<<< HEAD
                   // Map Section
                   _buildMapSection(theme),
                   const SizedBox(height: 20),
@@ -248,6 +356,112 @@ class _HomeViewState extends State<_HomeView> {
 
                   // Quick Actions
                   _buildQuickActions(context, loc, isDark),
+=======
+                  // Map
+                  Container(
+                    height: 180,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withValues(alpha: 0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: FlutterMap(
+                      options: const MapOptions(
+                        initialCenter:
+                            LatLng(10.8505, 76.2711), // Kerala, India
+                        initialZoom: 13.0,
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate:
+                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.example.busway',
+                        ),
+                      ],
+                    ),
+                  )
+                      .animate()
+                      .fadeIn(delay: 200.ms, duration: 500.ms)
+                      .scale(begin: const Offset(0.95, 0.95)),
+                  const SizedBox(height: 20),
+
+                  // Stats Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildStatItem('Arriving in', '8 min'),
+                      Container(
+                        height: 40,
+                        width: 1,
+                        color: Colors.grey[300],
+                      ),
+                      _buildStatItem('Current Speed', '38 km/h'),
+                    ],
+                  ).animate().fadeIn(delay: 300.ms, duration: 500.ms),
+                  const SizedBox(height: 30),
+
+                  // Quick Actions
+                  Text(
+                    'Quick Actions',
+                    style: AppTextStyles.heading2.copyWith(fontSize: 18),
+                  ).animate().fadeIn(delay: 400.ms, duration: 500.ms),
+                  const SizedBox(height: 15),
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 15,
+                    mainAxisSpacing: 15,
+                    childAspectRatio: 1.5,
+                    children: [
+                      _buildActionCard(
+                        context: context,
+                        icon: Icons.alt_route,
+                        label: 'Shortest Route',
+                        color: const Color(0xFF1E1E1E),
+                        iconColor: AppColors.primaryYellow,
+                        delay: 500,
+                        onTap: () =>
+                            Navigator.pushNamed(context, '/shortest_route'),
+                      ),
+                      _buildActionCard(
+                        context: context,
+                        icon: Icons.confirmation_number_outlined,
+                        label: 'My Ticket',
+                        color: const Color(0xFF1E1E1E),
+                        iconColor: AppColors.primaryYellow,
+                        delay: 550,
+                        onTap: () =>
+                            Navigator.pushNamed(context, '/ticket_validation'),
+                      ),
+                      _buildActionCard(
+                        context: context,
+                        icon: Icons.campaign_outlined,
+                        label: 'Complaint',
+                        color: const Color(0xFF1E1E1E),
+                        iconColor: AppColors.primaryYellow,
+                        delay: 600,
+                        onTap: () => Navigator.pushNamed(context, '/complaint'),
+                      ),
+                      _buildActionCard(
+                        context: context,
+                        icon: Icons.security,
+                        label: 'Safety',
+                        color: const Color(0xFF1E1E1E),
+                        iconColor: AppColors.primaryYellow,
+                        delay: 650,
+                        onTap: () => Navigator.pushNamed(context, '/safety'),
+                      ),
+                    ],
+                  ),
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                 ],
               ),
             ),
@@ -257,6 +471,7 @@ class _HomeViewState extends State<_HomeView> {
     );
   }
 
+<<<<<<< HEAD
   Widget _buildHeader(AppLocalizations loc) {
     return Container(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 30),
@@ -440,6 +655,9 @@ class _HomeViewState extends State<_HomeView> {
   }
 
   Widget _buildStatItem(BuildContext context, String label, String value) {
+=======
+  Widget _buildStatItem(String label, String value) {
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -456,10 +674,17 @@ class _HomeViewState extends State<_HomeView> {
             children: [
               TextSpan(
                 text: value.split(' ')[0],
+<<<<<<< HEAD
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).textTheme.bodyLarge?.color,
+=======
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                 ),
               ),
               const TextSpan(text: ' '),
@@ -478,6 +703,7 @@ class _HomeViewState extends State<_HomeView> {
     );
   }
 
+<<<<<<< HEAD
   Widget _buildQuickActions(
       BuildContext context, AppLocalizations loc, bool isDark) {
     return Column(
@@ -536,6 +762,8 @@ class _HomeViewState extends State<_HomeView> {
     );
   }
 
+=======
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
   Widget _buildActionCard({
     required BuildContext context,
     required IconData icon,
@@ -543,6 +771,7 @@ class _HomeViewState extends State<_HomeView> {
     required Color color,
     required Color iconColor,
     required int delay,
+<<<<<<< HEAD
   }) {
     // Mapping for navigation
     final Map<String, String> routeMap = {
@@ -583,6 +812,14 @@ class _HomeViewState extends State<_HomeView> {
             }
           }
         },
+=======
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
         borderRadius: BorderRadius.circular(20),
         child: Container(
           decoration: BoxDecoration(

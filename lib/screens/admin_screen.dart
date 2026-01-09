@@ -27,7 +27,11 @@ class _AdminScreenState extends State<AdminScreen> {
   void _showAddBusDialog() {
     showDialog(
       context: context,
+<<<<<<< HEAD
       builder: (_) => BusFormDialog(
+=======
+      builder: (context) => BusFormDialog(
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
         onSave: (bus) async {
           try {
             await _busService.addBus(bus);
@@ -57,7 +61,11 @@ class _AdminScreenState extends State<AdminScreen> {
   void _showEditBusDialog(Bus bus) {
     showDialog(
       context: context,
+<<<<<<< HEAD
       builder: (_) => BusFormDialog(
+=======
+      builder: (context) => BusFormDialog(
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
         bus: bus,
         onSave: (updatedBus) async {
           try {
@@ -88,17 +96,29 @@ class _AdminScreenState extends State<AdminScreen> {
   void _deleteBus(Bus bus) {
     showDialog(
       context: context,
+<<<<<<< HEAD
       builder: (dialogContext) => AlertDialog(
+=======
+      builder: (context) => AlertDialog(
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
         title: const Text('Delete Bus'),
         content: Text('Are you sure you want to delete bus ${bus.busNumber}?'),
         actions: [
           TextButton(
+<<<<<<< HEAD
             onPressed: () => Navigator.pop(dialogContext),
+=======
+            onPressed: () => Navigator.pop(context),
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
+<<<<<<< HEAD
               Navigator.pop(dialogContext);
+=======
+              Navigator.pop(context);
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
               try {
                 await _busService.deleteBus(bus.id);
                 if (mounted) {
@@ -157,17 +177,29 @@ class _AdminScreenState extends State<AdminScreen> {
   void _logout() {
     showDialog(
       context: context,
+<<<<<<< HEAD
       builder: (dialogContext) => AlertDialog(
+=======
+      builder: (context) => AlertDialog(
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
         title: const Text('Logout'),
         content: const Text('Are you sure you want to logout?'),
         actions: [
           TextButton(
+<<<<<<< HEAD
             onPressed: () => Navigator.pop(dialogContext),
+=======
+            onPressed: () => Navigator.pop(context),
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
+<<<<<<< HEAD
               Navigator.pop(dialogContext);
+=======
+              Navigator.pop(context);
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
               Navigator.pushNamedAndRemoveUntil(
                 context,
                 '/login',

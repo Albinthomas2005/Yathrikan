@@ -10,6 +10,7 @@ import 'screens/signup_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/admin_screen.dart';
 import 'screens/forgot_password_screen.dart';
+<<<<<<< HEAD
 import 'screens/shortest_route_screen.dart';
 
 import 'screens/ticket_validation_screen.dart';
@@ -24,6 +25,16 @@ import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'utils/settings_provider.dart';
 import 'utils/app_localizations.dart';
+=======
+
+import 'screens/available_buses_screen.dart';
+import 'screens/shortest_route_screen.dart';
+import 'screens/ticket_validation_screen.dart';
+import 'screens/safety_screen.dart';
+import 'screens/complaint_screen.dart';
+import 'screens/edit_profile_screen.dart';
+import 'screens/settings_screen.dart';
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,12 +42,16 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+<<<<<<< HEAD
   runApp(
     ChangeNotifierProvider(
       create: (_) => SettingsProvider(),
       child: const MyApp(),
     ),
   );
+=======
+  runApp(const MyApp());
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
 }
 
 class MyApp extends StatelessWidget {
@@ -44,6 +59,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return MaterialApp(
@@ -128,6 +144,42 @@ class MyApp extends StatelessWidget {
       ),
     );
   }
+=======
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Yathrikan',
+      theme: ThemeData(
+        primaryColor: AppColors.primaryYellow,
+        scaffoldBackgroundColor: Colors.white,
+        textTheme: GoogleFonts.interTextTheme(
+          Theme.of(context).textTheme,
+        ),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primaryYellow,
+          primary: AppColors.primaryYellow,
+          secondary: AppColors.darkBlack,
+        ),
+        useMaterial3: true,
+      ),
+      home: const AuthWrapper(),
+      routes: {
+        '/landing': (context) => const LandingScreen(),
+        '/login': (context) => const LoginScreen(),
+        '/signup': (context) => const SignupScreen(),
+        '/forgot_password': (context) => const ForgotPasswordScreen(),
+        '/home': (context) => const HomeScreen(),
+        '/admin': (context) => const AdminScreen(),
+        '/available_buses': (context) => const AvailableBusesScreen(),
+        '/shortest_route': (context) => const ShortestRouteScreen(),
+        '/ticket_validation': (context) => const TicketValidationScreen(),
+        '/safety': (context) => const SafetyScreen(),
+        '/complaint': (context) => const ComplaintScreen(),
+        '/edit_profile': (context) => const EditProfileScreen(),
+        '/settings': (context) => const SettingsScreen(),
+      },
+    );
+  }
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
 }
 
 class AuthWrapper extends StatelessWidget {

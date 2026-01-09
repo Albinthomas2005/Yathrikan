@@ -40,7 +40,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           // Small delay to show the notification
           await Future.delayed(const Duration(milliseconds: 800));
 
+<<<<<<< HEAD
           if (!mounted) return;
+=======
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
           Navigator.pop(context);
         }
       } catch (e) {

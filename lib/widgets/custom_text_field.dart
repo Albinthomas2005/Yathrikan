@@ -38,6 +38,7 @@ class CustomTextField extends StatelessWidget {
         prefixIcon: Icon(prefixIcon, color: AppColors.greyText, size: 20),
         suffixIcon: suffixIcon,
         border: OutlineInputBorder(
+<<<<<<< HEAD
           borderRadius: BorderRadius.circular(30),
           borderSide: BorderSide.none,
         ),
@@ -47,11 +48,26 @@ class CustomTextField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
+=======
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
           borderSide:
               const BorderSide(color: AppColors.primaryYellow, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
+<<<<<<< HEAD
           borderRadius: BorderRadius.circular(30),
+=======
+          borderRadius: BorderRadius.circular(12),
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
           borderSide: BorderSide(color: Colors.red.shade400, width: 1.0),
         ),
         contentPadding:

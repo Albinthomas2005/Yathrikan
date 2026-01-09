@@ -3,11 +3,15 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../utils/constants.dart';
 import '../services/auth_service.dart';
+<<<<<<< HEAD
 import '../utils/app_localizations.dart';
+=======
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
+<<<<<<< HEAD
   Future<void> _handleLogout(BuildContext context, AppLocalizations loc) async {
     // Show confirmation
     bool? confirm = await showDialog(
@@ -30,6 +34,9 @@ class ProfileScreen extends StatelessWidget {
 
     if (confirm != true) return;
 
+=======
+  Future<void> _handleLogout(BuildContext context) async {
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
     try {
       final authService = AuthService();
       await authService.signOut();
@@ -53,11 +60,17 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final authService = AuthService();
     final user = authService.currentUser;
+<<<<<<< HEAD
     final loc = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
+=======
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -66,9 +79,14 @@ class ProfileScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 20),
               Text(
+<<<<<<< HEAD
                 loc.translate('profile'),
                 style: AppTextStyles.heading1.copyWith(
                     fontSize: 32, color: theme.textTheme.titleLarge?.color),
+=======
+                'Profile',
+                style: AppTextStyles.heading1.copyWith(fontSize: 32),
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
               ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.2, end: 0),
               const SizedBox(height: 30),
 
@@ -80,7 +98,11 @@ class ProfileScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
+<<<<<<< HEAD
                       color: Colors.black.withValues(alpha: 0.1),
+=======
+                      color: Colors.grey.withValues(alpha: 0.2),
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -135,38 +157,69 @@ class ProfileScreen extends StatelessWidget {
 
               // Menu Items
               _buildMenuItem(
+<<<<<<< HEAD
                 context: context,
                 icon: CupertinoIcons.person,
                 title: loc.translate('edit_profile'),
                 onTap: () {
                   Navigator.pushNamed(context, '/edit-profile');
+=======
+                icon: CupertinoIcons.person,
+                title: 'Edit Profile',
+                onTap: () {
+                  Navigator.pushNamed(context, '/edit_profile');
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                 },
                 delay: 300,
               ),
               _buildMenuItem(
+<<<<<<< HEAD
                 context: context,
                 icon: CupertinoIcons.bell,
                 title: loc.translate('notifications'),
                 onTap: () {
                   Navigator.pushNamed(context, '/notifications');
+=======
+                icon: CupertinoIcons.bell,
+                title: 'Notifications',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Notifications coming soon!')),
+                  );
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                 },
                 delay: 350,
               ),
               _buildMenuItem(
+<<<<<<< HEAD
                 context: context,
                 icon: CupertinoIcons.settings,
                 title: loc.translate('settings'),
+=======
+                icon: CupertinoIcons.settings,
+                title: 'Settings',
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                 onTap: () {
                   Navigator.pushNamed(context, '/settings');
                 },
                 delay: 400,
               ),
               _buildMenuItem(
+<<<<<<< HEAD
                 context: context,
                 icon: CupertinoIcons.question_circle,
                 title: loc.translate('help_support'),
                 onTap: () {
                   Navigator.pushNamed(context, '/help');
+=======
+                icon: CupertinoIcons.question_circle,
+                title: 'Help & Support',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Help & Support coming soon!')),
+                  );
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                 },
                 delay: 450,
               ),
@@ -176,7 +229,11 @@ class ProfileScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
+<<<<<<< HEAD
                   onPressed: () => _handleLogout(context, loc),
+=======
+                  onPressed: () => _handleLogout(context),
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
                     foregroundColor: Colors.white,
@@ -186,6 +243,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     elevation: 0,
                   ),
+<<<<<<< HEAD
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -194,6 +252,16 @@ class ProfileScreen extends StatelessWidget {
                       Text(
                         loc.translate('logout'),
                         style: const TextStyle(
+=======
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(CupertinoIcons.arrow_right_square, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Logout',
+                        style: TextStyle(
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -213,7 +281,10 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildMenuItem({
+<<<<<<< HEAD
     required BuildContext context,
+=======
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
     required IconData icon,
     required String title,
     required VoidCallback onTap,
@@ -228,9 +299,14 @@ class ProfileScreen extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
+<<<<<<< HEAD
             color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+=======
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(16),
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
           ),
           child: Row(
             children: [
@@ -246,10 +322,17 @@ class ProfileScreen extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
+<<<<<<< HEAD
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: Theme.of(context).textTheme.bodyLarge?.color,
+=======
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                   ),
                 ),
               ),

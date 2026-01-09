@@ -50,7 +50,12 @@ class _BusFormDialogState extends State<BusFormDialog> {
     super.dispose();
   }
 
+<<<<<<< HEAD
   Future<void> _selectTime(TextEditingController controller) async {
+=======
+  Future<void> _selectTime(
+      BuildContext context, TextEditingController controller) async {
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
@@ -70,7 +75,10 @@ class _BusFormDialogState extends State<BusFormDialog> {
     );
 
     if (picked != null) {
+<<<<<<< HEAD
       if (!mounted) return;
+=======
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
       final formattedTime = picked.format(context);
       controller.text = formattedTime;
     }
@@ -185,7 +193,11 @@ class _BusFormDialogState extends State<BusFormDialog> {
                         hint: '6:00 AM',
                         icon: Icons.access_time,
                         readOnly: true,
+<<<<<<< HEAD
                         onTap: () => _selectTime(_startTimeController),
+=======
+                        onTap: () => _selectTime(context, _startTimeController),
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return 'Required';
@@ -202,7 +214,11 @@ class _BusFormDialogState extends State<BusFormDialog> {
                         hint: '10:00 PM',
                         icon: Icons.access_time,
                         readOnly: true,
+<<<<<<< HEAD
                         onTap: () => _selectTime(_endTimeController),
+=======
+                        onTap: () => _selectTime(context, _endTimeController),
+>>>>>>> 39273a09f78b17c048e7e03706cd88b5e66f2000
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return 'Required';
