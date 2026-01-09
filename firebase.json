@@ -1,0 +1,25 @@
+{
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "yathrikan-mini",
+                    "appId": "1:153229951872:android:5494d6c467ddc40846b765",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "yathrikan-mini",
+                    "configurations": {
+                        "android": "1:153229951872:android:5494d6c467ddc40846b765",
+                        "ios": "1:153229951872:ios:a19590b57b7144d946b765",
+                        "macos": "1:153229951872:ios:a19590b57b7144d946b765",
+                        "web": "1:153229951872:web:629d02e8f659436a46b765",
+                        "windows": "1:153229951872:web:b61f20de0b156a2546b765"
+                    }
+                }
+            }
+        }
+    }
+}

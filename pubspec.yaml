@@ -1,0 +1,41 @@
+name: yathrikan
+description: Smart Public Transport Assistant - Track buses in real-time.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  google_fonts: ^6.1.0
+  font_awesome_flutter: ^10.7.0
+
+  firebase_core: ^4.3.0
+  firebase_auth: ^6.1.3
+  cloud_firestore: ^6.1.1
+  google_sign_in: ^6.2.2
+  flutter_map: ^8.2.2
+  latlong2: ^0.9.1
+  geolocator: ^14.0.2
+  flutter_animate: ^4.5.2
+  geocoding: ^4.0.0
+  image_picker: ^1.2.1
+  permission_handler: ^12.0.1
+  mobile_scanner: ^7.1.4
+  shared_preferences: ^2.5.4
+  provider: ^6.1.5+1
+  flutter_localizations:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
