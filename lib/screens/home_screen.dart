@@ -4,10 +4,13 @@ import 'package:latlong2/latlong.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
+import 'dart:math' as math;
 import '../utils/constants.dart';
 import 'profile_screen.dart';
 import 'route_screen.dart';
 import '../utils/app_localizations.dart';
+import '../services/bus_location_service.dart';
+import '../models/live_bus_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -88,23 +91,26 @@ class _HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<_HomeView> {
-  // Kerala default location
-  LatLng _currentLocation = const LatLng(10.8505, 76.2711);
+  // Kottayam default location
+  LatLng _currentLocation = const LatLng(9.5916, 76.5222);
   final MapController _mapController = MapController();
   bool _isLoadingLocation = true;
   List<Marker> _busMarkers = [];
   StreamSubscription<Position>? _positionStream;
+  StreamSubscription<List<LiveBus>>? _busLocationStream;
+  final BusLocationService _busLocationService = BusLocationService();
 
   @override
   void initState() {
     super.initState();
     _startLiveLocationUpdates();
-    _initializeBusMarkers();
+    _initializeLiveBusTracking();
   }
 
   @override
   void dispose() {
     _positionStream?.cancel();
+    _busLocationStream?.cancel();
     super.dispose();
   }
 
@@ -167,40 +173,164 @@ class _HomeViewState extends State<_HomeView> {
     );
   }
 
-  void _initializeBusMarkers() {
-    // Mock bus data with different routes
-    final buses = [
-      {'loc': const LatLng(10.8550, 76.2750), 'route': 'Kochi - Thrissur'},
-      {'loc': const LatLng(10.8450, 76.2650), 'route': 'Palakkad - Kozhikode'},
-      {'loc': const LatLng(10.8600, 76.2800), 'route': 'TVM - Ernakulam'},
-      {'loc': const LatLng(10.8400, 76.2700), 'route': 'Alappuzha - Kannur'},
-    ];
+  void _initializeLiveBusTracking() {
+    // Initialize the bus location service
+    _busLocationService.initialize();
 
-    _busMarkers = buses.map((bus) {
-      return Marker(
-        point: bus['loc'] as LatLng,
-        width: 40,
-        height: 40,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 4,
-              )
-            ],
-          ),
-          padding: const EdgeInsets.all(5),
-          child: const Icon(
-            Icons.directions_bus,
-            color: AppColors.primaryYellow,
-            size: 20,
+    // Subscribe to bus location updates
+    _busLocationStream = _busLocationService.busStream.listen((buses) {
+      if (mounted) {
+        setState(() {
+          _busMarkers = buses.map((bus) => _createBusMarker(bus)).toList();
+        });
+      }
+    });
+  }
+
+  Marker _createBusMarker(LiveBus bus) {
+    // Determine color based on speed
+    Color busColor;
+    if (bus.speedKmph < 15) {
+      busColor = Colors.green; // Slow (shuttles, traffic)
+    } else if (bus.speedKmph < 35) {
+      busColor = AppColors.primaryYellow; // Medium
+    } else {
+      busColor = Colors.orange; // Fast (express buses)
+    }
+
+    return Marker(
+      point: LatLng(bus.lat, bus.lon),
+      width: 40,
+      height: 40,
+      child: GestureDetector(
+        onTap: () => _showBusInfo(bus),
+        child: Transform.rotate(
+          angle: bus.headingDeg * math.pi / 180, // Rotate based on heading
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 4,
+                )
+              ],
+            ),
+            padding: const EdgeInsets.all(5),
+            child: Icon(
+              Icons.directions_bus,
+              color: busColor,
+              size: 20,
+            ),
           ),
         ),
-      );
-    }).toList();
+      ),
+    );
+  }
+
+  void _showBusInfo(LiveBus bus) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryYellow.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.directions_bus,
+                    color: AppColors.primaryYellow,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        bus.busId,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        bus.routeName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildInfoTile(
+                    'Speed',
+                    '${bus.speedKmph.toStringAsFixed(0)} km/h',
+                    Icons.speed,
+                  ),
+                ),
+                Expanded(
+                  child: _buildInfoTile(
+                    'Status',
+                    bus.status,
+                    Icons.check_circle,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoTile(String label, String value, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 20, color: AppColors.primaryYellow),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

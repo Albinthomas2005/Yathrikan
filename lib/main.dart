@@ -19,10 +19,12 @@ import 'screens/notification_screen.dart';
 import 'screens/edit_profile_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/help_support_screen.dart';
+import 'screens/full_map_screen.dart';
 
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'utils/settings_provider.dart';
+import 'utils/profile_provider.dart';
 import 'utils/app_localizations.dart';
 
 void main() async {
@@ -32,8 +34,11 @@ void main() async {
   );
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => SettingsProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -79,6 +84,7 @@ class MyApp extends StatelessWidget {
             '/edit-profile': (context) => const EditProfileScreen(),
             '/settings': (context) => const SettingsScreen(),
             '/help': (context) => const HelpSupportScreen(),
+            '/full_map': (context) => const FullMapScreen(),
           },
         );
       },

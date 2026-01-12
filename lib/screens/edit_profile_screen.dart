@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:provider/provider.dart';
 import '../utils/constants.dart';
 import '../utils/app_localizations.dart';
+import '../utils/profile_provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -19,6 +21,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   File? _imageFile;
 
+  @override
+  void initState() {
+    super.initState();
+    // Load existing profile picture
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final profileProvider =
+          Provider.of<ProfileProvider>(context, listen: false);
+      if (profileProvider.profilePicturePath != null) {
+        setState(() {
+          _imageFile = File(profileProvider.profilePicturePath!);
+        });
+      }
+    });
+  }
+
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
@@ -29,6 +46,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         setState(() {
           _imageFile = file;
         });
+        // Save to ProfileProvider
+        final profileProvider =
+            Provider.of<ProfileProvider>(context, listen: false);
+        await profileProvider.setProfilePicture(image.path);
       }
     }
   }

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'dart:io';
+import 'package:provider/provider.dart';
 import '../utils/constants.dart';
 import '../services/auth_service.dart';
 import '../utils/app_localizations.dart';
+import '../utils/profile_provider.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -88,18 +91,34 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      width: 70,
-                      height: 70,
-                      decoration: const BoxDecoration(
-                        color: Colors.black,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        CupertinoIcons.person_fill,
-                        color: AppColors.primaryYellow,
-                        size: 35,
-                      ),
+                    Consumer<ProfileProvider>(
+                      builder: (context, profileProvider, child) {
+                        final hasProfilePicture =
+                            profileProvider.profilePicturePath != null;
+                        return Container(
+                          width: 70,
+                          height: 70,
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            shape: BoxShape.circle,
+                            image: hasProfilePicture
+                                ? DecorationImage(
+                                    image: FileImage(
+                                      File(profileProvider.profilePicturePath!),
+                                    ),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
+                          ),
+                          child: !hasProfilePicture
+                              ? const Icon(
+                                  CupertinoIcons.person_fill,
+                                  color: AppColors.primaryYellow,
+                                  size: 35,
+                                )
+                              : null,
+                        );
+                      },
                     ),
                     const SizedBox(width: 20),
                     Expanded(
