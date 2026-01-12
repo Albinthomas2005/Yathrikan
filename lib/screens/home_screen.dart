@@ -548,9 +548,9 @@ class _HomeViewState extends State<_HomeView> {
           if (routeName != null) {
             Navigator.pushNamed(context, routeName);
           } else {
-            if (label.contains('Route') || label.contains('റൂട്ട്'))
+            if (label.contains('Route') || label.contains('റൂട്ട്')) {
               Navigator.pushNamed(context, '/shortest_route');
-            else if (label.contains('Ticket') || label.contains('ടിക്കറ്റ്'))
+            } else if (label.contains('Ticket') || label.contains('ടിക്കറ്റ്'))
               Navigator.pushNamed(context, '/ticket_validation');
             else if (label.contains('Complaint') || label.contains('പരാതി'))
               Navigator.pushNamed(context, '/complaint');

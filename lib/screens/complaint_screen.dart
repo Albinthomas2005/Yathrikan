@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -497,16 +496,16 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                   ),
                   elevation: 0,
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
+                    Text(
                       'Submit Complaint',
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.send_rounded, size: 20),
+                    SizedBox(width: 8),
+                    Icon(Icons.send_rounded, size: 20),
                   ],
                 ),
               ),

@@ -267,12 +267,15 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
                                                   permission = await Geolocator
                                                       .requestPermission();
                                                   if (permission ==
-                                                      LocationPermission.denied)
+                                                      LocationPermission.denied) {
                                                     return;
+                                                  }
                                                 }
                                                 if (permission ==
                                                     LocationPermission
-                                                        .deniedForever) return;
+                                                        .deniedForever) {
+                                                  return;
+                                                }
 
                                                 await _getCurrentLocation();
                                               },

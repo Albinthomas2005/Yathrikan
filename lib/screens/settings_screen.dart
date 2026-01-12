@@ -112,7 +112,7 @@ class SettingsScreen extends StatelessWidget {
           ),
           CupertinoSwitch(
               value: value,
-              activeColor: AppColors.primaryYellow,
+              activeTrackColor: AppColors.primaryYellow,
               onChanged: onChanged),
         ],
       ),
