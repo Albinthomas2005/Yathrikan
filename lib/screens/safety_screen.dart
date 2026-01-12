@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:geolocator/geolocator.dart';
 import 'dart:math';
+import 'dart:async';
 
 class SafetyScreen extends StatefulWidget {
   const SafetyScreen({super.key});
@@ -11,6 +13,122 @@ class SafetyScreen extends StatefulWidget {
 }
 
 class _SafetyScreenState extends State<SafetyScreen> {
+  double _currentSpeed = 0.0; // Speed in km/h
+  final double _speedLimit = 80.0; // Speed limit in km/h
+  bool _isLoadingSpeed = true;
+  StreamSubscription<Position>? _positionStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _startSpeedTracking();
+  }
+
+  @override
+  void dispose() {
+    _positionStream?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _startSpeedTracking() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Check if location services are enabled
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      if (mounted) {
+        setState(() => _isLoadingSpeed = false);
+      }
+      return;
+    }
+
+    // Check location permissions
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        if (mounted) {
+          setState(() => _isLoadingSpeed = false);
+        }
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      if (mounted) {
+        setState(() => _isLoadingSpeed = false);
+      }
+      return;
+    }
+
+    // Get initial position
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.best,
+        ),
+      );
+      if (mounted) {
+        setState(() {
+          // Speed is in m/s, convert to km/h
+          _currentSpeed = (position.speed * 3.6).clamp(0.0, 200.0);
+          _isLoadingSpeed = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error getting initial position: $e");
+      if (mounted) {
+        setState(() => _isLoadingSpeed = false);
+      }
+    }
+
+    // Subscribe to position stream for live updates
+    const LocationSettings locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.best,
+      distanceFilter: 5, // Update every 5 meters
+    );
+
+    _positionStream = Geolocator.getPositionStream(
+      locationSettings: locationSettings,
+    ).listen(
+      (Position position) {
+        if (mounted) {
+          setState(() {
+            // Speed is in m/s, convert to km/h and clamp to reasonable values
+            _currentSpeed = (position.speed * 3.6).clamp(0.0, 200.0);
+            _isLoadingSpeed = false;
+          });
+        }
+      },
+      onError: (e) => debugPrint("Location Stream Error: $e"),
+    );
+  }
+
+  String _getSpeedStatus() {
+    if (_currentSpeed < _speedLimit * 0.8) {
+      return "NORMAL";
+    } else if (_currentSpeed < _speedLimit) {
+      return "WARNING";
+    } else {
+      return "DANGER";
+    }
+  }
+
+  Color _getStatusColor() {
+    final status = _getSpeedStatus();
+    switch (status) {
+      case "NORMAL":
+        return Colors.yellow;
+      case "WARNING":
+        return Colors.orange;
+      case "DANGER":
+        return Colors.red;
+      default:
+        return Colors.yellow;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,7 +140,7 @@ class _SafetyScreenState extends State<SafetyScreen> {
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
@@ -52,7 +170,7 @@ class _SafetyScreenState extends State<SafetyScreen> {
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -66,21 +184,27 @@ class _SafetyScreenState extends State<SafetyScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.yellow.withOpacity(0.2),
+                        color: _getStatusColor().withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
-                        border:
-                            Border.all(color: Colors.yellow.withOpacity(0.5)),
+                        border: Border.all(
+                            color: _getStatusColor().withValues(alpha: 0.5)),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.check_circle,
-                              color: Colors.yellow, size: 16),
-                          SizedBox(width: 6),
+                          Icon(
+                              _getSpeedStatus() == "NORMAL"
+                                  ? Icons.check_circle
+                                  : _getSpeedStatus() == "WARNING"
+                                      ? Icons.warning_amber_rounded
+                                      : Icons.error,
+                              color: _getStatusColor(),
+                              size: 16),
+                          const SizedBox(width: 6),
                           Text(
-                            "NORMAL",
+                            _getSpeedStatus(),
                             style: TextStyle(
-                              color: Colors.yellow,
+                              color: _getStatusColor(),
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
                             ),
@@ -95,7 +219,10 @@ class _SafetyScreenState extends State<SafetyScreen> {
                     height: 220,
                     width: 220,
                     child: CustomPaint(
-                      painter: SpeedometerPainter(percentage: 0.75),
+                      painter: SpeedometerPainter(
+                        percentage: (_currentSpeed / 100).clamp(0.0, 1.0),
+                        statusColor: _getStatusColor(),
+                      ),
                       child: Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -114,7 +241,9 @@ class _SafetyScreenState extends State<SafetyScreen> {
                               text: TextSpan(
                                 children: [
                                   TextSpan(
-                                    text: "64",
+                                    text: _isLoadingSpeed
+                                        ? "--"
+                                        : _currentSpeed.toStringAsFixed(0),
                                     style: GoogleFonts.oswald(
                                       color: Colors.white,
                                       fontSize: 64,
@@ -285,7 +414,7 @@ class _SafetyScreenState extends State<SafetyScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.15),
+                color: iconColor.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: iconColor, size: 24),
@@ -323,8 +452,12 @@ class _SafetyScreenState extends State<SafetyScreen> {
 
 class SpeedometerPainter extends CustomPainter {
   final double percentage;
+  final Color statusColor;
 
-  SpeedometerPainter({required this.percentage});
+  SpeedometerPainter({
+    required this.percentage,
+    required this.statusColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -333,7 +466,7 @@ class SpeedometerPainter extends CustomPainter {
 
     // Background Arc
     final bgPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.15)
+      ..color = Colors.grey.withValues(alpha: 0.15)
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 20;
@@ -349,7 +482,7 @@ class SpeedometerPainter extends CustomPainter {
 
     // Active Arc
     final activePaint = Paint()
-      ..color = Colors.yellow
+      ..color = statusColor
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 20;

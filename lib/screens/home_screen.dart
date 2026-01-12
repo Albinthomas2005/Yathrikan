@@ -226,10 +226,6 @@ class _HomeViewState extends State<_HomeView> {
                   _buildMapSection(theme),
                   const SizedBox(height: 20),
 
-                  // Stats Row
-                  _buildStatsRow(context, loc),
-                  const SizedBox(height: 30),
-
                   // Quick Actions
                   _buildQuickActions(context, loc, isDark),
                 ],
@@ -406,60 +402,6 @@ class _HomeViewState extends State<_HomeView> {
         .animate()
         .fadeIn(delay: 200.ms, duration: 500.ms)
         .scale(begin: const Offset(0.95, 0.95));
-  }
-
-  Widget _buildStatsRow(BuildContext context, AppLocalizations loc) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _buildStatItem(context, loc.translate('arriving_in'), '8 min'),
-        Container(
-          height: 40,
-          width: 1,
-          color: Colors.grey[300],
-        ),
-        _buildStatItem(context, loc.translate('current_speed'), '38 km/h'),
-      ],
-    ).animate().fadeIn(delay: 300.ms, duration: 500.ms);
-  }
-
-  Widget _buildStatItem(BuildContext context, String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 12,
-          ),
-        ),
-        const SizedBox(height: 4),
-        RichText(
-          text: TextSpan(
-            children: [
-              TextSpan(
-                text: value.split(' ')[0],
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
-                ),
-              ),
-              const TextSpan(text: ' '),
-              TextSpan(
-                text: value.split(' ').length > 1 ? value.split(' ')[1] : '',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
   }
 
   Widget _buildQuickActions(
