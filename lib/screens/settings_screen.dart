@@ -65,6 +65,14 @@ class SettingsScreen extends StatelessWidget {
                   () => _showLanguageDialog(context, settings),
                 ),
                 _buildActionItem(
+                  context,
+                  'Accessibility & Voice',
+                  '',
+                  () {
+                    Navigator.pushNamed(context, '/accessibility-voice');
+                  },
+                ),
+                _buildActionItem(
                     context, loc.translate('privacy_policy'), "", () {}),
                 _buildActionItem(
                     context, loc.translate('terms_of_service'), "", () {}),

@@ -290,18 +290,6 @@ class _SignupScreenState extends State<SignupScreen> {
                               assetPath: 'assets/images/google_logo.png',
                               isAsset: true,
                             ),
-                            const SizedBox(width: 20),
-                            // Apple/Other Placeholder
-                            SocialLoginButton(
-                              onTap: () {},
-                              iconData: CupertinoIcons.person_solid,
-                            ),
-                            const SizedBox(width: 20),
-                            // X (Twitter)
-                            SocialLoginButton(
-                              onTap: () {},
-                              iconData: CupertinoIcons.xmark,
-                            ),
                           ],
                         ),
 

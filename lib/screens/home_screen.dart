@@ -11,6 +11,8 @@ import 'route_screen.dart';
 import '../utils/app_localizations.dart';
 import '../services/bus_location_service.dart';
 import '../models/live_bus_model.dart';
+import '../services/admin_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -77,6 +79,21 @@ class _HomeScreenState extends State<HomeScreen> {
               label: loc.translate('profile'),
             ),
           ],
+        ),
+      ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 70), // Position above bottom nav
+        child: FloatingActionButton.small(
+          onPressed: () {
+            Navigator.pushNamed(context, '/chatbot');
+          },
+          backgroundColor: AppColors.primaryYellow,
+          elevation: 4,
+          child: const Icon(
+            Icons.smart_toy, // Chatbot icon
+            color: Colors.black,
+            size: 24,
+          ),
         ),
       ),
     );

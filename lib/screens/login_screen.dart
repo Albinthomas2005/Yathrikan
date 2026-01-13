@@ -5,6 +5,7 @@ import '../utils/constants.dart';
 import '../utils/validators.dart';
 import '../widgets/custom_text_field.dart';
 import '../services/auth_service.dart';
+import '../services/admin_service.dart';
 import '../widgets/animated_notification.dart';
 import '../widgets/social_login_button.dart';
 
@@ -28,15 +29,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
       try {
         final authService = AuthService();
+        final adminService = AdminService();
 
-        // Check if admin credentials
-        if (authService.isAdminLogin(
-          _emailController.text.trim(),
-          _passwordController.text.trim(),
-        )) {
-          if (mounted) {
-            setState(() => _isLoading = false);
+        // Regular user login with Firebase
+        final userCredential = await authService.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
 
+        if (mounted) {
+          // Check if user is admin
+          final userEmail = userCredential.user?.email ?? '';
+          print('DEBUG: Checking admin status for email: $userEmail');
+          final isAdmin = await adminService.isAdmin(userEmail);
+          print('DEBUG: isAdmin result: $isAdmin');
+
+          setState(() => _isLoading = false);
+
+          if (isAdmin) {
+            // Admin user - redirect to admin panel
+            print('DEBUG: Redirecting to admin panel');
             AnimatedNotification.showSuccess(
               context,
               title: 'Admin Access',
@@ -48,45 +60,32 @@ class _LoginScreenState extends State<LoginScreen> {
 
             if (!mounted) return;
 
-            // Navigate to admin page
             Navigator.pushNamedAndRemoveUntil(
               context,
               '/admin',
               (route) => false,
             );
+          } else {
+            // Regular user - show welcome message
+            final userName = userCredential.user?.displayName ?? 'User';
+            AnimatedNotification.showSuccess(
+              context,
+              title: 'Welcome Back!',
+              message: 'Hi $userName, you\'re successfully logged in',
+              duration: const Duration(seconds: 3),
+            );
+
+            await Future.delayed(const Duration(milliseconds: 500));
+
+            if (!mounted) return;
+
+            // Navigate to home
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/home',
+              (route) => false,
+            );
           }
-          return;
-        }
-
-        // Regular user login with Firebase
-        final userCredential = await authService.signInWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
-
-        if (mounted) {
-          setState(() => _isLoading = false);
-
-          // Show welcome message with user's name
-          final userName = userCredential.user?.displayName ?? 'User';
-          AnimatedNotification.showSuccess(
-            context,
-            title: 'Welcome Back!',
-            message: 'Hi $userName, you\'re successfully logged in',
-            duration: const Duration(seconds: 3),
-          );
-
-          // Small delay to show the notification before navigating
-          await Future.delayed(const Duration(milliseconds: 500));
-
-          if (!mounted) return;
-
-          // Navigate to home and remove all previous routes
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/home',
-            (route) => false,
-          );
         }
       } catch (e) {
         if (mounted) {
@@ -109,29 +108,58 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _isLoading = true);
 
       final authService = AuthService();
+      final adminService = AdminService();
       final userCredential = await authService.signInWithGoogle();
 
       if (mounted) {
+        // Check if user is admin
+        final userEmail = userCredential.user?.email ?? '';
+        print('DEBUG GOOGLE: User email from Google: $userEmail');
+        print('DEBUG GOOGLE: Checking admin status...');
+        final isAdmin = await adminService.isAdmin(userEmail);
+        print('DEBUG GOOGLE: isAdmin result: $isAdmin');
+
         setState(() => _isLoading = false);
 
-        // Show welcome message
-        final userName = userCredential.user?.displayName ?? 'User';
-        AnimatedNotification.showSuccess(
-          context,
-          title: 'Welcome!',
-          message: 'Hi $userName, signed in with Google successfully',
-          duration: const Duration(seconds: 3),
-        );
+        if (isAdmin) {
+          // Admin user - redirect to admin panel
+          print('DEBUG GOOGLE: Redirecting to admin panel');
+          AnimatedNotification.showSuccess(
+            context,
+            title: 'Admin Access',
+            message: 'Welcome Admin! Redirecting to admin panel...',
+            duration: const Duration(seconds: 2),
+          );
 
-        await Future.delayed(const Duration(milliseconds: 500));
+          await Future.delayed(const Duration(milliseconds: 500));
 
-        if (!mounted) return;
+          if (!mounted) return;
 
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/home',
-          (route) => false,
-        );
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/admin',
+            (route) => false,
+          );
+        } else {
+          // Regular user - show welcome message
+          final userName = userCredential.user?.displayName ?? 'User';
+          AnimatedNotification.showSuccess(
+            context,
+            title: 'Welcome!',
+            message: 'Hi $userName, signed in with Google successfully',
+            duration: const Duration(seconds: 3),
+          );
+
+          await Future.delayed(const Duration(milliseconds: 500));
+
+          if (!mounted) return;
+
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/home',
+            (route) => false,
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -302,7 +330,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         strokeWidth: 2,
                                         color: AppColors.primaryYellow))
                                 : const Text(
-                                    'Sign In',
+                                    'Log In',
                                     style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold),
@@ -337,16 +365,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               onTap: signInWithGoogle,
                               assetPath: 'assets/images/google_logo.png',
                               isAsset: true,
-                            ),
-                            const SizedBox(width: 20),
-                            SocialLoginButton(
-                              onTap: () {},
-                              iconData: CupertinoIcons.person_solid,
-                            ),
-                            const SizedBox(width: 20),
-                            SocialLoginButton(
-                              onTap: () {},
-                              iconData: CupertinoIcons.xmark,
                             ),
                           ],
                         ),

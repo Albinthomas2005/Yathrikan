@@ -26,6 +26,7 @@ class _RouteScreenState extends State<RouteScreen> {
   List<FavoriteRoute> _favorites = [];
   List<RecentRoute> _recentRoutes = [];
   bool _isEditingRecent = false;
+  bool _isEditingFavorites = false;
 
   @override
   void initState() {
@@ -187,6 +188,26 @@ class _RouteScreenState extends State<RouteScreen> {
     setState(() {
       _recentRoutes.removeAt(index);
     });
+  }
+
+  void _toggleFavoritesEditMode() {
+    setState(() {
+      _isEditingFavorites = !_isEditingFavorites;
+    });
+  }
+
+  void _deleteFavorite(String id) {
+    setState(() {
+      _favorites.removeWhere((fav) => fav.id == id);
+    });
+    _saveFavorites();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Removed from favorites!'),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   List<FavoriteRoute> _getFavorites() {
@@ -353,13 +374,29 @@ class _RouteScreenState extends State<RouteScreen> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-                    child: Text(
-                      'Favorites',
-                      style: AppTextStyles.heading2.copyWith(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: theme.textTheme.titleLarge?.color,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Favorites',
+                          style: AppTextStyles.heading2.copyWith(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: theme.textTheme.titleLarge?.color,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: _toggleFavoritesEditMode,
+                          child: Text(
+                            _isEditingFavorites ? 'Done' : 'Edit',
+                            style: TextStyle(
+                              color: AppColors.primaryYellow,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   SizedBox(
@@ -680,11 +717,27 @@ class _RouteScreenState extends State<RouteScreen> {
           Positioned(
             top: 6,
             right: 6,
-            child: Icon(
-              Icons.star,
-              color: AppColors.primaryYellow,
-              size: 14,
-            ),
+            child: _isEditingFavorites
+                ? GestureDetector(
+                    onTap: () => _deleteFavorite(fav.id),
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 14,
+                      ),
+                    ),
+                  )
+                : Icon(
+                    Icons.star,
+                    color: AppColors.primaryYellow,
+                    size: 14,
+                  ),
           ),
         ],
       ),

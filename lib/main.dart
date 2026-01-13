@@ -20,6 +20,11 @@ import 'screens/edit_profile_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/help_support_screen.dart';
 import 'screens/full_map_screen.dart';
+import 'screens/admin_setup_screen.dart'; // REMOVE THIS AFTER SETUP
+import 'screens/admin_routes_screen.dart';
+import 'screens/admin_support_screen.dart';
+import 'screens/admin_finance_screen.dart';
+import 'screens/chatbot_screen.dart';
 
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -85,6 +90,12 @@ class MyApp extends StatelessWidget {
             '/settings': (context) => const SettingsScreen(),
             '/help': (context) => const HelpSupportScreen(),
             '/full_map': (context) => const FullMapScreen(),
+            '/admin-setup': (context) =>
+                const AdminSetupScreen(), // REMOVE THIS AFTER SETUP
+            '/admin-routes': (context) => const AdminRoutesScreen(),
+            '/admin-support': (context) => const AdminSupportScreen(),
+            '/admin-finance': (context) => const AdminFinanceScreen(),
+            '/chatbot': (context) => const ChatbotScreen(),
           },
         );
       },

@@ -107,12 +107,6 @@ class AuthService {
     ]);
   }
 
-  // Check if admin credentials
-  bool isAdminLogin(String email, String password) {
-    return email.trim().toLowerCase() == 'admin@gmail.com' &&
-        password.trim() == 'admin123';
-  }
-
   // Handle Firebase Auth exceptions
   String _handleAuthException(FirebaseAuthException e) {
     switch (e.code) {
