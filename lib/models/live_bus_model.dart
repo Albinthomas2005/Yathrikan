@@ -1,4 +1,6 @@
 import 'dart:math';
+import 'package:latlong2/latlong.dart';
+import 'route_path_model.dart';
 
 class LiveBus {
   final String busId;
@@ -6,9 +8,14 @@ class LiveBus {
   double lat;
   double lon;
   final double speedKmph;
-  final double headingDeg;
+  double headingDeg;
   final DateTime lastUpdated;
   final String status;
+
+  // New fields for waypoint-based movement
+  RoutePath? routePath;
+  int currentWaypointIndex;
+  double progressInSegment; // 0.0 to 1.0
 
   LiveBus({
     required this.busId,
@@ -19,6 +26,9 @@ class LiveBus {
     required this.headingDeg,
     required this.lastUpdated,
     required this.status,
+    this.routePath,
+    this.currentWaypointIndex = 0,
+    this.progressInSegment = 0.0,
   });
 
   factory LiveBus.fromJson(Map<String, dynamic> json) {
@@ -47,9 +57,112 @@ class LiveBus {
     };
   }
 
-  /// Simulates bus movement based on speed and heading
+  /// Simulates bus movement along predefined route waypoints
   /// Returns a new LiveBus object with updated position
   LiveBus simulateMovement(int secondsElapsed) {
+    // If no route path is defined, fall back to simple movement
+    if (routePath == null || routePath!.waypoints.length < 2) {
+      return _simulateSimpleMovement(secondsElapsed);
+    }
+
+    // Convert speed from km/h to m/s
+    final speedMs = speedKmph * 1000 / 3600;
+
+    // Distance to travel in meters
+    final distanceToTravel = speedMs * secondsElapsed;
+
+    // Add slight random variation (±10%) for realism
+    final random = Random();
+    final variation = 0.9 + random.nextDouble() * 0.2; // 0.9 to 1.1
+    final actualDistance = distanceToTravel * variation;
+
+    return _moveAlongPath(actualDistance);
+  }
+
+  /// Move bus along its route path by the specified distance
+  LiveBus _moveAlongPath(double distanceMeters) {
+    if (routePath == null || routePath!.waypoints.isEmpty) {
+      return this;
+    }
+
+    int newWaypointIndex = currentWaypointIndex;
+    double newProgress = progressInSegment;
+    double remainingDistance = distanceMeters;
+
+    // Keep moving until we've covered the required distance
+    while (remainingDistance > 0 &&
+        newWaypointIndex < routePath!.waypoints.length - 1) {
+      final fromPoint = routePath!.waypoints[newWaypointIndex];
+      final toPoint = routePath!.waypoints[newWaypointIndex + 1];
+
+      // Calculate segment distance
+      final segmentDistance = _calculateDistance(fromPoint, toPoint);
+
+      // How far are we already in this segment?
+      final alreadyTraveled = segmentDistance * newProgress;
+
+      // How much of this segment is left?
+      final segmentRemaining = segmentDistance - alreadyTraveled;
+
+      if (remainingDistance >= segmentRemaining) {
+        // We'll complete this segment and move to the next
+        remainingDistance -= segmentRemaining;
+        newWaypointIndex++;
+        newProgress = 0.0;
+
+        // Check if we've completed the route
+        if (newWaypointIndex >= routePath!.waypoints.length - 1) {
+          // If circular, loop back to start
+          if (routePath!.isCircular) {
+            newWaypointIndex = 0;
+            newProgress = 0.0;
+          } else {
+            // Stay at the end
+            newWaypointIndex = routePath!.waypoints.length - 2;
+            newProgress = 1.0;
+          }
+          break;
+        }
+      } else {
+        // We'll stop somewhere in this segment
+        newProgress += (remainingDistance / segmentDistance);
+        remainingDistance = 0;
+      }
+    }
+
+    // Calculate new position by interpolating between waypoints
+    final newPosition = routePath!.interpolate(
+      newWaypointIndex,
+      min(newWaypointIndex + 1, routePath!.waypoints.length - 1),
+      newProgress,
+    );
+
+    // Calculate heading to next waypoint
+    double newHeading = headingDeg;
+    if (newWaypointIndex < routePath!.waypoints.length - 1) {
+      final fromPoint = routePath!.waypoints[newWaypointIndex];
+      final toPoint = routePath!.waypoints[newWaypointIndex + 1];
+      newHeading = routePath!.getBearing(fromPoint, toPoint);
+    }
+
+    // Create new bus with updated position
+    return LiveBus(
+      busId: busId,
+      routeName: routeName,
+      lat: newPosition.latitude,
+      lon: newPosition.longitude,
+      speedKmph: speedKmph,
+      headingDeg: newHeading,
+      lastUpdated: DateTime.now(),
+      status: status,
+      routePath: routePath,
+      currentWaypointIndex: newWaypointIndex,
+      progressInSegment: newProgress,
+    );
+  }
+
+  /// Fallback: Simulates bus movement based on speed and heading (old method)
+  LiveBus _simulateSimpleMovement(int secondsElapsed) {
     // Convert speed from km/h to m/s
     final speedMs = speedKmph * 1000 / 3600;
 
@@ -85,7 +198,26 @@ class LiveBus {
       headingDeg: headingDeg,
       lastUpdated: DateTime.now(),
       status: status,
+      routePath: routePath,
+      currentWaypointIndex: currentWaypointIndex,
+      progressInSegment: progressInSegment,
     );
+  }
+
+  /// Calculate distance between two points in meters using Haversine formula
+  double _calculateDistance(LatLng point1, LatLng point2) {
+    const double earthRadius = 6371000; // meters
+
+    final lat1Rad = point1.latitude * pi / 180;
+    final lat2Rad = point2.latitude * pi / 180;
+    final deltaLat = (point2.latitude - point1.latitude) * pi / 180;
+    final deltaLon = (point2.longitude - point1.longitude) * pi / 180;
+
+    final a = sin(deltaLat / 2) * sin(deltaLat / 2) +
+        cos(lat1Rad) * cos(lat2Rad) * sin(deltaLon / 2) * sin(deltaLon / 2);
+    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+
+    return earthRadius * c;
   }
 
   LiveBus copyWith({
@@ -97,6 +229,9 @@ class LiveBus {
     double? headingDeg,
     DateTime? lastUpdated,
     String? status,
+    RoutePath? routePath,
+    int? currentWaypointIndex,
+    double? progressInSegment,
   }) {
     return LiveBus(
       busId: busId ?? this.busId,
@@ -107,6 +242,9 @@ class LiveBus {
       headingDeg: headingDeg ?? this.headingDeg,
       lastUpdated: lastUpdated ?? this.lastUpdated,
       status: status ?? this.status,
+      routePath: routePath ?? this.routePath,
+      currentWaypointIndex: currentWaypointIndex ?? this.currentWaypointIndex,
+      progressInSegment: progressInSegment ?? this.progressInSegment,
     );
   }
 }

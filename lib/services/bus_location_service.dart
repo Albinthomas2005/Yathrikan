@@ -1,5 +1,10 @@
 import 'dart:async';
+import 'dart:math';
+import 'package:latlong2/latlong.dart';
 import '../models/live_bus_model.dart';
+import '../models/route_path_model.dart';
+import '../data/route_paths_data.dart';
+import 'osrm_routing_service.dart';
 
 class BusLocationService {
   static final BusLocationService _instance = BusLocationService._internal();
@@ -10,18 +15,137 @@ class BusLocationService {
   final StreamController<List<LiveBus>> _busStreamController =
       StreamController<List<LiveBus>>.broadcast();
   Timer? _updateTimer;
+  bool _isInitializing = false;
 
   Stream<List<LiveBus>> get busStream => _busStreamController.stream;
   List<LiveBus> get buses => List.unmodifiable(_buses);
 
   void initialize() {
-    if (_buses.isNotEmpty) return; // Already initialized
+    if (_buses.isNotEmpty || _isInitializing)
+      return; // Already initialized or initializing
+
+    _isInitializing = true;
 
     // Add all 100 buses from the provided data
     _buses.addAll(_get100BusesData());
 
-    // Start simulating movement every 4 seconds
+    // Assign route paths to each bus (async operation)
+    _assignRoutePaths();
+
+    // Start simulating movement immediately with fallback paths
+    // Real OSRM routes will be loaded in the background
     _startMovementSimulation();
+  }
+
+  Future<void> _assignRoutePaths() async {
+    print('🗺️ Fetching real road routes from OpenStreetMap via OSRM...');
+    int osrmSuccessCount = 0;
+    int predefinedCount = 0;
+    int fallbackCount = 0;
+
+    for (int i = 0; i < _buses.length; i++) {
+      final bus = _buses[i];
+      RoutePath? routePath;
+
+      // Strategy 1: Try predefined route path first
+      routePath = RoutePathsData.getRoutePath(bus.routeName);
+      if (routePath != null) {
+        predefinedCount++;
+      } else {
+        // Strategy 2: Use OSRM to fetch actual road route
+        final currentPos = LatLng(bus.lat, bus.lon);
+        final destination =
+            _extractDestinationFromRouteName(bus.routeName, currentPos);
+
+        // Try to fetch from OSRM
+        routePath = await OSRMRoutingService.fetchRoute(
+          start: currentPos,
+          end: destination,
+          routeName: bus.routeName,
+        );
+
+        if (routePath != null) {
+          osrmSuccessCount++;
+          print(
+              '✅ Bus ${bus.busId}: Fetched ${routePath.waypoints.length} waypoints from OSRM');
+        } else {
+          // Strategy 3: Fallback to simple generated path
+          fallbackCount++;
+          routePath = RoutePathsData.generateSimplePath(
+            bus.routeName,
+            currentPos,
+            destination,
+          );
+          print('⚠️ Bus ${bus.busId}: Using fallback path (OSRM failed)');
+        }
+      }
+
+      // Find the closest waypoint to the bus's current position
+      final currentPos = LatLng(bus.lat, bus.lon);
+      final closestWaypointIndex = routePath.findClosestWaypoint(currentPos);
+
+      // Update the bus with route path information
+      _buses[i] = bus.copyWith(
+        routePath: routePath,
+        currentWaypointIndex: closestWaypointIndex,
+        progressInSegment: 0.0,
+      );
+
+      // Add small delay to avoid overwhelming the OSRM server
+      if (i < _buses.length - 1) {
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+    }
+
+    _isInitializing = false;
+    print('✅ Route assignment complete:');
+    print('   - Predefined routes: $predefinedCount');
+    print('   - OSRM fetched routes: $osrmSuccessCount');
+    print('   - Fallback routes: $fallbackCount');
+    print('   - Total buses: ${_buses.length}');
+  }
+
+  /// Extract destination from route name
+  /// Examples: "Kottayam - Changanassery" -> Changanassery coordinates
+  LatLng _extractDestinationFromRouteName(String routeName, LatLng start) {
+    // Parse route name to extract destination
+    if (routeName.contains(' - ')) {
+      final parts = routeName.split(' - ');
+      final destination = parts.length > 1 ? parts[1].trim() : '';
+
+      // Map of known destinations in Kerala
+      final knownDestinations = {
+        'Changanassery': LatLng(9.4450, 76.5488),
+        'Ettumanoor': LatLng(9.6691, 76.5622),
+        'Vaikom': LatLng(9.7188, 76.4066),
+        'Pala': LatLng(9.7101, 76.6841),
+        'Kanjirappally': LatLng(9.5244, 76.8141),
+        'Kumarakom': LatLng(9.6100, 76.4300),
+        'Tiruvalla': LatLng(9.3830, 76.5740),
+        'Erattupetta': LatLng(9.7004, 76.7803),
+        'Mundakayam': LatLng(9.6213, 76.8566),
+        'Thalayolaparambu': LatLng(9.7481, 76.4855),
+        'Pampady': LatLng(9.5863, 76.5855),
+        'Kottayam': LatLng(9.5916, 76.5222),
+      };
+
+      // Check if destination is in our known list
+      for (final entry in knownDestinations.entries) {
+        if (destination.toLowerCase().contains(entry.key.toLowerCase())) {
+          return entry.value;
+        }
+      }
+    }
+
+    // Fallback: random offset
+    final random = Random();
+    final offsetLat = (random.nextDouble() - 0.5) * 0.15;
+    final offsetLon = (random.nextDouble() - 0.5) * 0.15;
+
+    return LatLng(
+      start.latitude + offsetLat,
+      start.longitude + offsetLon,
+    );
   }
 
   void _startMovementSimulation() {
