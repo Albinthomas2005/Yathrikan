@@ -3,6 +3,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../utils/constants.dart';
 import '../utils/app_localizations.dart';
+import '../models/payment_model.dart';
+import 'razorpay_payment_screen.dart';
+import 'ticket_details_screen.dart';
 
 class TicketValidationScreen extends StatefulWidget {
   const TicketValidationScreen({super.key});
@@ -15,7 +18,18 @@ class _TicketValidationScreenState extends State<TicketValidationScreen> {
   final TextEditingController _pinController = TextEditingController();
 
   Future<void> _handleVerification() async {
-    final loc = AppLocalizations.of(context);
+    final ticketId = _pinController.text.trim();
+
+    if (ticketId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please enter a ticket number'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     // Show loading
     showDialog(
       context: context,
@@ -24,16 +38,16 @@ class _TicketValidationScreenState extends State<TicketValidationScreen> {
           child: CircularProgressIndicator(color: AppColors.primaryYellow)),
     );
 
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 1));
 
     if (!mounted) return;
     Navigator.pop(context); // Close loader
 
-    // Show success dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(loc.translate('ticket_verified')),
-        backgroundColor: Colors.green,
+    // Navigate to ticket details screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TicketDetailsScreen(ticketId: ticketId),
       ),
     );
   }
@@ -266,19 +280,55 @@ class _TicketValidationScreenState extends State<TicketValidationScreen> {
                                         final List<Barcode> barcodes =
                                             capture.barcodes;
                                         if (barcodes.isNotEmpty) {
-                                          // Handle code
+                                          final scannedValue =
+                                              barcodes.first.rawValue ?? '';
                                           debugPrint(
-                                              'Barcode found! ${barcodes.first.rawValue}');
+                                              'Barcode found! $scannedValue');
                                           Navigator.pop(
                                               context); // Close scanner
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                              content: Text(loc.translate(
-                                                  'ticket_verified')),
-                                              backgroundColor: Colors.green,
-                                            ),
-                                          );
+
+                                          // Parse QR code data
+                                          TicketData? ticketData;
+
+                                          // Try to parse structured QR data
+                                          if (scannedValue.contains('|')) {
+                                            ticketData = TicketData.fromQrCode(
+                                                scannedValue);
+                                          } else {
+                                            // Fallback: Use default ticket data for demo
+                                            ticketData = TicketData(
+                                              routeName:
+                                                  'CHANGANASSERY - MUNDAKKAYAM',
+                                              busId: 'KL33B7747',
+                                              fromLocation: 'KARUKACHAL',
+                                              toLocation: 'KANJIRAPALLY',
+                                              fare: 10.0,
+                                              qrCodeData: scannedValue,
+                                            );
+                                          }
+
+                                          if (ticketData != null) {
+                                            // Navigate to Razorpay payment
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    RazorpayPaymentScreen(
+                                                  ticketData: ticketData!,
+                                                ),
+                                              ),
+                                            );
+                                          } else {
+                                            // Show error if QR parsing failed
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                    'Invalid QR code format'),
+                                                backgroundColor: Colors.red,
+                                              ),
+                                            );
+                                          }
                                         }
                                       },
                                     ),
