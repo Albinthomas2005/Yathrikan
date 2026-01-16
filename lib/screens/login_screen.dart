@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/constants.dart';
@@ -40,15 +41,17 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) {
           // Check if user is admin
           final userEmail = userCredential.user?.email ?? '';
-          print('DEBUG: Checking admin status for email: $userEmail');
+          debugPrint('DEBUG: Checking admin status for email: $userEmail');
           final isAdmin = await adminService.isAdmin(userEmail);
-          print('DEBUG: isAdmin result: $isAdmin');
+          debugPrint('DEBUG: isAdmin result: $isAdmin');
+
+          if (!mounted) return;
 
           setState(() => _isLoading = false);
 
           if (isAdmin) {
             // Admin user - redirect to admin panel
-            print('DEBUG: Redirecting to admin panel');
+            debugPrint('DEBUG: Redirecting to admin panel');
             AnimatedNotification.showSuccess(
               context,
               title: 'Admin Access',
@@ -114,16 +117,18 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         // Check if user is admin
         final userEmail = userCredential.user?.email ?? '';
-        print('DEBUG GOOGLE: User email from Google: $userEmail');
-        print('DEBUG GOOGLE: Checking admin status...');
+        debugPrint('DEBUG GOOGLE: User email from Google: $userEmail');
+        debugPrint('DEBUG GOOGLE: Checking admin status...');
         final isAdmin = await adminService.isAdmin(userEmail);
-        print('DEBUG GOOGLE: isAdmin result: $isAdmin');
+        debugPrint('DEBUG GOOGLE: isAdmin result: $isAdmin');
+
+        if (!mounted) return;
 
         setState(() => _isLoading = false);
 
         if (isAdmin) {
           // Admin user - redirect to admin panel
-          print('DEBUG GOOGLE: Redirecting to admin panel');
+          debugPrint('DEBUG GOOGLE: Redirecting to admin panel');
           AnimatedNotification.showSuccess(
             context,
             title: 'Admin Access',

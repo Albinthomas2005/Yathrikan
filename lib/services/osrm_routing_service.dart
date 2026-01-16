@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import '../models/route_path_model.dart';
@@ -66,11 +67,11 @@ class OSRMRoutingService {
 
         return routePath;
       } else {
-        print('OSRM API error: ${response.statusCode} - ${response.body}');
+        debugPrint('OSRM API error: ${response.statusCode} - ${response.body}');
         return null;
       }
     } catch (e) {
-      print('Error fetching route from OSRM: $e');
+      debugPrint('Error fetching route from OSRM: $e');
       return null;
     }
   }
@@ -94,7 +95,7 @@ class OSRMRoutingService {
         );
       }).toList();
     } catch (e) {
-      print('Error parsing OSRM response: $e');
+      debugPrint('Error parsing OSRM response: $e');
       return [];
     }
   }
@@ -145,7 +146,7 @@ class OSRMRoutingService {
         return routePath;
       }
     } catch (e) {
-      print('Error fetching multi-waypoint route: $e');
+      debugPrint('Error fetching multi-waypoint route: $e');
     }
 
     return null;

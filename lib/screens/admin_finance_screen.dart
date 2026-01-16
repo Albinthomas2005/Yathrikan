@@ -281,11 +281,11 @@ class _DailyComparisonChart extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         // Simplified Bar Chart
-        Expanded(
+        const Expanded(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.end,
-            children: const [
+            children: [
               _ChartBar(height: 0.4, label: 'Mon'),
               _ChartBar(height: 0.6, label: 'Tue'),
               _ChartBar(height: 0.9, label: 'Wed'),

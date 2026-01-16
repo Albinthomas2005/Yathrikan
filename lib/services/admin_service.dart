@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 class AdminService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -7,21 +8,21 @@ class AdminService {
   Future<bool> isAdmin(String email) async {
     try {
       final normalizedEmail = email.trim().toLowerCase();
-      print('DEBUG AdminService: Checking email: $normalizedEmail');
+      debugPrint('DEBUG AdminService: Checking email: $normalizedEmail');
 
       // Query the admins collection to check if this email exists
       final adminDoc =
           await _firestore.collection('admins').doc(normalizedEmail).get();
 
-      print('DEBUG AdminService: Document exists: ${adminDoc.exists}');
+      debugPrint('DEBUG AdminService: Document exists: ${adminDoc.exists}');
       if (adminDoc.exists) {
-        print('DEBUG AdminService: Document data: ${adminDoc.data()}');
+        debugPrint('DEBUG AdminService: Document data: ${adminDoc.data()}');
       }
 
       return adminDoc.exists;
     } catch (e) {
       // If there's an error, default to not admin
-      print('DEBUG AdminService: Error checking admin: $e');
+      debugPrint('DEBUG AdminService: Error checking admin: $e');
       return false;
     }
   }

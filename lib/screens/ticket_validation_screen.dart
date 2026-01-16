@@ -4,7 +4,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../utils/constants.dart';
 import '../utils/app_localizations.dart';
 import '../models/payment_model.dart';
-import 'razorpay_payment_screen.dart';
+import 'mock_payment_screen.dart';
 import 'ticket_details_screen.dart';
 
 class TicketValidationScreen extends StatefulWidget {
@@ -22,7 +22,7 @@ class _TicketValidationScreenState extends State<TicketValidationScreen> {
 
     if (ticketId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Please enter a ticket number'),
           backgroundColor: Colors.red,
         ),
@@ -308,12 +308,12 @@ class _TicketValidationScreenState extends State<TicketValidationScreen> {
                                           }
 
                                           if (ticketData != null) {
-                                            // Navigate to Razorpay payment
+                                            // Navigate to Mock payment screen
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
                                                 builder: (context) =>
-                                                    RazorpayPaymentScreen(
+                                                    MockPaymentScreen(
                                                   ticketData: ticketData!,
                                                 ),
                                               ),

@@ -76,7 +76,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                     color: Colors.green.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.check_circle,
                     size: 80,
                     color: Colors.green,
@@ -167,7 +167,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                 // Loading indicator for auto-navigation
                 Column(
                   children: [
-                    SizedBox(
+                    const SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(

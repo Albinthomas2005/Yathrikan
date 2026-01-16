@@ -341,7 +341,7 @@ class _RouteScreenState extends State<RouteScreen> {
                           onTap: _toggleEditMode,
                           child: Text(
                             _isEditingRecent ? 'Done' : 'Edit',
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: AppColors.primaryYellow,
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
@@ -389,7 +389,7 @@ class _RouteScreenState extends State<RouteScreen> {
                           onTap: _toggleFavoritesEditMode,
                           child: Text(
                             _isEditingFavorites ? 'Done' : 'Edit',
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: AppColors.primaryYellow,
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
@@ -505,14 +505,14 @@ class _RouteScreenState extends State<RouteScreen> {
                         color: theme.textTheme.titleLarge?.color,
                       ),
                     ),
-                    Row(
+                    const Row(
                       children: [
                         Icon(
                           CupertinoIcons.sort_down,
                           size: 16,
                           color: AppColors.greyText,
                         ),
-                        const SizedBox(width: 4),
+                        SizedBox(width: 4),
                         Text(
                           'SORT',
                           style: TextStyle(
@@ -722,7 +722,7 @@ class _RouteScreenState extends State<RouteScreen> {
                     onTap: () => _deleteFavorite(fav.id),
                     child: Container(
                       padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.red,
                         shape: BoxShape.circle,
                       ),
@@ -733,7 +733,7 @@ class _RouteScreenState extends State<RouteScreen> {
                       ),
                     ),
                   )
-                : Icon(
+                : const Icon(
                     Icons.star,
                     color: AppColors.primaryYellow,
                     size: 14,
@@ -823,7 +823,7 @@ class _RouteScreenState extends State<RouteScreen> {
 
   Widget _buildLiveMapPreview(bool isDark) {
     // Kottayam default location
-    final defaultLocation = LatLng(9.5916, 76.5222);
+    const defaultLocation = LatLng(9.5916, 76.5222);
 
     return StreamBuilder(
       stream: _busService.busStream,
@@ -889,10 +889,10 @@ class _RouteScreenState extends State<RouteScreen> {
             children: [
               // FlutterMap
               FlutterMap(
-                options: MapOptions(
+                options: const MapOptions(
                   initialCenter: defaultLocation,
                   initialZoom: 12.0,
-                  interactionOptions: const InteractionOptions(
+                  interactionOptions: InteractionOptions(
                     flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
                   ),
                 ),
@@ -969,7 +969,7 @@ class _RouteScreenState extends State<RouteScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(
+                          const Icon(
                             CupertinoIcons.bus,
                             color: AppColors.primaryYellow,
                             size: 16,
@@ -1004,8 +1004,8 @@ class _RouteScreenState extends State<RouteScreen> {
                           color: AppColors.primaryYellow,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Row(
-                          children: const [
+                        child: const Row(
+                          children: [
                             Icon(
                               CupertinoIcons.map_fill,
                               color: Colors.black,

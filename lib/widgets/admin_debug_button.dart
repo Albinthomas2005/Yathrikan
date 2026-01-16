@@ -20,7 +20,7 @@ class _AdminDebugButtonState extends State<AdminDebugButton> {
       // Check current status
       final isAdmin =
           await _adminService.isAdmin('albinthomastkh2005@gmail.com');
-      print('Current admin status: $isAdmin');
+      debugPrint('Current admin status: $isAdmin');
 
       if (!isAdmin) {
         // Add the admin
@@ -40,7 +40,7 @@ class _AdminDebugButtonState extends State<AdminDebugButton> {
 
       // List all admins
       final allAdmins = await _adminService.getAllAdmins();
-      print('All admins: $allAdmins');
+      debugPrint('All admins: $allAdmins');
       setState(
           () => _message += '\n\nAll admins in DB:\n${allAdmins.join('\n')}');
     } catch (e) {

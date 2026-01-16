@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:latlong2/latlong.dart';
+import 'package:flutter/foundation.dart';
 import '../models/live_bus_model.dart';
 import '../models/route_path_model.dart';
 import '../data/route_paths_data.dart';
@@ -21,8 +22,9 @@ class BusLocationService {
   List<LiveBus> get buses => List.unmodifiable(_buses);
 
   void initialize() {
-    if (_buses.isNotEmpty || _isInitializing)
+    if (_buses.isNotEmpty || _isInitializing) {
       return; // Already initialized or initializing
+    }
 
     _isInitializing = true;
 
@@ -38,7 +40,7 @@ class BusLocationService {
   }
 
   Future<void> _assignRoutePaths() async {
-    print('🗺️ Fetching real road routes from OpenStreetMap via OSRM...');
+    debugPrint('🗺️ Fetching real road routes from OpenStreetMap via OSRM...');
     int osrmSuccessCount = 0;
     int predefinedCount = 0;
     int fallbackCount = 0;
@@ -66,7 +68,7 @@ class BusLocationService {
 
         if (routePath != null) {
           osrmSuccessCount++;
-          print(
+          debugPrint(
               '✅ Bus ${bus.busId}: Fetched ${routePath.waypoints.length} waypoints from OSRM');
         } else {
           // Strategy 3: Fallback to simple generated path
@@ -76,7 +78,7 @@ class BusLocationService {
             currentPos,
             destination,
           );
-          print('⚠️ Bus ${bus.busId}: Using fallback path (OSRM failed)');
+          debugPrint('⚠️ Bus ${bus.busId}: Using fallback path (OSRM failed)');
         }
       }
 
@@ -98,11 +100,11 @@ class BusLocationService {
     }
 
     _isInitializing = false;
-    print('✅ Route assignment complete:');
-    print('   - Predefined routes: $predefinedCount');
-    print('   - OSRM fetched routes: $osrmSuccessCount');
-    print('   - Fallback routes: $fallbackCount');
-    print('   - Total buses: ${_buses.length}');
+    debugPrint('✅ Route assignment complete:');
+    debugPrint('   - Predefined routes: $predefinedCount');
+    debugPrint('   - OSRM fetched routes: $osrmSuccessCount');
+    debugPrint('   - Fallback routes: $fallbackCount');
+    debugPrint('   - Total buses: ${_buses.length}');
   }
 
   /// Extract destination from route name
@@ -115,18 +117,18 @@ class BusLocationService {
 
       // Map of known destinations in Kerala
       final knownDestinations = {
-        'Changanassery': LatLng(9.4450, 76.5488),
-        'Ettumanoor': LatLng(9.6691, 76.5622),
-        'Vaikom': LatLng(9.7188, 76.4066),
-        'Pala': LatLng(9.7101, 76.6841),
-        'Kanjirappally': LatLng(9.5244, 76.8141),
-        'Kumarakom': LatLng(9.6100, 76.4300),
-        'Tiruvalla': LatLng(9.3830, 76.5740),
-        'Erattupetta': LatLng(9.7004, 76.7803),
-        'Mundakayam': LatLng(9.6213, 76.8566),
-        'Thalayolaparambu': LatLng(9.7481, 76.4855),
-        'Pampady': LatLng(9.5863, 76.5855),
-        'Kottayam': LatLng(9.5916, 76.5222),
+        'Changanassery': const LatLng(9.4450, 76.5488),
+        'Ettumanoor': const LatLng(9.6691, 76.5622),
+        'Vaikom': const LatLng(9.7188, 76.4066),
+        'Pala': const LatLng(9.7101, 76.6841),
+        'Kanjirappally': const LatLng(9.5244, 76.8141),
+        'Kumarakom': const LatLng(9.6100, 76.4300),
+        'Tiruvalla': const LatLng(9.3830, 76.5740),
+        'Erattupetta': const LatLng(9.7004, 76.7803),
+        'Mundakayam': const LatLng(9.6213, 76.8566),
+        'Thalayolaparambu': const LatLng(9.7481, 76.4855),
+        'Pampady': const LatLng(9.5863, 76.5855),
+        'Kottayam': const LatLng(9.5916, 76.5222),
       };
 
       // Check if destination is in our known list

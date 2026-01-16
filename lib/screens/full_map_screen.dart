@@ -374,7 +374,7 @@ class _FullMapScreenState extends State<FullMapScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(
+                          const Icon(
                             CupertinoIcons.bus,
                             color: AppColors.primaryYellow,
                             size: 20,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import '../services/admin_service.dart';
 
 /// Utility screen to add admin emails to Firestore

@@ -20,9 +20,9 @@ Future<void> setupInitialAdmin(BuildContext context) async {
       );
     }
 
-    print('✅ Admin setup complete!');
-    print('Admin email: albinthomastkh2005@gmail.com');
-    print('You can now remove this function and file.');
+    debugPrint('✅ Admin setup complete!');
+    debugPrint('Admin email: albinthomastkh2005@gmail.com');
+    debugPrint('You can now remove this function and file.');
   } catch (e) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -32,7 +32,7 @@ Future<void> setupInitialAdmin(BuildContext context) async {
         ),
       );
     }
-    print('❌ Error setting up admin: $e');
+    debugPrint('❌ Error setting up admin: $e');
   }
 }
 
@@ -45,10 +45,10 @@ Future<void> setupInitialAdminStandalone() async {
     // Add your admin email
     await adminService.addAdmin('albinthomastkh2005@gmail.com');
 
-    print('✅ Admin setup complete!');
-    print('Admin email: albinthomastkh2005@gmail.com');
-    print('You can now remove this function and file.');
+    debugPrint('✅ Admin setup complete!');
+    debugPrint('Admin email: albinthomastkh2005@gmail.com');
+    debugPrint('You can now remove this function and file.');
   } catch (e) {
-    print('❌ Error setting up admin: $e');
+    debugPrint('❌ Error setting up admin: $e');
   }
 }

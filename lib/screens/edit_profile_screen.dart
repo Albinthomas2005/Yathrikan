@@ -49,7 +49,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         // Save to ProfileProvider
         final profileProvider =
             Provider.of<ProfileProvider>(context, listen: false);
-        await profileProvider.setProfilePicture(image.path);
+        profileProvider.setProfilePicture(image.path);
       }
     }
   }

@@ -30,6 +30,7 @@ class TicketDetailsScreen extends StatelessWidget {
     return rawId;
   }
 
+  @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
     final theme = Theme.of(context);
@@ -171,10 +172,10 @@ class TicketDetailsScreen extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     colors: [
-                      const Color(0xFF528FF0),
-                      const Color(0xFF3A5FCD),
+                      Color(0xFF528FF0),
+                      Color(0xFF3A5FCD),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(15),
@@ -214,12 +215,12 @@ class TicketDetailsScreen extends StatelessWidget {
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
+                gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    const Color(0xFF1E3A5F),
-                    const Color(0xFF2C5282),
+                    Color(0xFF1E3A5F),
+                    Color(0xFF2C5282),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),
@@ -695,33 +696,6 @@ class TicketDetailsScreen extends StatelessWidget {
       'Dec'
     ];
     return '${dt.day} ${months[dt.month - 1]} ${dt.year}, ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-  }
-
-  // Old info row (kept for compatibility)
-  Widget _buildInfoRow(String label, String value, ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: theme.textTheme.bodyLarge?.color,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 

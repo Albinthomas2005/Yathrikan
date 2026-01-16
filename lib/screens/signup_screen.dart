@@ -275,16 +275,16 @@ class _SignupScreenState extends State<SignupScreen> {
                                 try {
                                   setState(() => _isLoading = true);
                                   await authService.signInWithGoogle();
-                                  if (mounted) {
-                                    Navigator.pushNamedAndRemoveUntil(
-                                        context, '/home', (route) => false);
-                                  }
+
+                                  if (!mounted) return;
+                                  Navigator.pushNamedAndRemoveUntil(
+                                      context, '/home', (route) => false);
                                 } catch (e) {
-                                  if (mounted) {
-                                    AnimatedNotification.showError(context,
-                                        title: "Error", message: e.toString());
-                                    setState(() => _isLoading = false);
-                                  }
+                                  if (!mounted) return;
+
+                                  setState(() => _isLoading = false);
+                                  AnimatedNotification.showError(context,
+                                      title: "Error", message: e.toString());
                                 }
                               },
                               assetPath: 'assets/images/google_logo.png',
