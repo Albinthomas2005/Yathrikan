@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/payment_model.dart';
-import '../services/razorpay_service.dart';
 import '../utils/constants.dart';
 import 'payment_success_screen.dart';
 
@@ -20,17 +19,14 @@ class MockPaymentScreen extends StatefulWidget {
 class _MockPaymentScreenState extends State<MockPaymentScreen> {
   String? _selectedPaymentMethod;
   bool _isProcessing = false;
-  late RazorpayService _razorpayService;
-
   @override
   void initState() {
     super.initState();
-    _razorpayService = RazorpayService();
+    // No initialization needed
   }
 
   @override
   void dispose() {
-    _razorpayService.dispose();
     super.dispose();
   }
 
@@ -63,17 +59,17 @@ class _MockPaymentScreenState extends State<MockPaymentScreen> {
       id: 'phonepe',
       name: 'PhonePe',
       icon: Icons.phone_android,
-      color: Color(0xFF5F259F),
+      color: const Color(0xFF5F259F),
     ),
     PaymentMethodOption(
       id: 'paytm',
       name: 'Paytm',
       icon: Icons.wallet,
-      color: Color(0xFF00BAF2),
+      color: const Color(0xFF00BAF2),
     ),
   ];
 
-  void _handlePayment() {
+  void _handlePayment() async {
     if (_selectedPaymentMethod == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -87,79 +83,36 @@ class _MockPaymentScreenState extends State<MockPaymentScreen> {
     setState(() => _isProcessing = true);
     HapticFeedback.mediumImpact();
 
+    // Simulate payment processing delay
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (!mounted) return;
+
     final transactionId = PaymentTransaction.generateTransactionId();
 
-    _razorpayService.openCheckout(
-      amount: widget.ticketData.fare,
+    // Create success transaction
+    final completeTransaction = PaymentTransaction(
       transactionId: transactionId,
-      ticketData: widget.ticketData,
-      onPaymentSuccess: (transaction) {
-        // Update transaction with complete data
-        final completeTransaction = transaction.copyWith(
-          amount: widget.ticketData.fare,
-          routeName: widget.ticketData.routeName,
-          busId: widget.ticketData.busId,
-          fromLocation: widget.ticketData.fromLocation,
-          toLocation: widget.ticketData.toLocation,
-          paymentMethod: _selectedPaymentMethod!.toUpperCase(),
-        );
-
-        if (mounted) {
-          setState(() => _isProcessing = false);
-
-          // Navigate to success screen
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PaymentSuccessScreen(
-                transaction: completeTransaction,
-                ticketData: widget.ticketData,
-              ),
-            ),
-          );
-        }
-      },
-      onPaymentError: (error) {
-        if (mounted) {
-          setState(() => _isProcessing = false);
-          _showErrorDialog(error);
-        }
-      },
+      paymentMethod: _selectedPaymentMethod!.toUpperCase(),
+      amount: widget.ticketData.fare,
+      timestamp: DateTime.now(),
+      status: PaymentStatus.success,
+      routeName: widget.ticketData.routeName,
+      busId: widget.ticketData.busId,
+      fromLocation: widget.ticketData.fromLocation,
+      toLocation: widget.ticketData.toLocation,
     );
-  }
 
-  void _showErrorDialog(String error) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.error_outline, color: Colors.red, size: 28),
-            const SizedBox(width: 12),
-            const Text('Payment Failed'),
-          ],
+    setState(() => _isProcessing = false);
+
+    // Navigate to success screen
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PaymentSuccessScreen(
+          transaction: completeTransaction,
+          ticketData: widget.ticketData,
         ),
-        content: Text(error),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back to scanner
-            },
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              _handlePayment(); // Retry payment
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryYellow,
-              foregroundColor: Colors.black,
-            ),
-            child: const Text('Retry'),
-          ),
-        ],
       ),
     );
   }

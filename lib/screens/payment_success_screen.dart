@@ -39,8 +39,8 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
           MaterialPageRoute(
             builder: (context) => TicketDetailsScreen(
               ticketId: widget.transaction.transactionId,
-              paymentTransactionId: widget.transaction.razorpayPaymentId,
-              paymentMethod: 'RAZORPAY',
+              paymentTransactionId: widget.transaction.transactionId,
+              paymentMethod: widget.transaction.paymentMethod,
               paymentTimestamp: widget.transaction.timestamp,
             ),
           ),
@@ -139,15 +139,14 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                       const Divider(height: 24),
                       _buildDetailRow(
                         'Transaction ID',
-                        widget.transaction.razorpayPaymentId ??
-                            widget.transaction.transactionId,
+                        widget.transaction.transactionId,
                         Icons.receipt_long,
                         theme,
                       ),
                       const Divider(height: 24),
                       _buildDetailRow(
                         'Payment Method',
-                        'Razorpay',
+                        widget.transaction.paymentMethod,
                         Icons.payment,
                         theme,
                       ),

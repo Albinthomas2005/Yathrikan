@@ -214,11 +214,11 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15),
                             borderSide: BorderSide(
-                                color: Colors.grey.withOpacity(0.2))),
+                                color: Colors.grey.withValues(alpha: 0.2))),
                         enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15),
                             borderSide: BorderSide(
-                                color: Colors.grey.withOpacity(0.2))),
+                                color: Colors.grey.withValues(alpha: 0.2))),
                         focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15),
                             borderSide: const BorderSide(
@@ -239,14 +239,14 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                   color: const Color(0xFF2C2F33),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                      color: AppColors.primaryYellow.withOpacity(0.3)),
+                      color: AppColors.primaryYellow.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryYellow.withOpacity(0.2),
+                        color: AppColors.primaryYellow.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.directions_bus,
@@ -290,7 +290,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF111418),
                 borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
@@ -330,7 +330,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF111418),
                 borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
               ),
               child: TextField(
                 controller: _descController,
@@ -375,7 +375,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                         color: const Color(0xFF111418),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.grey.withOpacity(0.3),
+                          color: Colors.grey.withValues(alpha: 0.3),
                           style: BorderStyle.solid,
                         ),
                       ),
@@ -484,7 +484,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                     ),
                   );
                   Future.delayed(const Duration(seconds: 1), () {
-                    if (mounted) Navigator.pop(context);
+                    if (context.mounted) Navigator.pop(context);
                   });
                 },
                 style: ElevatedButton.styleFrom(

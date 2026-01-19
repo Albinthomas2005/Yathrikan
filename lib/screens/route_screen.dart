@@ -8,7 +8,6 @@ import 'dart:io';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/constants.dart';
-import '../utils/app_localizations.dart';
 import '../utils/profile_provider.dart';
 import '../models/route_model.dart';
 import '../services/bus_location_service.dart';
@@ -258,7 +257,6 @@ class _RouteScreenState extends State<RouteScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 

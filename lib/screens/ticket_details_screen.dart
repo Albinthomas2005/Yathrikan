@@ -389,8 +389,8 @@ class TicketDetailsScreen extends StatelessWidget {
                               child: Container(
                                 height: 2,
                                 margin: const EdgeInsets.only(bottom: 32),
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
+                                decoration: const BoxDecoration(
+                                  gradient: LinearGradient(
                                     colors: [
                                       Color(0xFF00A8A8),
                                       Color(0xFF1E3A5F)
@@ -550,7 +550,7 @@ class TicketDetailsScreen extends StatelessWidget {
                           color: AppColors.primaryYellow.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.info_outline,
                           color: AppColors.primaryYellow,
                           size: 20,

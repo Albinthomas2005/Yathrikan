@@ -119,7 +119,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withValues(alpha: 0.1),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -276,11 +276,11 @@ class _SignupScreenState extends State<SignupScreen> {
                                   setState(() => _isLoading = true);
                                   await authService.signInWithGoogle();
 
-                                  if (!mounted) return;
+                                  if (!context.mounted) return;
                                   Navigator.pushNamedAndRemoveUntil(
                                       context, '/home', (route) => false);
                                 } catch (e) {
-                                  if (!mounted) return;
+                                  if (!context.mounted) return;
 
                                   setState(() => _isLoading = false);
                                   AnimatedNotification.showError(context,

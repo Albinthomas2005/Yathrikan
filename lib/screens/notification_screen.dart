@@ -66,7 +66,6 @@ class NotificationScreen extends StatelessWidget {
   Widget _buildNotificationItem(
       BuildContext context, Map<String, dynamic> notif, int index) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 15),

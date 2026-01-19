@@ -75,7 +75,8 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   Future<void> _getCurrentLocation() async {
     try {
       Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+          locationSettings:
+              const LocationSettings(accuracy: LocationAccuracy.high));
 
       String placeName = "Unknown Location";
       try {
@@ -267,7 +268,8 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
                                                   permission = await Geolocator
                                                       .requestPermission();
                                                   if (permission ==
-                                                      LocationPermission.denied) {
+                                                      LocationPermission
+                                                          .denied) {
                                                     return;
                                                   }
                                                 }

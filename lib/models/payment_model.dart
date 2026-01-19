@@ -11,13 +11,12 @@ enum PaymentStatus {
 /// Payment transaction model
 class PaymentTransaction {
   final String transactionId;
-  final String paymentMethod; // 'RAZORPAY'
+  final String paymentMethod;
   final double amount;
   final DateTime timestamp;
   final PaymentStatus status;
-  final String? razorpayPaymentId;
-  final String? razorpayOrderId;
-  final String? razorpaySignature;
+  // Razorpay fields removed
+
   final String? errorMessage;
 
   // Bus/Route information
@@ -32,9 +31,6 @@ class PaymentTransaction {
     required this.amount,
     required this.timestamp,
     required this.status,
-    this.razorpayPaymentId,
-    this.razorpayOrderId,
-    this.razorpaySignature,
     this.errorMessage,
     required this.routeName,
     required this.busId,
@@ -56,9 +52,6 @@ class PaymentTransaction {
     double? amount,
     DateTime? timestamp,
     PaymentStatus? status,
-    String? razorpayPaymentId,
-    String? razorpayOrderId,
-    String? razorpaySignature,
     String? errorMessage,
     String? routeName,
     String? busId,
@@ -71,9 +64,6 @@ class PaymentTransaction {
       amount: amount ?? this.amount,
       timestamp: timestamp ?? this.timestamp,
       status: status ?? this.status,
-      razorpayPaymentId: razorpayPaymentId ?? this.razorpayPaymentId,
-      razorpayOrderId: razorpayOrderId ?? this.razorpayOrderId,
-      razorpaySignature: razorpaySignature ?? this.razorpaySignature,
       errorMessage: errorMessage ?? this.errorMessage,
       routeName: routeName ?? this.routeName,
       busId: busId ?? this.busId,
@@ -90,9 +80,6 @@ class PaymentTransaction {
       'amount': amount,
       'timestamp': timestamp.toIso8601String(),
       'status': status.toString(),
-      'razorpayPaymentId': razorpayPaymentId,
-      'razorpayOrderId': razorpayOrderId,
-      'razorpaySignature': razorpaySignature,
       'errorMessage': errorMessage,
       'routeName': routeName,
       'busId': busId,
