@@ -11,6 +11,7 @@ class LiveBus {
   double headingDeg;
   final DateTime lastUpdated;
   final String status;
+  final int etaMin; // Newly added field
 
   // New fields for waypoint-based movement
   RoutePath? routePath;
@@ -26,6 +27,7 @@ class LiveBus {
     required this.headingDeg,
     required this.lastUpdated,
     required this.status,
+    this.etaMin = 0, // Default to 0 if not provided
     this.routePath,
     this.currentWaypointIndex = 0,
     this.progressInSegment = 0.0,
@@ -41,6 +43,7 @@ class LiveBus {
       headingDeg: (json['headingDeg'] as num).toDouble(),
       lastUpdated: DateTime.parse(json['lastUpdated'] as String),
       status: json['status'] as String,
+      etaMin: json['etaMin'] != null ? (json['etaMin'] as num).toInt() : 0,
     );
   }
 
@@ -54,6 +57,7 @@ class LiveBus {
       'headingDeg': headingDeg,
       'lastUpdated': lastUpdated.toIso8601String(),
       'status': status,
+      'etaMin': etaMin,
     };
   }
 
@@ -155,6 +159,7 @@ class LiveBus {
       headingDeg: newHeading,
       lastUpdated: DateTime.now(),
       status: status,
+      etaMin: etaMin, // Persist ETA
       routePath: routePath,
       currentWaypointIndex: newWaypointIndex,
       progressInSegment: newProgress,
@@ -198,6 +203,7 @@ class LiveBus {
       headingDeg: headingDeg,
       lastUpdated: DateTime.now(),
       status: status,
+      etaMin: etaMin, // Persist ETA
       routePath: routePath,
       currentWaypointIndex: currentWaypointIndex,
       progressInSegment: progressInSegment,
@@ -229,6 +235,7 @@ class LiveBus {
     double? headingDeg,
     DateTime? lastUpdated,
     String? status,
+    int? etaMin,
     RoutePath? routePath,
     int? currentWaypointIndex,
     double? progressInSegment,
@@ -242,6 +249,7 @@ class LiveBus {
       headingDeg: headingDeg ?? this.headingDeg,
       lastUpdated: lastUpdated ?? this.lastUpdated,
       status: status ?? this.status,
+      etaMin: etaMin ?? this.etaMin,
       routePath: routePath ?? this.routePath,
       currentWaypointIndex: currentWaypointIndex ?? this.currentWaypointIndex,
       progressInSegment: progressInSegment ?? this.progressInSegment,

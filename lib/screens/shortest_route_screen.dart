@@ -11,33 +11,51 @@ import '../models/route_path_model.dart';
 import '../services/osrm_routing_service.dart';
 import '../services/notification_service.dart';
 import '../utils/app_localizations.dart';
+import '../services/bus_location_service.dart';
+import 'dart:convert';
+import '../models/live_bus_model.dart';
+import '../models/route_history_item.dart';
+import '../utils/string_utils.dart';
+import '../data/kerala_places.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BusOption {
   final String id;
   final String name;
   final String type; // KSRTC, Private, AC
-  final String time;
+  final String time; // Display time string
+  final DateTime departureTime; // Actual time for sorting
   final String duration;
   final double price;
   final int seatsLeft;
   final String origin;
   final String destination;
+  final String arrivalTimeAtOrigin;
+  final String arrivalTimeAtDestination;
+  final LiveBus? liveBusData;
 
   BusOption({
     required this.id,
     required this.name,
     required this.type,
     required this.time,
+    required this.departureTime,
     required this.duration,
     required this.price,
     required this.seatsLeft,
     required this.origin,
     required this.destination,
+    required this.arrivalTimeAtOrigin,
+    required this.arrivalTimeAtDestination,
+    this.liveBusData,
   });
 }
 
+
+
 class ShortestRouteScreen extends StatefulWidget {
-  const ShortestRouteScreen({super.key});
+  final String? initialDestination;
+  const ShortestRouteScreen({super.key, this.initialDestination});
 
   @override
   State<ShortestRouteScreen> createState() => _ShortestRouteScreenState();
@@ -45,7 +63,92 @@ class ShortestRouteScreen extends StatefulWidget {
 
 class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   final TextEditingController _fromController = TextEditingController();
-  final TextEditingController _toController = TextEditingController();
+  late final TextEditingController _toController;
+
+  List<RouteHistoryItem> _recentRoutes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _toController = TextEditingController(text: widget.initialDestination ?? '');
+    _checkLocationPermission();
+    _notificationService.initialize();
+    _notificationService.requestPermissions();
+    BusLocationService().initialize();
+    _loadRecentRoutes(); // Load history (Restored)
+    
+    // Auto-search logic
+    _getCurrentLocation().then((_) {
+      // If we have a destination from Chatbot
+      if (widget.initialDestination != null && widget.initialDestination!.isNotEmpty) {
+        if (mounted) {
+           // If 'From' is still empty but we have location, set it to "Current Location"
+           if (_fromController.text.isEmpty) {
+              _fromController.text = "Current Location";
+           }
+           
+           // Trigger search if we have both fields (even if From is "Current Location")
+           if (_fromController.text.isNotEmpty) {
+              _handleFindRoute();
+           }
+        }
+      }
+    });
+  }
+
+  Future<void> _loadRecentRoutes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final List<String> jsonList = prefs.getStringList('recent_routes_v2') ?? [];
+    
+    if (mounted) {
+      setState(() {
+        _recentRoutes = jsonList
+            .map((e) => RouteHistoryItem.fromJson(jsonDecode(e)))
+            .toList();
+      });
+    }
+  }
+
+  Future<void> _saveRecentRoute(String origin, String destination) async {
+    if (origin.isEmpty || destination.isEmpty) return;
+    
+    final prefs = await SharedPreferences.getInstance();
+    final List<String> currentJsonList = prefs.getStringList('recent_routes_v2') ?? [];
+    
+    // Convert to objects
+    List<RouteHistoryItem> items = currentJsonList
+        .map((e) => RouteHistoryItem.fromJson(jsonDecode(e)))
+        .toList();
+
+    // Remove duplicates (same origin & dest)
+    items.removeWhere((item) => 
+        item.origin.toLowerCase() == origin.toLowerCase() && 
+        item.destination.toLowerCase() == destination.toLowerCase());
+    
+    // Add to top
+    items.insert(0, RouteHistoryItem(
+      origin: origin,
+      destination: destination,
+      lastViewed: DateTime.now(),
+    ));
+    
+    // Keep max 5
+    if (items.length > 5) items.removeLast();
+    
+    // Save back
+    await prefs.setStringList('recent_routes_v2', 
+        items.map((e) => jsonEncode(e.toJson())).toList());
+
+    // Update UI immediately
+    if (mounted) {
+      setState(() {
+        _recentRoutes = items;
+      });
+    }
+  }
+
+
+
   final MapController _mapController = MapController();
   final NotificationService _notificationService = NotificationService();
 
@@ -67,36 +170,44 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   LatLng _currentLocation = const LatLng(9.9312, 76.2673);
   // _isLoadingLocation removed
 
-  // Mock Data for Autocomplete
-  final List<String> _keralaLocations = [
-    'Aluva',
-    'Angamaly',
-    'Chalakudy',
-    'Edappally',
-    'Ernakulam North',
-    'Ernakulam South',
-    'Fort Kochi',
-    'Kakkanad',
-    'Kaloor',
-    'Kalamassery',
-    'Kottayam',
-    'Kozhikode',
-    'Lulu Mall',
-    'Marine Drive',
-    'MG Road',
-    'Palarivattom',
-    'Thiruvananthapuram',
-    'Thrissur',
-    'Vyttila',
-  ];
+  // Static locations for fallback
+  final Map<String, LatLng> _staticLocations = {
+    'Aluva': const LatLng(10.1076, 76.3516),
+    'Angamaly': const LatLng(10.1963, 76.3860),
+    'Chalakudy': const LatLng(10.3073, 76.3330),
+    'Edappally': const LatLng(10.0261, 76.3086),
+    'Ernakulam North': const LatLng(9.9894, 76.2872),
+    'Ernakulam South': const LatLng(9.9696, 76.2917),
+    'Fort Kochi': const LatLng(9.9658, 76.2421),
+    'Kakkanad': const LatLng(10.0159, 76.3419),
+    'Kaloor': const LatLng(9.9934, 76.2991),
+    'Kalamassery': const LatLng(10.0573, 76.3149),
+    'Kottayam': const LatLng(9.5916, 76.5222),
+    'Kozhikode': const LatLng(11.2588, 75.7804),
+    'Lulu Mall': const LatLng(10.0271, 76.3079),
+    'Marine Drive': const LatLng(9.9774, 76.2751),
+    'MG Road': const LatLng(9.9663, 76.2879),
+    'Palarivattom': const LatLng(10.0039, 76.3060),
+    'Thiruvananthapuram': const LatLng(8.5241, 76.9366),
+    'Thrissur': const LatLng(10.5276, 76.2144),
+    'Vyttila': const LatLng(9.9656, 76.3190),
+    'Changanassery': const LatLng(9.4442, 76.5413),
+    'Pala': const LatLng(9.7086, 76.6830),
+    'Kumily': const LatLng(9.6083, 77.1691),
+    'Kattappana': const LatLng(9.7430, 77.0784),
+    'Mundakayam': const LatLng(9.6213, 76.8566),
+    'Erumely': const LatLng(9.4820, 76.8797),
+    'Pathanamthitta': const LatLng(9.2647, 76.7872),
+    'Peermade': const LatLng(9.5772, 76.9694),
+    'Thodupuzha': const LatLng(9.8953, 76.7136),
+  };
 
-  @override
-  void initState() {
-    super.initState();
-    _checkLocationPermission();
-    _notificationService.initialize();
-    _notificationService.requestPermissions();
-  }
+
+
+  // Using KeralaPlaces.all instead of local list
+  List<String> get _keralaLocations => KeralaPlaces.all;
+
+
 
   @override
   void dispose() {
@@ -136,10 +247,9 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
 
       Position position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.medium, // balanced -> medium
-          timeLimit: Duration(seconds: 10),
+          accuracy: LocationAccuracy.low, // balanced -> low for better success rate
         ),
-      );
+      ).timeout(const Duration(seconds: 20));
 
       String placeName = "Unknown Location";
       try {
@@ -181,8 +291,10 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
           _fromController.text = ""; // Clear "Locating..." on error
         });
 
-        String errorMessage = "Could not get location";
-        if (e.toString().contains("Location services are disabled")) {
+        String errorMessage = "Could not get location. Please try again.";
+        if (e is TimeoutException) {
+          errorMessage = "Location request timed out. Please check your GPS signal.";
+        } else if (e.toString().contains("Location services are disabled")) {
           errorMessage = "Location services are disabled. Please enable them.";
         } else if (e.toString().contains("denied")) {
           errorMessage = "Location permission denied.";
@@ -202,104 +314,90 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
     });
   }
 
-  List<BusOption> _generateMockBuses() {
-    final Random random = Random();
-    final List<BusOption> buses = [];
-    // User requested only Private buses for Mundakayam - Koovalpaly route
-    const String type = 'Private';
+  List<String> _getAllKnownLocations() {
+    final allBuses = BusLocationService().buses;
+    final Set<String> knownLocations = {};
+    for (var bus in allBuses) {
+      if (bus.routeName.contains(' - ')) {
+        final parts = bus.routeName.split(' - ');
+        if (parts.length >= 2) {
+          knownLocations.add(parts[0].trim());
+          knownLocations.add(parts[1].trim());
+        }
+      }
+    }
+    knownLocations.addAll(_staticLocations.keys);
+    // Add expansive list
+    knownLocations.addAll(KeralaPlaces.all);
+    return knownLocations.toList();
+  }
 
-    // Diverse Private Bus Names
-    final List<String> busNames = [
-      'St. Marys',
-      'Blue Bird',
-      'Karthika',
-      'Devi Travels',
-      'Ave Maria',
-      'St. Jude',
-      'Royal Cruisers',
-      'Angel Wings',
-      'City Fast',
-      'Highrange',
-      'Pala Flyers',
-      'Ranni Express',
-      'Pathanamthitta Wheels',
-      'Erumely Fast',
-      'Kanjirappally Spl',
-      'Sree Murugan',
-      'Vettukallumkuzhi',
-      'Holy Cross',
-      'Moonlight',
-      'Sunrise',
-      'Kerala Roadways'
-    ];
+  List<BusOption> _searchRealBuses(String from, String to, {bool strict = true}) {
+    // 1. Get real buses from service
+    final allBuses = BusLocationService().buses;
+    final List<BusOption> matchedBuses = [];
+    final now = DateTime.now();
+    
+    final searchFrom = from.toLowerCase().trim();
+    final searchTo = to.toLowerCase().trim();
 
-    // Origins and Destinations to simulate passing buses
-    final List<String> origins = [
-      'Kottayam',
-      'Changanassery',
-      'Pala',
-      'Ernakulam',
-      'Aluva',
-      'Thodupuzha'
-    ];
-    final List<String> destinations = [
-      'Kumily',
-      'Kattappana',
-      'Mundakayam',
-      'Erumely',
-      'Pathanamthitta',
-      'Peermade'
-    ];
+    for (var liveBus in allBuses) {
+      final routeName = liveBus.routeName.toLowerCase();
 
-    for (int i = 0; i < 100; i++) {
-      String baseName = busNames[random.nextInt(busNames.length)];
-
-      // Pick random origin and destination
-      String busOrigin = origins[random.nextInt(origins.length)];
-      String busDest = destinations[random.nextInt(destinations.length)];
-
-      // Ensure they are different
-      while (busOrigin == busDest) {
-        busDest = destinations[random.nextInt(destinations.length)];
+      bool matches = false;
+      if (strict) {
+        // STRICT MODE: Route name must contain both locations
+        matches = routeName.contains(searchFrom) && routeName.contains(searchTo);
+      } else {
+        // PARTIAL MODE: Matches either Origin OR Destination
+        // Useful for showing "Buses from X" or "Buses to Y"
+        if (searchFrom.isNotEmpty && routeName.contains(searchFrom)) matches = true;
+        if (searchTo.isNotEmpty && routeName.contains(searchTo)) matches = true;
       }
 
-      // Format: "Name (Origin - Dest)"
-      // e.g., "St. Marys (Kottayam - Kumily)"
-      String name = "$baseName ($busOrigin - $busDest)";
+      if (matches) {
+        // Create a display-friendly object
+        
+        // Depart in (busId hash % 30) minutes to look realistic
+        int offsetMinutes = (liveBus.busId.hashCode % 30) + 5; 
+        DateTime departureTime = now.add(Duration(minutes: offsetMinutes));
+        
+        // Calculate duration (approx 45m to 2h)
+        int durationMinutes = 45 + (liveBus.busId.hashCode % 90);
+        DateTime destinationTime = departureTime.add(Duration(minutes: durationMinutes));
+        String durationStr = "${durationMinutes ~/ 60}h ${durationMinutes % 60}m";
+        
+        int hour = departureTime.hour;
+        String amPm = hour >= 12 ? 'PM' : 'AM';
+        int displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+        String originTimeStr = "$displayHour:${departureTime.minute.toString().padLeft(2, '0')} $amPm";
+        
+        int destHour = destinationTime.hour;
+        String destAmPm = destHour >= 12 ? 'PM' : 'AM';
+        int destDisplayHour = destHour > 12 ? destHour - 12 : (destHour == 0 ? 12 : destHour);
+        String destTimeStr = "$destDisplayHour:${destinationTime.minute.toString().padLeft(2, '0')} $destAmPm";
 
-      // Ticket rate 13 - 35
-      double price = 13.0 + random.nextInt(23);
-
-      // Random Time
-      int hour = 5 + random.nextInt(18); // 5 AM to 11 PM
-      int minute = random.nextInt(60);
-      String amPm = hour >= 12 ? 'PM' : 'AM';
-      int displayHour = hour > 12 ? hour - 12 : hour;
-      String time = "$displayHour:${minute.toString().padLeft(2, '0')} $amPm";
-
-      // Random Duration (Short route: Mundakayam to Koovalpaly)
-      int durMin = 20 + random.nextInt(30); // 20 to 50 mins
-      String duration = "${durMin}m";
-
-      buses.add(BusOption(
-        id: i.toString(),
-        name: name,
-        type: type,
-        time: time,
-        duration: duration,
-        price: price,
-        seatsLeft: 1 + random.nextInt(40), // Private buses usually small/medium
-        origin: busOrigin,
-        destination: busDest,
-      ));
+        matchedBuses.add(BusOption(
+          id: liveBus.busId,
+          name: "${liveBus.routeName} (${liveBus.busId})",
+          type: "Live Bus", // Showing it's real
+          time: originTimeStr,
+          departureTime: departureTime,
+          duration: durationStr, // Dynamic
+          price: 20.0 + (liveBus.busId.hashCode % 20), // Placeholder price
+          seatsLeft: 10 + (liveBus.busId.hashCode % 30), // Placeholder seats
+          origin: from, // Used for routing
+          destination: to, // Used for routing
+          arrivalTimeAtOrigin: originTimeStr,
+          arrivalTimeAtDestination: destTimeStr,
+          liveBusData: liveBus,
+        ));
+      }
     }
 
-    // Sort by time
-    buses.sort((a, b) {
-      return a.time.compareTo(b.time);
-    });
-
-    return buses;
+    // Sort by departure time
+    matchedBuses.sort((a, b) => a.departureTime.compareTo(b.departureTime));
+    return matchedBuses;
   }
 
   Future<void> _handleFindRoute() async {
@@ -320,45 +418,62 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
     });
 
     try {
-      // 1. Geocode "From" and "To" locations
-      List<Location> fromLocations =
-          await locationFromAddress("${_fromController.text}, Kerala");
-      List<Location> toLocations =
-          await locationFromAddress("${_toController.text}, Kerala");
-
-      if (fromLocations.isEmpty || toLocations.isEmpty) {
-        throw Exception("Could not find locations");
+      // 1. Auto-correction Logic (Visual)
+      // Get all known locations
+      final candidates = _getAllKnownLocations();
+      
+      // Find matches - skip for "Current Location"
+      String? correctedFrom;
+      if (!["current location", "my location"].contains(_fromController.text.toLowerCase().trim())) {
+         correctedFrom = StringUtils.findClosestMatch(_fromController.text.trim(), candidates);
+      }
+      
+      final correctedTo = StringUtils.findClosestMatch(_toController.text.trim(), candidates);
+      
+      // Update UI if corrections found
+      if (correctedFrom != null && correctedFrom.toLowerCase() != _fromController.text.toLowerCase().trim()) {
+        _fromController.text = correctedFrom;
+      }
+      if (correctedTo != null && correctedTo.toLowerCase() != _toController.text.toLowerCase().trim()) {
+        _toController.text = correctedTo;
       }
 
-      LatLng start =
-          LatLng(fromLocations.first.latitude, fromLocations.first.longitude);
-      LatLng end =
-          LatLng(toLocations.first.latitude, toLocations.first.longitude);
-
-      // 2. Fetch Route from OSRM
-      final routePath = await OSRMRoutingService.fetchRoute(
-        start: start,
-        end: end,
-        routeName: "${_fromController.text} to ${_toController.text}",
-      );
-
-      if (routePath == null) {
-        throw Exception("Could not fetch route");
+      // 2. Search for Real Buses
+      // Pass actual coordinates if "Current Location" to avoid geocoding issues in search logic if we were using it there
+      // But _searchRealBuses currently uses string matching. 
+      // We should probably rely on the names for now as per current logic, 
+      // OR update _searchRealBuses to handle coordinates (which is complex).
+      // For now, let's keep the bus search string-based but ensure we don't fail geocoding for the MAP route later.
+      
+      var buses = _searchRealBuses(_fromController.text, _toController.text);
+      
+      if (buses.isEmpty) {
+        // FALLBACK: Try partial match
+        // If we can't find direct route, check for ANY buses that go through these places
+        // This answers "buses have to list not have to there is no bus like that"
+        final partialBuses = _searchRealBuses(_fromController.text, _toController.text, strict: false);
+        
+        if (partialBuses.isNotEmpty) {
+           buses = partialBuses;
+           if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("No direct buses found. Showing buses passing through these locations.")),
+              );
+           }
+        } else {
+           throw Exception("No buses found matching your search.");
+        }
       }
 
       setState(() {
-        _currentRoutePath = routePath;
         _isRouteLoading = false;
-        // Generate mock buses for this route
-        _availableBuses = _generateMockBuses();
-        _showBusList = true; // Show the list instead of map directly
+        _availableBuses = buses;
+        _showBusList = true; // Show the list
       });
+      
+      // Save successful search (Advanced)
+      _saveRecentRoute(_fromController.text.trim(), _toController.text.trim());
 
-      // Fit bounds
-      _fitBounds(routePath.waypoints);
-
-      // 3. Start Simulation (Moved to _selectBus)
-      // _startBusSimulation();
     } catch (e) {
       debugPrint("Error finding route: $e");
       setState(() {
@@ -367,10 +482,35 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: ${e.toString()}")),
+          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
         );
       }
     }
+  }
+
+  /// Helper to get coordinates with fallback
+  Future<LatLng?> _getCoordinates(String placeName) async {
+    // 1. Check static map first (Case insensitive check)
+    final key = _staticLocations.keys.firstWhere(
+      (k) => k.toLowerCase() == placeName.toLowerCase(),
+      orElse: () => '',
+    );
+    
+    if (key.isNotEmpty) {
+      return _staticLocations[key];
+    }
+
+    // 2. Try Geocoding
+    try {
+      List<Location> locations = await locationFromAddress("$placeName, Kerala");
+      if (locations.isNotEmpty) {
+        return LatLng(locations.first.latitude, locations.first.longitude);
+      }
+    } catch (e) {
+      debugPrint("Geocoding failed for $placeName: $e");
+    }
+    
+    return null;
   }
 
   void _fitBounds(List<LatLng> points) {
@@ -394,22 +534,42 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
     });
 
     try {
-      // 1. Geocode Bus Origin and Destination
-      // Append ", Kerala" for better accuracy
-      List<Location> originLocs =
-          await locationFromAddress("${bus.origin}, Kerala");
-      List<Location> destLocs =
-          await locationFromAddress("${bus.destination}, Kerala");
+      // Use LiveBus data if available
+      if (bus.liveBusData != null && bus.liveBusData!.routePath != null) {
+         // If the bus already has a path, use it!
+         final path = bus.liveBusData!.routePath!;
+         
+         setState(() {
+            _currentRoutePath = path;
+            _isRouteLoading = false;
+            // Use current live location
+            _busLocation = LatLng(bus.liveBusData!.lat, bus.liveBusData!.lon);
+            // Find closest waypoint index to start tracking
+             _currentWaypointIndex = bus.liveBusData!.currentWaypointIndex;
+            _hasNotified = false;
+         });
+         
+         WidgetsBinding.instance.addPostFrameCallback((_) {
+            _fitBounds(path.waypoints);
+            _startBusSimulation();
+         });
+         return;
+      }
+    
+      // Fallback if no pre-calculated path: Fetch new one
+      LatLng? start;
+      if (bus.origin.toLowerCase() == "current location" || bus.origin.toLowerCase() == "my location") {
+         start = _currentLocation;
+      } else {
+         start = await _getCoordinates(bus.origin);
+      }
+      
+      LatLng? end = await _getCoordinates(bus.destination);
 
-      if (originLocs.isEmpty || destLocs.isEmpty) {
+      if (start == null || end == null) {
         throw Exception("Could not locate bus route points");
       }
 
-      LatLng start =
-          LatLng(originLocs.first.latitude, originLocs.first.longitude);
-      LatLng end = LatLng(destLocs.first.latitude, destLocs.first.longitude);
-
-      // 2. Fetch Route for the Bus
       final routePath = await OSRMRoutingService.fetchRoute(
         start: start,
         end: end,
@@ -422,14 +582,11 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
         setState(() {
           _currentRoutePath = routePath;
           _isRouteLoading = false;
-
-          // Reset simulation for new route
           _busLocation = _currentRoutePath!.waypoints.first;
           _currentWaypointIndex = 0;
           _hasNotified = false;
         });
 
-        // Fit bounds and start simulation
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_currentRoutePath != null) {
             _fitBounds(_currentRoutePath!.waypoints);
@@ -479,27 +636,26 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   void _updateETA() {
     if (_currentRoutePath == null || _busLocation == null) return;
 
-    // Approximate if getDistanceToWaypoint isn't perfect for current index logic,
-    // but calculating distance from current index to end is better:
+    // Calculate distance from current bus location to end
     double distToEnd = 0;
-    for (int i = _currentWaypointIndex;
-        i < _currentRoutePath!.waypoints.length - 1;
-        i++) {
-      distToEnd += const Distance().as(LengthUnit.Meter,
+    // Optimization: Calculate from current index
+    for (int i = _currentWaypointIndex; i < _currentRoutePath!.waypoints.length - 1; i++) {
+       distToEnd += const Distance().as(LengthUnit.Meter,
           _currentRoutePath!.waypoints[i], _currentRoutePath!.waypoints[i + 1]);
     }
 
-    final minutes = (distToEnd / 666).round(); // 40km/h => 666m/min
+    // Bus speed ~40km/h => ~666 m/min
+    final totalMinutes = (distToEnd / 666).round();
 
     setState(() {
-      if (minutes < 1) {
-        _etaText = "Arriving now";
-      } else if (minutes > 60) {
-        final hours = minutes ~/ 60;
-        final mins = minutes % 60;
-        _etaText = "ETA: $hours" "h $mins" "m";
+      if (totalMinutes < 1) {
+        _etaText = "Arriving Now";
+      } else if (totalMinutes < 60) {
+        _etaText = "$totalMinutes min";
       } else {
-        _etaText = "ETA: $minutes min";
+        final hours = totalMinutes ~/ 60;
+        final mins = totalMinutes % 60;
+        _etaText = "${hours}h ${mins}m";
       }
     });
   }
@@ -509,12 +665,9 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
       return;
     }
 
-    // Calculate distance to destination (last waypoint)
     final destination = _currentRoutePath!.waypoints.last;
-    final distance =
-        const Distance().as(LengthUnit.Meter, _busLocation!, destination);
+    final distance = const Distance().as(LengthUnit.Meter, _busLocation!, destination);
 
-    // Notify if within 1000 meters
     if (distance < 1000) {
       _hasNotified = true;
       _notificationService.showNotification(
@@ -523,9 +676,25 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
         body: "Your bus is within 1km of ${_toController.text}. Get ready!",
       );
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text("Bus is arriving soon! Notification sent.")),
+        const SnackBar(content: Text("Bus is arriving soon! Notification sent.")),
       );
+    }
+  }
+
+  void _onBackPressed() {
+    if (_selectedBus != null) {
+      // Return to list view
+      setState(() {
+        _selectedBus = null;
+        _showBusList = true;
+        _simulationTimer?.cancel();
+        _currentRoutePath = null;
+      });
+    } else {
+      // Exit screen
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
     }
   }
 
@@ -535,14 +704,20 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+    return PopScope(
+      canPop: _selectedBus == null,
+      onPopInvokedWithResult: (didPop, result) {
+         if (didPop) return;
+         _onBackPressed();
+      },
+      child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: theme.iconTheme.color),
-          onPressed: () => Navigator.pop(context),
+          onPressed: _onBackPressed,
         ),
         title: Text(
           loc.translate('shortest_route'),
@@ -551,6 +726,51 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
         ),
         centerTitle: true,
       ),
+      bottomNavigationBar: _selectedBus == null
+          ? Container(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+              decoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isRouteLoading ? null : _handleFindRoute,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryYellow,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(CupertinoIcons.search, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          _isRouteLoading
+                              ? "Finding Route..."
+                              : loc.translate('find_route'),
+                          style: AppTextStyles.bodyBold.copyWith(fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -800,10 +1020,11 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 25),
+                ),
 
-              if (_showBusList) ...[
+                const SizedBox(height: 25),
+
+                if (_showBusList) ...[
                 Text("Select a Bus",
                     style: AppTextStyles.heading2.copyWith(
                         fontSize: 18,
@@ -855,11 +1076,33 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
                                           .copyWith(fontSize: 16),
                                     ),
                                     const SizedBox(height: 4),
-                                    Text(
-                                      "${bus.time} • ${bus.duration}",
-                                      style: TextStyle(
-                                          color: Colors.grey.shade600,
-                                          fontSize: 13),
+                                    // Calculate relative time
+                                    Builder(
+                                      builder: (context) {
+                                        final now = DateTime.now();
+                                        final diff = bus.departureTime.difference(now).inMinutes;
+                                        final isArrivingSoon = diff <= 15;
+                                        return Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "Arriving in $diff min  •  ${bus.arrivalTimeAtOrigin}",
+                                              style: TextStyle(
+                                                  color: isArrivingSoon ? Colors.green : Colors.blue,
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w800),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              "Reaches Dest: ${bus.arrivalTimeAtDestination}",
+                                              style: TextStyle(
+                                                  color: Colors.grey.shade600,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500),
+                                            ),
+                                          ],
+                                        );
+                                      }
                                     ),
                                   ],
                                 ),
@@ -923,7 +1166,7 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: Colors.black.withOpacity(0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -976,18 +1219,52 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
                                     child: const Icon(Icons.location_on,
                                         color: Colors.red, size: 40),
                                   ),
-                                // Bus Marker
-                                if (_busLocation != null)
-                                  Marker(
-                                    point: _busLocation!,
-                                    width: 50,
-                                    height: 50,
-                                    child: const Icon(
-                                      Icons.directions_bus,
-                                      color: AppColors.primaryYellow,
-                                      size: 45,
+                                  // Bus Marker - Enhanced
+                                  if (_busLocation != null)
+                                    Marker(
+                                      point: _busLocation!,
+                                      width: 60,
+                                      height: 60,
+                                      child: Stack(
+                                        alignment: Alignment.center,
+                                        children: [
+                                          Container(
+                                            width: 60,
+                                            height: 60,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white
+                                                  .withValues(alpha: 0.3),
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          Container(
+                                            width: 40,
+                                            height: 40,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withValues(alpha: 0.2),
+                                                  blurRadius: 6,
+                                                  offset: const Offset(0, 3),
+                                                ),
+                                              ],
+                                              border: Border.all(
+                                                color: AppColors.primaryYellow,
+                                                width: 2,
+                                              ),
+                                            ),
+                                            child: const Icon(
+                                              Icons.directions_bus,
+                                              color: Colors.black,
+                                              size: 24,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
                                 // Current Location Marker
                                 if (_currentRoutePath == null)
                                   Marker(
@@ -1028,27 +1305,82 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
                 const SizedBox(height: 25),
 
                 if (_selectedBus == null) ...[
-                  // Recent Places
-                  Text(loc.translate('recent_places'),
-                      style: AppTextStyles.heading2.copyWith(
-                          fontSize: 18,
-                          color: theme.textTheme.titleLarge?.color)),
-                  const SizedBox(height: 15),
+                  // 1. RECENT ROUTES (Restored)
+                  if (_recentRoutes.isNotEmpty) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Recent Routes", style: AppTextStyles.heading2),
+                         // Optional: Clear button
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    ..._recentRoutes.map((route) {
+                      final diff = DateTime.now().difference(route.lastViewed);
+                      String timeAgo;
+                      if (diff.inMinutes < 60) {
+                        timeAgo = "${diff.inMinutes} mins ago";
+                      } else if (diff.inHours < 24) {
+                        timeAgo = "${diff.inHours} hours ago";
+                      } else {
+                        timeAgo = "Yesterday";
+                      }
+                      
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12.0),
+                        child: GestureDetector(
+                          onTap: () {
+                             // Populate and search
+                             setState(() {
+                               _fromController.text = route.origin;
+                               _toController.text = route.destination;
+                             });
+                             _handleFindRoute();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: theme.brightness == Brightness.dark ? Colors.grey[800] : Colors.grey[100],
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.withValues(alpha: 0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(Icons.history, color: Colors.grey.shade500, size: 24),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "${route.origin} → ${route.destination}",
+                                        style: AppTextStyles.bodyBold.copyWith(fontSize: 16),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        "Last viewed $timeAgo",
+                                        style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(Icons.chevron_right, color: Colors.grey),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 25),
+                  ],
+               ],
 
-                  _buildRecentPlaceItem(
-                    context,
-                    icon: CupertinoIcons.clock,
-                    title: loc.translate('central_station'),
-                    subtitle: "Main Blvd, Downtown",
-                  ),
-                  const SizedBox(height: 10),
-                  _buildRecentPlaceItem(
-                    context,
-                    icon: CupertinoIcons.briefcase,
-                    title: loc.translate('office_hq'),
-                    subtitle: "Tech Park, Sector 4",
-                  ),
-                ],
 
                 if (_selectedBus != null)
                   Padding(
@@ -1064,114 +1396,44 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text("On Board: ${_selectedBus!.name}",
-                                  style: AppTextStyles.bodyBold),
-                              Text("To: ${_toController.text}",
-                                  style: const TextStyle(color: Colors.grey)),
-                            ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "On Board: ${_selectedBus!.name}",
+                                  style: AppTextStyles.bodyBold,
+                                  overflow: TextOverflow.ellipsis, // Fix overflow
+                                  maxLines: 1,
+                                ),
+                                Text(
+                                  "To: ${_toController.text}",
+                                  style: const TextStyle(color: Colors.grey),
+                                  overflow: TextOverflow.ellipsis, // Fix overflow
+                                  maxLines: 1,
+                                ),
+                              ],
+                            ),
                           ),
                           Text(_etaText, style: AppTextStyles.heading2),
                         ],
                       ),
-                    ),
                   ),
+                ),
 
                 const SizedBox(height: 30),
 
-                if (_selectedBus == null)
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _isRouteLoading ? null : _handleFindRoute,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryYellow,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(CupertinoIcons.search, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            _isRouteLoading
-                                ? "Finding Route..."
-                                : loc.translate('find_route'),
-                            style:
-                                AppTextStyles.bodyBold.copyWith(fontSize: 16),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: 20),
 
                 const SizedBox(height: 20),
               ],
             ],
           ),
         ),
-      ),
-    );
+    ),
+    ),
+  );
   }
 
-  Widget _buildRecentPlaceItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: theme.brightness == Brightness.dark
-                  ? Colors.grey[800]
-                  : const Color(0xFFF5F5F5),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: Colors.grey.shade700, size: 20),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: theme.textTheme.bodyLarge?.color,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: Colors.grey.shade500,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(Icons.chevron_right, color: Colors.grey.shade400),
-        ],
-      ),
-    );
-  }
+
 }

@@ -95,10 +95,11 @@ class _LoginScreenState extends State<LoginScreen> {
           setState(() => _isLoading = false);
 
           // Show specific error message with animated notification
+          final cleanMessage = e.toString().replaceAll('Exception: ', '');
           AnimatedNotification.showError(
             context,
             title: 'Login Failed',
-            message: e.toString(),
+            message: cleanMessage,
             duration: const Duration(seconds: 4),
           );
         }
@@ -166,34 +167,38 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
       }
+
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
 
-        // Check if user cancelled the sign-in
         final errorMessage = e.toString();
-        if (errorMessage.contains('popup_closed') ||
-            errorMessage.contains('cancelled') ||
-            errorMessage.contains('canceled')) {
-          // User cancelled, don't show error
+        
+        // Use a simpler check for cancellation
+        if (errorMessage.contains('cancelled') ||
+            errorMessage.contains('canceled') || 
+            errorMessage.contains('popup_closed')) {
           return;
         }
 
-        // Check for People API error
-        if (errorMessage.contains('People API')) {
-          AnimatedNotification.showWarning(
+        // Show the detailed error message from the service
+        // Removing "Exception: " prefix if present for cleaner UI
+        final cleanMessage = errorMessage.replaceAll('Exception: ', '');
+        
+        if (cleanMessage.contains('Configuration Error')) {
+           // Show longer duration for configuration errors
+           AnimatedNotification.showError(
             context,
-            title: 'Setup Required',
-            message:
-                'Please enable People API in Google Cloud Console, then try again. Or use email/password sign-in.',
-            duration: const Duration(seconds: 6),
+            title: 'Configuration Error',
+            message: cleanMessage,
+            duration: const Duration(seconds: 10),
           );
         } else {
-          AnimatedNotification.showError(
+           AnimatedNotification.showError(
             context,
             title: 'Google Sign-In Failed',
-            message: errorMessage,
-            duration: const Duration(seconds: 4),
+            message: cleanMessage,
+            duration: const Duration(seconds: 5),
           );
         }
       }

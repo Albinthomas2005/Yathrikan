@@ -29,10 +29,23 @@ class BusLocationService {
     _isInitializing = true;
 
     // Add all 100 buses from the provided data
-    _buses.addAll(_get100BusesData());
+    final buses100 = _get100BusesData();
+    debugPrint('🚌 Loaded ${buses100.length} buses from _get100BusesData');
+    _buses.addAll(buses100);
+    
+    // Add new KVP buses
+    final kvpBuses = _getKVPBusesData();
+    debugPrint('🚌 Loaded ${kvpBuses.length} buses from _getKVPBusesData');
+    _buses.addAll(kvpBuses);
+    
+    debugPrint('🚌 Total buses initialized: ${_buses.length}');
 
     // Assign route paths to each bus (async operation)
     _assignRoutePaths();
+
+    // Broadcast initial bus positions immediately so they show on map
+    debugPrint('📡 Broadcasting ${_buses.length} buses to stream');
+    _busStreamController.add(List.from(_buses));
 
     // Start simulating movement immediately with fallback paths
     // Real OSRM routes will be loaded in the background
@@ -1173,6 +1186,650 @@ class BusLocationService {
       },
     ];
 
-    return busesJson.map((json) => LiveBus.fromJson(json)).toList();
+    // Using simple mapping similar to existing data
+    final random = Random();
+    return busesJson.map((json) {
+      return LiveBus(
+        busId: json['busId'] as String,
+        routeName: json['routeName'] as String,
+        lat: (json['lat'] as num).toDouble(),
+        lon: (json['lon'] as num).toDouble(),
+        speedKmph: (json['speedKmph'] as num).toDouble(),
+        headingDeg: (json['headingDeg'] as num).toDouble(),
+        lastUpdated: DateTime.parse(json['lastUpdated'] as String),
+        status: json['status'] as String,
+        etaMin: random.nextInt(50) + 5, // Random ETA between 5 and 55 mins
+      );
+    }).toList();
+  }
+
+  List<LiveBus> _getKVPBusesData() {
+    final busesJson = [
+      {
+        "busId": "KVP-001",
+        "routeName": "Koovappally - Kanjirappally",
+        "lat": 9.5241,
+        "lon": 76.7892,
+        "speedKmph": 36,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING"
+      },
+      {
+        "busId": "KVP-002",
+        "routeName": "Koovappally - Ponkunnam",
+        "lat": 9.5568,
+        "lon": 76.7493,
+        "speedKmph": 42,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING"
+      },
+      {
+        "busId": "KVP-003",
+        "routeName": "Koovappally - Erumely",
+        "lat": 9.4692,
+        "lon": 76.8421,
+        "speedKmph": 38,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING"
+      },
+      {
+        "busId": "KVP-004",
+        "routeName": "Koovappally - Mundakayam",
+        "lat": 9.5533,
+        "lon": 76.8894,
+        "speedKmph": 44,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING"
+      },
+      {
+        "busId": "KVP-005",
+        "routeName": "Koovappally - Pala",
+        "lat": 9.6412,
+        "lon": 76.6944,
+        "speedKmph": 48,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING"
+      },
+      {
+        "busId": "KVP-006",
+        "routeName": "Koovappally - Kottayam",
+        "lat": 9.5961,
+        "lon": 76.6277,
+        "speedKmph": 52,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING"
+      },
+      {
+        "busId": "KVP-007",
+        "routeName": "Koovappally - Changanassery",
+        "lat": 9.5114,
+        "lon": 76.5992,
+        "speedKmph": 46,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING"
+      },
+      {
+        "busId": "KVP-008",
+        "routeName": "Koovappally - Thiruvalla",
+        "lat": 9.3819,
+        "lon": 76.5744,
+        "speedKmph": 55,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING"
+      },
+      {
+        "busId": "KVP-009",
+        "routeName": "Koovappally - Pathanamthitta",
+        "lat": 9.2741,
+        "lon": 76.7803,
+        "speedKmph": 50,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING"
+      },
+      {
+        "busId": "KVP-010",
+        "routeName": "Koovappally - Erattupetta",
+        "lat": 9.6844,
+        "lon": 76.7812,
+        "speedKmph": 47,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING"
+      },
+      {
+        "busId": "KVP-011",
+        "routeName": "Koovappally - Ettumanoor",
+        "lat": 9.6623,
+        "lon": 76.5622,
+        "speedKmph": 53,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING"
+      },
+      {
+        "busId": "KVP-012",
+        "routeName": "Koovappally - Vaikom",
+        "lat": 9.7342,
+        "lon": 76.3964,
+        "speedKmph": 58,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING"
+      },
+      {
+        "busId": "KVP-013",
+        "routeName": "Koovappally - Kumarakom",
+        "lat": 9.6212,
+        "lon": 76.4321,
+        "speedKmph": 49,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING"
+      },
+      {
+        "busId": "KVP-014",
+        "routeName": "Koovappally - Alappuzha",
+        "lat": 9.4988,
+        "lon": 76.3344,
+        "speedKmph": 60,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING"
+      },
+      {
+        "busId": "KVP-015",
+        "routeName": "Koovappally - Punalur",
+        "lat": 9.0163,
+        "lon": 76.9277,
+        "speedKmph": 57,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING"
+      },
+      {
+        "busId": "KVP-016",
+        "routeName": "Koovappally - Adoor",
+        "lat": 9.1641,
+        "lon": 76.7312,
+        "speedKmph": 54,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING"
+      },
+      {
+        "busId": "KVP-017",
+        "routeName": "Koovappally - Ranni",
+        "lat": 9.3866,
+        "lon": 76.8211,
+        "speedKmph": 45,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING"
+      },
+      {
+        "busId": "KVP-018",
+        "routeName": "Koovappally - Kattappana",
+        "lat": 9.7521,
+        "lon": 77.1155,
+        "speedKmph": 52,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING"
+      },
+      {
+        "busId": "KVP-019",
+        "routeName": "Koovappally - Thodupuzha",
+        "lat": 9.8921,
+        "lon": 76.7212,
+        "speedKmph": 56,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING"
+      },
+      {
+        "busId": "KVP-020",
+        "routeName": "Koovappally - Muvattupuzha",
+        "lat": 9.9831,
+        "lon": 76.5801,
+        "speedKmph": 58,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 95
+      },
+      // Additional long-distance KSRTC routes
+      {
+        "busId": "KSRTC-BLR-ERN-001",
+        "routeName": "Bangalore → Ernakulam",
+        "lat": 12.9716,
+        "lon": 77.5946,
+        "speedKmph": 58,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 600
+      },
+      {
+        "busId": "KSRTC-BLR-ERN-002",
+        "routeName": "Bangalore → Ernakulam",
+        "lat": 12.7300,
+        "lon": 76.9000,
+        "speedKmph": 52,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 540
+      },
+      {
+        "busId": "KSRTC-BLR-TVM-003",
+        "routeName": "Bangalore → Thiruvananthapuram",
+        "lat": 12.6000,
+        "lon": 77.3000,
+        "speedKmph": 53,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 720
+      },
+      {
+        "busId": "KSRTC-MYS-CLT-004",
+        "routeName": "Mysore → Kozhikode",
+        "lat": 12.2958,
+        "lon": 76.6394,
+        "speedKmph": 50,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 400
+      },
+      {
+        "busId": "KSRTC-BLR-THR-005",
+        "routeName": "Bangalore → Thrissur",
+        "lat": 12.9000,
+        "lon": 77.1000,
+        "speedKmph": 49,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 480
+      },
+      {
+        "busId": "KSRTC-BLR-THR-006",
+        "routeName": "Bangalore → Thrissur",
+        "lat": 12.8200,
+        "lon": 77.0500,
+        "speedKmph": 46,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 500
+      },
+      {
+        "busId": "KSRTC-CLT-ERN-007",
+        "routeName": "Kozhikode → Ernakulam",
+        "lat": 11.2500,
+        "lon": 75.7800,
+        "speedKmph": 54,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 360
+      },
+      {
+        "busId": "KSRTC-CLT-TVM-008",
+        "routeName": "Kozhikode → Thiruvananthapuram",
+        "lat": 11.4000,
+        "lon": 76.0000,
+        "speedKmph": 50,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 660
+      },
+      {
+        "busId": "KSRTC-PER-ADY-009",
+        "routeName": "Palakkad → Adoor",
+        "lat": 10.8000,
+        "lon": 76.6500,
+        "speedKmph": 47,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 300
+      },
+      {
+        "busId": "KSRTC-PON-PAL-010",
+        "routeName": "Ponnani → Palakkad",
+        "lat": 10.7700,
+        "lon": 75.9200,
+        "speedKmph": 42,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 240
+      },
+      {
+        "busId": "KSRTC-BLR-ERN-011",
+        "routeName": "Bangalore → Ernakulam",
+        "lat": 12.6000,
+        "lon": 77.0000,
+        "speedKmph": 62,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 550
+      },
+      {
+        "busId": "KSRTC-BLR-TVM-012",
+        "routeName": "Bangalore → Thiruvananthapuram",
+        "lat": 12.5000,
+        "lon": 77.2500,
+        "speedKmph": 57,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 710
+      },
+      // Private buses around Kottayam
+      {
+        "busId": "PRV-KTM-001",
+        "routeName": "Kottayam → Pala",
+        "lat": 9.6882,
+        "lon": 76.6794,
+        "speedKmph": 42,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 35
+      },
+      {
+        "busId": "PRV-KTM-002",
+        "routeName": "Kottayam → Changanassery",
+        "lat": 9.5004,
+        "lon": 76.5739,
+        "speedKmph": 38,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 22
+      },
+      {
+        "busId": "PRV-KTM-003",
+        "routeName": "Kottayam → Ettumanoor",
+        "lat": 9.6501,
+        "lon": 76.5534,
+        "speedKmph": 40,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 25
+      },
+      {
+        "busId": "PRV-KTM-004",
+        "routeName": "Kottayam → Vaikom",
+        "lat": 9.6870,
+        "lon": 76.4119,
+        "speedKmph": 35,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 48
+      },
+      {
+        "busId": "PRV-KTM-005",
+        "routeName": "Kottayam → Kumarakom",
+        "lat": 9.6182,
+        "lon": 76.4328,
+        "speedKmph": 32,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 30
+      },
+      {
+        "busId": "PRV-KTM-006",
+        "routeName": "Kottayam → Erattupetta",
+        "lat": 9.6743,
+        "lon": 76.7839,
+        "speedKmph": 45,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 42
+      },
+      {
+        "busId": "PRV-KTM-007",
+        "routeName": "Kottayam → Ponkunnam",
+        "lat": 9.5487,
+        "lon": 76.6993,
+        "speedKmph": 39,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 33
+      },
+      {
+        "busId": "PRV-KTM-008",
+        "routeName": "Kottayam → Manarcadu",
+        "lat": 9.5804,
+        "lon": 76.5765,
+        "speedKmph": 29,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 40
+      },
+      {
+        "busId": "PRV-KTM-009",
+        "routeName": "Kottayam → Kaduthuruthy",
+        "lat": 9.7058,
+        "lon": 76.5190,
+        "speedKmph": 41,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 28
+      },
+      {
+        "busId": "PRV-KTM-010",
+        "routeName": "Kottayam → Neendoor",
+        "lat": 9.6801,
+        "lon": 76.5419,
+        "speedKmph": 33,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 26
+      },
+      {
+        "busId": "PRV-KTM-011",
+        "routeName": "Kottayam → Kuravilangad",
+        "lat": 9.7132,
+        "lon": 76.6010,
+        "speedKmph": 37,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 32
+      },
+      {
+        "busId": "PRV-KTM-012",
+        "routeName": "Kottayam → Thalayolaparambu",
+        "lat": 9.7441,
+        "lon": 76.4834,
+        "speedKmph": 44,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 38
+      },
+      {
+        "busId": "PRV-KTM-013",
+        "routeName": "Kottayam → Athirampuzha",
+        "lat": 9.6522,
+        "lon": 76.5459,
+        "speedKmph": 27,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 30
+      },
+      {
+        "busId": "PRV-KTM-014",
+        "routeName": "Kottayam → Parippu",
+        "lat": 9.6405,
+        "lon": 76.5022,
+        "speedKmph": 35,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 37
+      },
+      {
+        "busId": "PRV-KTM-015",
+        "routeName": "Kottayam → Vakathanam",
+        "lat": 9.5679,
+        "lon": 76.5538,
+        "speedKmph": 39,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 33
+      },
+      {
+        "busId": "PRV-KTM-016",
+        "routeName": "Kottayam → Kidangoor",
+        "lat": 9.6645,
+        "lon": 76.6382,
+        "speedKmph": 36,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 29
+      },
+      {
+        "busId": "PRV-KTM-017",
+        "routeName": "Kottayam → Chengalam",
+        "lat": 9.6201,
+        "lon": 76.6065,
+        "speedKmph": 31,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 26
+      },
+      {
+        "busId": "PRV-KTM-018",
+        "routeName": "Kottayam → Poovanthuruthu",
+        "lat": 9.6312,
+        "lon": 76.4920,
+        "speedKmph": 28,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 35
+      },
+      {
+        "busId": "PRV-KTM-019",
+        "routeName": "Kottayam → Kodungoor",
+        "lat": 9.5561,
+        "lon": 76.6080,
+        "speedKmph": 34,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 30
+      },
+      {
+        "busId": "PRV-KTM-020",
+        "routeName": "Kottayam → Pampady",
+        "lat": 9.5863,
+        "lon": 76.5854,
+        "speedKmph": 32,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 28
+      },
+      {
+        "busId": "PRV-KTM-021",
+        "routeName": "Kottayam → Puthuppally",
+        "lat": 9.5718,
+        "lon": 76.5804,
+        "speedKmph": 30,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 15
+      },
+      {
+        "busId": "PRV-KTM-022",
+        "routeName": "Kottayam → Elikulam",
+        "lat": 9.6309,
+        "lon": 76.6319,
+        "speedKmph": 29,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 26
+      },
+      {
+        "busId": "PRV-KTM-023",
+        "routeName": "Kottayam → Kooroppada",
+        "lat": 9.5552,
+        "lon": 76.6088,
+        "speedKmph": 30,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 28
+      },
+      {
+        "busId": "PRV-KTM-024",
+        "routeName": "Kottayam → Thiruvalla",
+        "lat": 9.3813,
+        "lon": 76.5669,
+        "speedKmph": 49,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 75
+      },
+      {
+        "busId": "PRV-KTM-025",
+        "routeName": "Kottayam → Pathanamthitta",
+        "lat": 9.2758,
+        "lon": 76.7811,
+        "speedKmph": 52,
+        "headingDeg": 0,
+        "lastUpdated": DateTime.now().toIso8601String(),
+        "status": "RUNNING",
+        "etaMin": 85
+      }
+];
+    
+    // Using simple mapping similar to existing data
+    return busesJson.map((json) {
+      return LiveBus(
+        busId: json['busId'] as String,
+        routeName: json['routeName'] as String,
+        lat: (json['lat'] as num).toDouble(),
+        lon: (json['lon'] as num).toDouble(),
+        speedKmph: (json['speedKmph'] as num).toDouble(),
+        headingDeg: (json['headingDeg'] as num).toDouble(),
+        lastUpdated: DateTime.parse(json['lastUpdated'] as String),
+        status: json['status'] as String,
+        etaMin: json['etaMin'] != null ? (json['etaMin'] as num).toInt() : 0,
+      );
+    }).toList();
   }
 }

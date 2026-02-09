@@ -199,13 +199,16 @@ class _HomeViewState extends State<_HomeView> {
 
   void _initializeLiveBusTracking() {
     // Initialize the bus location service
+    debugPrint('🔧 Initializing BusLocationService...');
     _busLocationService.initialize();
 
     // Subscribe to bus location updates
     _busLocationStream = _busLocationService.busStream.listen((buses) {
+      debugPrint('📍 Received ${buses.length} buses from stream');
       if (mounted) {
         setState(() {
           _busMarkers = buses.map((bus) => _createBusMarker(bus)).toList();
+          debugPrint('🗺️ Created ${_busMarkers.length} bus markers');
         });
       }
     });
@@ -455,16 +458,62 @@ class _HomeViewState extends State<_HomeView> {
               ),
             ],
           ),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.25),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.notifications_outlined,
-              size: 22,
-              color: Colors.black,
+          GestureDetector(
+            onTap: () {
+              // Show notifications modal
+              showModalBottomSheet(
+                context: context,
+                backgroundColor: Colors.transparent,
+                builder: (context) => Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 40, 
+                        height: 4, 
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300], 
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        "Notifications",
+                        style: TextStyle(
+                          fontSize: 18, 
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                      Icon(Icons.notifications_off_outlined, size: 48, color: Colors.grey[400]),
+                      const SizedBox(height: 16),
+                      Text(
+                        "No new notifications",
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.25),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.notifications_outlined,
+                size: 22,
+                color: Colors.black,
+              ),
             ),
           ),
         ],

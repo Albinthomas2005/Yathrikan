@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "153229951872-56bc5m0ht8vlncarb078arguon7n43g7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.busway",
+            "certificate_hash": "55cc595976bb09d359dbd58aa30252afef02cc4f"
+          }
+        },
+        {
           "client_id": "153229951872-5jskgnaf0p9bomtiq9v380h7g4dl98dc.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

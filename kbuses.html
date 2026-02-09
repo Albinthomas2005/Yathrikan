@@ -1,0 +1,1386 @@
+
+<html lang="en">
+<head>
+<title>Kbuses</title>
+<link rel="icon" href="https://www.kbuses.in/staticfiles/favico.png?v=2" />
+<meta property="og:type" content="website">
+<meta property="og:title" content="KBUSES Timings">
+<meta property="og:description" content="Kerala, Karnataka Bus Timings powered by Team KBUSES | Kbuses is an application that&#39;s intuitive, efficient and useful. More than 50000 buses including KSRTC, with bus schedules, image , route map  and mobile access. Bus Timings ,Pictures ,Route details of all buses passing through Kanjirapally , Mundakayam, Erattupetta and near areas timings on KBUSES | www.kbuses.in">
+<meta property="og:url" content="https://www.kbuses.in">
+<meta property="og:image" content="https://www.kbuses.in/staticfiles/2x200.jpg">
+<meta property="og:image:width" content="200px">
+<meta property="og:image:height" content="200px">
+<meta property="fb:app_id" content="973846456153140" />
+<link rel="alternate" href="https://www.kbuses.in" hreflang="x-default" />
+<meta name="Author" content="aNaNthu">
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta name="google-signin-client_id" content="838931125086-7i3c9o32de2cmsc3cphmp7k4op4nqeco.apps.googleusercontent.com">
+<meta name="description" content="Kerala, Karnataka Bus Timings powered by Team KBUSES | Kbuses is an application that&#39;s intuitive, efficient and useful. More than 50000 buses including KSRTC, with bus schedules, image , route map  and mobile access. Bus Timings ,Pictures ,Route details of all buses passing through Kanjirapally , Mundakayam, Erattupetta and near areas timings on KBUSES | www.kbuses.in">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <!-- Google Fonts -->
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+ <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css">
+<link
+  href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css"
+  rel="stylesheet"
+/><link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css"
+    rel="stylesheet"
+/>
+<link href="https://cdn.jsdelivr.net/npm/simple-datatables@latest/dist/style.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" type="ea38ddeeca998a7a6852a2d4-text/javascript"></script>
+
+  <!-- Template Main CSS File -->
+  <link href="https://www.kbuses.in/assets/css/style.css?v1" rel="stylesheet">
+   <link href="https://www.kbuses.in/assets/css/animations.css" rel="stylesheet">
+
+     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js" type="ea38ddeeca998a7a6852a2d4-text/javascript"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.14.1/jquery-ui.min.js" type="ea38ddeeca998a7a6852a2d4-text/javascript"></script>
+<script type="ea38ddeeca998a7a6852a2d4-text/javascript">
+    // --- Theme Switcher ---
+    document.addEventListener('DOMContentLoaded', function() {
+        const themeToggleWrapper = document.getElementById('theme-toggle-wrapper');
+        const body = document.body;
+
+        const applyTheme = (theme) => {
+            if (theme === 'dark') {
+                body.classList.add('dark-mode');
+            } else {
+                body.classList.remove('dark-mode');
+            }
+        };
+
+        // Apply the saved theme on page load, or system preference
+        const savedTheme = localStorage.getItem('theme');
+        // const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (savedTheme) {
+            applyTheme(savedTheme);
+        } 
+        // else if (prefersDark) {
+        //     applyTheme('dark');
+        //     localStorage.setItem('theme', 'dark'); // Save the preference
+        // }
+
+        const toggleAction = function() {
+            const isDarkMode = body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        };
+
+        // Add event listener for the wrapper for better UX
+        if(themeToggleWrapper) {
+            themeToggleWrapper.addEventListener('click', toggleAction);
+        }
+    });
+</script>
+<style>
+    /* --- Custom Scrollbar (for Webkit browsers) --- */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 5px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+    .dark-mode ::-webkit-scrollbar-track {
+        background: var(--dark-bg);
+    }
+    .dark-mode ::-webkit-scrollbar-thumb {
+        background: #444;
+    }
+    .dark-mode ::-webkit-scrollbar-thumb:hover {
+        background: #666;
+    }
+
+    /* --- Dark Mode Styles --- */
+    :root {
+        --dark-bg: #0d1117;
+        --dark-card-bg: #161b22;
+        --dark-border: #30363d;
+        --dark-text: #c9d1d9;
+        --dark-text-muted: #8b949e;
+        --dark-link: #58a6ff;
+        --dark-primary-btn-bg: #238636;
+        --dark-primary-btn-border: #2ea043;
+    }
+
+    body.dark-mode {
+        background-color: var(--dark-bg);
+        color: var(--dark-text);
+    }
+
+    body, header, .sidebar, .modal-content, .list-group-item, .accordion-item, .pagetitle, .footer {
+        transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+    }
+
+    .dark-mode header, .dark-mode .sidebar {
+        background-color: var(--dark-card-bg);
+        border-color: var(--dark-border);
+    }
+
+    .dark-mode .sidebar .nav-link {
+        background: transparent;
+        color: var(--dark-text);
+    }
+
+    .dark-mode .sidebar .nav-link i {
+        color: var(--dark-text-muted);
+    }
+
+    .dark-mode .sidebar .nav-link:hover,
+    .dark-mode .sidebar .nav-link:not(.collapsed) {
+        background: var(--dark-bg);
+        color: var(--dark-link);
+    }
+
+    .dark-mode .sidebar .nav-link:hover i,
+    .dark-mode .sidebar .nav-link:not(.collapsed) i {
+        color: var(--dark-link);
+    }
+
+    .dark-mode .sidebar .nav-heading {
+        color: var(--dark-text-muted);
+    }
+
+    .dark-mode .pagetitle h1, .dark-mode .pagetitle .breadcrumb-item, .dark-mode .pagetitle .breadcrumb-item.active {
+        color: var(--dark-text);
+    }
+
+    .dark-mode .pagetitle .breadcrumb-item a {
+        color: var(--dark-link);
+    }
+
+    .dark-mode .card, .dark-mode .modal-content, .dark-mode .accordion-item {
+        background-color: var(--dark-card-bg);
+        border: 1px solid var(--dark-border);
+        color: var(--dark-text);
+    }
+
+    .dark-mode .card-title, .dark-mode h1, .dark-mode h2, .dark-mode h3, .dark-mode h4, .dark-mode h5, .dark-mode h6 {
+        color: var(--dark-text);
+    }
+
+    .dark-mode .list-group-item {
+        background-color: var(--dark-card-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-text);
+    }
+
+    .dark-mode a:not(.btn) {
+        color: var(--dark-link);
+    }
+
+    .dark-mode .list-group-item-action:hover, .dark-mode .list-group-item-action:focus {
+        background-color: #222831;
+    }
+
+    .dark-mode .form-control, .dark-mode .form-select {
+        background-color: var(--dark-bg);
+        color: var(--dark-text);
+        border-color: var(--dark-border);
+    }
+
+    .form-control, .form-select {
+        transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        transform: scale(1.01);
+    }
+
+    .dark-mode .form-control:focus, .dark-mode .form-select:focus {
+        background-color: var(--dark-bg);
+        color: var(--dark-text);
+        border-color: var(--dark-link);
+        box-shadow: 0 0 0 0.25rem rgba(88, 166, 255, 0.25);
+    }
+
+    .dark-mode .table {
+        --bs-table-color: var(--dark-text);
+        --bs-table-bg: transparent;
+        --bs-table-border-color: var(--dark-border);
+        --bs-table-striped-bg: rgba(255, 255, 255, 0.05);
+        --bs-table-striped-color: var(--dark-text);
+        --bs-table-hover-bg: #222831;
+        --bs-table-hover-color: var(--dark-text);
+        color: var(--bs-table-color);
+    }
+
+    .dark-mode .nav-tabs-bordered {
+        border-bottom-color: var(--dark-border);
+    }
+
+    .dark-mode .nav-tabs-bordered .nav-link {
+        border-color: transparent;
+        color: var(--dark-text-muted);
+    }
+
+    .dark-mode .nav-tabs-bordered .nav-link.active {
+        background-color: var(--dark-card-bg);
+        color: var(--dark-link);
+        border-bottom: 2px solid var(--dark-link);
+    }
+
+    .dark-mode .btn-primary {
+        background-color: var(--dark-primary-btn-bg);
+        border-color: var(--dark-primary-btn-border);
+    }
+
+    .dark-mode .footer {
+        background-color: var(--dark-card-bg);
+        color: var(--dark-text-muted);
+    }
+
+    .dark-mode .credits a {
+        color: var(--dark-link);
+    }
+
+    /* --- Pagination Dark Mode --- */
+    .dark-mode .pagination .page-link {
+        background-color: var(--dark-card-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-link);
+    }
+    .dark-mode .pagination .page-link:hover {
+        background-color: #222831;
+        border-color: var(--dark-border);
+    }
+    .dark-mode .pagination .page-item.active .page-link {
+        background-color: var(--dark-link);
+        border-color: var(--dark-link);
+        color: var(--dark-card-bg);
+    }
+    .dark-mode .pagination .page-item.disabled .page-link {
+        background-color: var(--dark-card-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-text-muted);
+    }
+
+    /* --- Modern Alert Styles --- */
+    .alert {
+        border-left-width: 5px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .dark-mode .alert-warning {
+        background-color: #3d3421;
+        color: #fdeec9;
+    }
+
+    /* --- Modern Theme Toggle Button --- */
+    .theme-toggle-btn {
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        color: #212529; /* Default icon color for light mode */
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        transition: color 0.3s ease;
+    }
+
+    .theme-toggle-btn:hover {
+        color: #007bff; /* Hover color for light mode */
+    }
+
+    .dark-mode .theme-toggle-btn {
+        color: var(--dark-text);
+    }
+
+    .dark-mode .theme-toggle-btn:hover {
+        color: var(--dark-link);
+    }
+
+    .sun-and-moon {
+        width: 1.5rem; /* 24px */
+        height: 1.5rem; /* 24px */
+        stroke-linecap: round;
+    }
+
+    .sun-and-moon > .sun,
+    .sun-and-moon > .sun-beams {
+        transform-origin: center center;
+        transition: transform 0.5s cubic-bezier(0.5, 1.5, 0.75, 1.25);
+    }
+
+    .sun-and-moon > .sun-beams {
+        transition-property: transform, opacity;
+    }
+
+    .sun-and-moon .moon > circle {
+        transition: transform .25s ease-out;
+    }
+
+  @keyframes sway {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(5px); } /* Adjust for more or less sway */
+  100% { transform: translateX(0); }
+}
+
+/* --- Card Hover Effect --- */
+.indibus, .unsurebusinfo, .card, .journey-timeline {
+    transition: transform 0.25s ease-out, box-shadow 0.25s ease-out;
+}
+.indibus:hover, .unsurebusinfo:hover, .card:hover, .journey-timeline:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+}
+.dark-mode .indibus:hover, .dark-mode .unsurebusinfo:hover, .dark-mode .card:hover, .dark-mode .journey-timeline:hover {
+    box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+}
+.card:hover {
+    z-index: 10; /* Ensure hovered card comes to the front */
+}
+
+.wind-image-sway {
+  animation: sway 3s ease-in-out infinite; /* 3s duration, smooth ease, repeats forever */
+}
+@keyframes gentle-breeze {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(9deg); }
+  75% { transform: rotate(3deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.wind-image-rotate {
+  animation: gentle-breeze 4s ease-in-out infinite;
+  transform-origin: bottom center; /* Adjust origin based on your image */
+}
+     .logo2img {
+    max-height: 9vh;
+    margin-right: 6px;
+    margin-top: 18px;
+} 
+.loading-image {
+      background-image: url('https://www.kbuses.in/resources/loading3.svg');
+	  width: auto;
+    height: 180px;
+	  background-repeat: space;
+  }
+    .loaded-img {
+      width: auto;
+        height: auto;
+  }
+    table {
+    table-layout: fixed;
+    width: 100%;
+}
+ .vertical-text {
+        writing-mode: vertical-lr;
+        transform: rotate(180deg);
+    }
+    .cell1 {
+            width: 100%;
+        }
+    .cell7 {
+            width: 72%;
+        }
+
+        .cell3 {
+            width: 28%;
+        }
+  /* Bootstrap styling for jQuery UI Autocomplete */
+.ui-autocomplete {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    float: left;
+    display: none;
+    min-width: 160px;
+    padding: 4px 0;
+    margin: 0 0 10px 25px;
+    list-style: none;
+    background-color: #ffffff;
+    border-color: #ccc;
+    /* Add other styles as needed */
+}
+
+.ui-menu-item > a.ui-corner-all {
+    display: block;
+    padding: 3px 15px;
+    clear: both;
+    font-weight: normal;
+    line-height: 18px;
+    color: #555555;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.ui-state-hover,
+.ui-state-active {
+    color: #ffffff;
+    font-weight: bold;
+    text-decoration:underline;
+    text-align: center;
+    background-color: #34a853;
+    border-radius: 9px;
+}
+
+.dark-mode .indibus, .dark-mode .unsurebusinfo {
+    background-color: var(--dark-card-bg);
+    border: 1px solid var(--dark-border);
+    color: var(--dark-text);
+}
+
+.dark-mode .busname {
+    color: #38a3a5;
+}
+
+.dark-mode .bustype {
+    color: #e0e0e0 !important;
+}
+
+.dark-mode .journey-timeline {
+    background-color: var(--dark-card-bg);
+    border: 1px solid var(--dark-border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.dark-mode .journey-timeline .place, .dark-mode .journey-timeline .stop-name, .dark-mode .journey-timeline .time, .dark-mode .journey-timeline .reg-no {
+    color: var(--dark-text);
+}
+.dark-mode .journey-timeline .text-muted {
+    color: var(--dark-text-muted) !important;
+}
+
+.dark-mode .journey-timeline .timeline-point {
+    background-color: #222831;
+}
+
+.dark-mode .journey-timeline .timeline-line {
+    background-color: var(--dark-border);
+}
+
+.dark-mode .journey-timeline .timeline-bus-info {
+    background-color: var(--dark-card-bg);
+    border-radius: 10px; /* Add rounded corners for a modern look */
+}
+
+.dark-mode .accordion-button::after {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+.dark-mode .accordion-button:not(.collapsed) {
+    background-color: #1f2937;
+}
+
+/* --- Breadcrumb Styling --- */
+.breadcrumb-item + .breadcrumb-item::before {
+    content: '›'; /* Use a more elegant separator */
+    font-weight: bold;
+}
+.dark-mode .breadcrumb-item + .breadcrumb-item::before {
+    color: var(--dark-text-muted);
+}
+
+    /* Dark mode active */
+    .dark-mode .sun-and-moon > .sun {
+        transform: scale(1.75);
+    }
+
+    .dark-mode .sun-and-moon > .sun-beams {
+        transform: rotateZ(-90deg);
+        opacity: 0;
+    }
+
+    .dark-mode .sun-and-moon .moon > circle {
+        transform: translateX(-7px);
+    }
+
+.bus-list .hideplay::before {
+  content: "";
+  position: absolute;
+  left: 0%;
+  top: 0;
+  height: 100%;
+  width: 99%;
+  background: linear-gradient(to right, #e2e2e2 25%, #d5d5d5 50%, #e2e2e2 100%);
+  animation-name: gradient-animation;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
+  filter: blur(5px);
+}
+@keyframes gradient-animation {
+  from {
+    left: 0%;
+  }
+  to {
+    left: 100%;
+  }
+}
+.progress-bar {
+  width: 100%;
+  height: 50px;
+  background-color: white;
+  border-radius: 5px;
+}
+
+.progress {
+ height: 100%;
+  background-color: white;
+  transition: width 1s ease-in-out;
+}
+.progress img {
+  position: absolute;
+  animation: moveBus 2s linear;
+}
+
+@keyframes moveBus {
+  0% {
+    left: -50px;
+  }
+  100% {
+    left: calc(100% + 50px);
+  }
+}
+.smalltxt
+    {
+        font-size: small;
+    }
+    
+.large_bold{
+        font-size: large;
+    font-weight: 900;
+    }
+    
+    .busname {
+    font-size: 1.02em;
+    font-weight: 900;
+    color: #34a853;
+        display: flex
+}
+    
+            ul.pagination li a {
+                border: solid 1px;
+                border-radius: 3px;
+                -moz-border-radius: 3px;
+                -webkit-border-radius: 3px;
+                padding: 6px 9px 6px 9px
+            }
+
+            ul.pagination li {
+                padding-bottom: 1px
+            }
+
+            ul.pagination li a.current,ul.pagination li a:hover {
+                color: #fff;
+                box-shadow: 0 1px #ededed;
+                -moz-box-shadow: 0 1px #ededed;
+                -webkit-box-shadow: 0 1px #ededed
+            }
+
+            ul.pagination {
+                margin: 4px 0;
+                padding: 0;
+                overflow: hidden;
+                font: 12px Tahoma;
+                list-style-type: none
+            }
+
+            ul.pagination li {
+                float: left;
+                margin: 0;
+                padding: 0;
+                margin-left: 5px
+            }
+
+            ul.pagination li a {
+                color: #000;
+                display: block;
+                text-decoration: none;
+                padding: 7px 10px 7px 10px
+            }
+    
+            ul.pagination li.active a{
+                background-color: #fff;
+                border: #34a853 3px dotted;
+            }
+            ul.pagination li a img {
+                border: none
+            }
+
+            ul.pagination li a.current,ul.pagination li a:hover {
+                text-shadow: 0 1px #388dbe;
+                border-color: #3390ca;
+                background: green;
+                background: -moz-linear-gradient(top,#b4f6ff 1px,#63d0fe 1px,#58b0e7);
+            }
+    .dot {
+    transform: scaleX(-1);
+    position: absolute;
+    right: 18%;
+    content: "";
+    width: 1em;
+    height: 1em;
+    border-radius: 50%;
+    background: #f46965;
+    box-shadow: 1.4em 0 #e9cd06, 2.8em 0 #81d95e;
+}
+    
+    .btn-primary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #34a853;
+    }
+    
+    .modal {
+background-color: #f6f9ff;
+    }
+
+    .lightning-svg {
+            filter: drop-shadow(0 0 8px rgba(255, 255, 0, 0.8)) drop-shadow(0 0 20px rgba(255, 255, 0, 0.5));
+        }
+
+        .lightning-bolt {
+            stroke: #fff300; /* Gold outline */
+            stroke-width: 0.9;
+            animation: flicker 6.3s infinite alternate; /* The flickering animation */
+            transform-origin: center; /* Ensure scaling is from the center */
+        }
+
+        @keyframes flicker {
+            0% {
+                opacity: 0.8;
+                transform: scale(1);
+                filter: drop-shadow(0 0 5px rgba(255, 255, 0, 0.8));
+            }
+            20% {
+                opacity: 1;
+                transform: scale(1.02);
+                filter: drop-shadow(0 0 10px rgba(255, 255, 0, 0.9));
+            }
+            40% {
+                opacity: 0.7;
+                transform: scale(0.98);
+                filter: drop-shadow(0 0 3px rgba(255, 255, 0, 0.7));
+            }
+            60% {
+                opacity: 1;
+                transform: scale(1.03);
+                filter: drop-shadow(0 0 12px rgba(255, 255, 0, 1));
+            }
+            80% {
+                opacity: 0.9;
+                transform: scale(1.01);
+                filter: drop-shadow(0 0 7px rgba(255, 255, 0, 0.85));
+            }
+            100% {
+                opacity: 0.85;
+                transform: scale(1);
+                filter: drop-shadow(0 0 8px rgba(255, 255, 0, 0.8));
+            }
+          }
+          
+
+       
+    </style>
+	 
+<script type="ea38ddeeca998a7a6852a2d4-text/javascript">
+var progress = document.querySelector('.progress-bar .progress');
+progress.style.width = '100%';
+   var modal = document.getElementsByClassName("modal");
+window.onclick = function(event) {
+	for (const div of modal) {
+  if (event.target == div) { 
+            div.style.display = "none";
+        }
+  }
+}
+const $el = document.querySelector("body");
+
+ $(window).on("load", function() {
+ $el
+    .querySelectorAll(".hideplay")
+    .forEach((el) => el.classList.remove("hideplay"));
+	document.querySelector('.progress-bar').remove("progress-bar");
+});
+
+</script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1855480056325912" crossorigin="anonymous" type="ea38ddeeca998a7a6852a2d4-text/javascript"></script>
+
+      <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-HT041R14H9" type="ea38ddeeca998a7a6852a2d4-text/javascript"></script>
+<script type="ea38ddeeca998a7a6852a2d4-text/javascript">
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-HT041R14H9');
+</script>
+  </head>
+
+<body><a href="https://www.kbuses.in/cdn-cgi/content?id=W1oG5e80.hZbxODD4PHbrhQ8x0TJgL0mk.gQwgQOd_k-1770619315.3940434-1.0.1.1-i1I6DLO8IYpS8ZuLum5AxYt.a2QzQ0zAUgaLy39XVmA" aria-hidden="true" rel="nofollow noopener" style="display: none !important; visibility: hidden !important"></a>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="header fixed-top d-flex align-items-center">
+    <i class="bi bi-list toggle-sidebar-btn"></i>
+    <div class="d-flex align-items-center justify-content-between">
+         <a href="https://www.kbuses.in/" class="logo d-flex align-items-center">
+        <img src="https://www.kbuses.in//assets/img/green_heading_logo_v3.png" alt="">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-lightning lightning-svg" viewBox="0 0 16 16">
+          <path class="lightning-bolt" d="M5.52.359A.5.5 0 0 1 6 0h4a.5.5 0 0 1 .474.658L8.694 6H12.5a.5.5 0 0 1 .395.807l-7 9a.5.5 0 0 1-.873-.454L6.823 9.5H3.5a.5.5 0 0 1-.48-.641zM6.374 1 4.168 8.5H7.5a.5.5 0 0 1 .478.647L6.78 13.04 11.478 7H8a.5.5 0 0 1-.474-.658L9.306 1z"/>
+            </svg>
+              </a>
+    </div><!-- End Logo -->
+        <span class="dot"></span>  
+  <!-- ======= Sidebar ======= -->
+  <aside id="sidebar" class="sidebar">
+    <ul class="sidebar-nav" id="sidebar-nav">
+
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="https://www.kbuses.in/">
+          <i class="bi bi-house"></i>
+          <span>Home</span>
+        </a>
+      </li><!-- End Home Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="https://www.kbuses.in/privacy">
+          <i class="bi bi-receipt-cutoff"></i>
+          <span>Privacy Policy</span>
+        </a>
+      </li><!-- End Privacy Policy Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="https://www.kbuses.in/tc">
+          <i class="bi bi-card-list"></i>
+          <span>Terms &amp; Conditions</span>
+        </a>
+      </li><!-- End T&C Nav -->
+
+      <li class="nav-heading">Settings</li>
+
+      <li class="nav-item">
+        <div class="nav-link collapsed" style="display: flex; align-items: center; width: 100%; cursor: pointer;" id="theme-toggle-wrapper">
+          <i class="bi bi-moon-stars"></i>
+          <span>Night Mode</span>
+          <button id="theme-toggle" class="theme-toggle-btn ms-auto">
+            <svg class="sun-and-moon" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24">
+                <mask class="moon" id="moon-mask">
+                    <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                    <circle cx="24" cy="10" r="6" fill="black" />
+                </mask>
+                <circle class="sun" cx="12" cy="12" r="6" mask="url(#moon-mask)" fill="currentColor" />
+                <g class="sun-beams" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="23" />
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                    <line x1="1" y1="12" x2="3" y2="12" />
+                    <line x1="21" y1="12" x2="23" y2="12" />
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </g>
+            </svg>
+          </button>
+        </div>
+      </li>
+
+      <li class="nav-heading">Pages</li>
+
+      <li class="nav-item">
+    <a class="nav-link collapsed" href="https://www.kbuses.in/depots">
+        <i class="bi bi-building"></i>
+        <span>Depot Enquiry</span>
+    </a>
+</li>
+
+
+    
+    <!-- <li class="nav-item">
+        <a class="nav-link collapsed" href="https://www.kbuses.in/contact">
+          <i class="bi bi-envelope"></i>
+          <span>Send feedback</span>
+        </a>
+      </li> -->
+     
+        
+              <li class="nav-item">
+            <a class="nav-link collapsed" href="https://www.kbuses.in/login">
+                <i class="bi bi-box-arrow-in-right"></i>
+                <span>Login</span>
+            </a>
+        </li>
+          </ul>
+
+  </aside><!-- End Sidebar-->
+
+  </header><!-- End Header -->
+
+       <div class="progress-bar">
+  <div class="progress" style="width: 0%;">
+    <img src="https://www.kbuses.in/resources/7308522.gif" alt="Bus icon" width="50" height="50">
+  </div>
+</div>
+  
+       <div id="servqtymodal" class="modal hashbrown" style="display:none;">
+  <style>
+    .dark-mode .modal-content {
+        background-color: var(--dark-card-bg) !important;
+        color: var(--dark-text) !important;
+    }
+    .dark-mode .modal-content i, .dark-mode .modal-content li, .dark-mode .modal-content font {
+        color: var(--dark-text) !important;
+    }
+    .dark-mode .modal-content font[style*="color:green"] {
+        color: #238636 !important;
+    }
+    .dark-mode .modal-content font[style*="color:orange"] {
+        color: #f39c12 !important;
+    }
+    .dark-mode .modal-content font[style*="color:red"] {
+        color: #e74c3c !important;
+    }
+    .dark-mode .modal-content .fa-times-circle {
+        color: var(--dark-text) !important;
+    }
+  </style>
+  <div class="modal-content" style="top:36%;    padding: 12px;"> 
+  <i title="Close this message" class="fas fa-times-circle" style="float: right;color: black;font-size: x-large;" onclick="if (!window.__cfRLUnblockHandlers) return false; document.getElementById('servqtymodal').style.display = 'none';" data-cf-modified-ea38ddeeca998a7a6852a2d4-=""></i>
+ Service quality is determined by the realtime users who reported about this bus. This helps to identify whether a bus is running regularly or not
+<li><font style="color:green;font-weight:bold;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-check hideplay" viewBox="0 0 16 16">
+  <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m1.679-4.493-1.335 2.226a.75.75 0 0 1-1.174.144l-.774-.773a.5.5 0 0 1 .708-.708l.547.548 1.17-1.951a.5.5 0 1 1 .858.514M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/>
+  <path d="M8.256 14a4.5 4.5 0 0 1-.229-1.004H3c.001-.246.154-.986.832-1.664C4.484 10.68 5.711 10 8 10q.39 0 .74.025c.226-.341.496-.65.804-.918Q8.844 9.002 8 9c-5 0-6 3-6 4s1 1 1 1z"/>
+</svg></i> Verified</font> - <i>This bus is conducting service. Verified by users recently.</i></li>
+<li><font style="color:orange;font-weight:bold;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-diamond hideplay" viewBox="0 0 16 16">
+  <path d="M6.95.435c.58-.58 1.52-.58 2.1 0l6.515 6.516c.58.58.58 1.519 0 2.098L9.05 15.565c-.58.58-1.519.58-2.098 0L.435 9.05a1.48 1.48 0 0 1 0-2.098zm1.4.7a.495.495 0 0 0-.7 0L1.134 7.65a.495.495 0 0 0 0 .7l6.516 6.516a.495.495 0 0 0 .7 0l6.516-6.516a.495.495 0 0 0 0-.7L8.35 1.134z"/>
+  <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+</svg> Unsure</font> - <i>Unsure about the bus! This bus may not be running</i></li>
+<li><font style="color:red;font-weight:bold;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-octagon hideplay" viewBox="0 0 16 16">
+  <path d="M4.54.146A.5.5 0 0 1 4.893 0h6.214a.5.5 0 0 1 .353.146l4.394 4.394a.5.5 0 0 1 .146.353v6.214a.5.5 0 0 1-.146.353l-4.394 4.394a.5.5 0 0 1-.353.146H4.893a.5.5 0 0 1-.353-.146L.146 11.46A.5.5 0 0 1 0 11.107V4.893a.5.5 0 0 1 .146-.353zM5.1 1 1 5.1v5.8L5.1 15h5.8l4.1-4.1V5.1L10.9 1z"/>
+  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+</svg> No Service</font> - <i>This trip is not conducted. Possibly schedule is cancelled</i></li>
+</div>
+</div>  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Welcome</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item active">Home</li>
+             <li class="breadcrumb-item"></li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+    <section class="section dashboard">
+      <div class="row">
+
+          <div class="card">
+            <div class="card-body profile-card pt-4 d-flex flex-column align-items-center">
+              
+              <h5 class="card-title" id="msg">Plan your Trip</h5>
+                 <img src="assets/img/from.jpg" loading="lazy" width="95" alt="plan your trip" class="rounded-circle">
+              </div>
+
+              <!-- Custom Styled Validation with Tooltips -->
+              <form class="row g-3 needs-validation" onsubmit="if (!window.__cfRLUnblockHandlers) return false; return verifySearch()" novalidate data-cf-modified-ea38ddeeca998a7a6852a2d4-="">
+                <div class="col-md-4 position-relative">
+                  <label for="validationTooltip01" class="form-label">From</label>
+                  <input type="text" class="form-control input-round" autofocus id="sorc" value="" required>
+                  <div class="invalid-tooltip">
+                    Please select the place
+                  </div>
+                </div>
+                   <span class="position-relative">
+                  <i class="bi bi-arrow-down-up" onclick="if (!window.__cfRLUnblockHandlers) return false; swapLoc()" data-cf-modified-ea38ddeeca998a7a6852a2d4-=""></i>
+                    </span>
+                <div class="col-md-4 position-relative">
+                  <label for="validationTooltip02" class="form-label">To:</label>
+                  <input type="text" class="form-control input-round" id="dest" value="" required>
+                  <div class="invalid-tooltip">
+                   Please select the place
+                  </div>
+                </div>
+                <div class="col-md-3 position-relative">
+                  <label for="validationTooltip03" class="form-label">Bus Service Type</label>
+                  <select class="form-select input-round" id="svce" required>
+                            <option selected value="all">All Buses</option>
+                            <option value="bking">Reservation enabled buses</option>
+                            <option value="ac">AC Buses</option>
+                            <option value="swift">KSRTC-SWIFT</option>
+                            <option value="krtc">Karnataka RTC</option>
+                            <option value="dlx">Super/Minnal Deluxe</option>
+                            <option value="ls">Limited Stop</option>
+                            <option value="fp">Fast Passenger</option>
+                            <option value="sf">Super Fast</option>
+                            <option value="exp">Super Express</option>
+                  </select>
+                  <div class="invalid-tooltip">
+                    Please select a valid service type.
+                  </div>
+                </div>
+                    <div class="col-md-3 position-relative">
+                  <label for="validationTooltip04" class="form-label">Time</label>
+                  <select class="form-select input-round" id="time" required>
+                            <option  selected value="now">All Time</option>
+                            <option value="onwards">From now onwards</option>
+                            <option value="night">Early morning Services (12night to 6am )</option>
+                            <option value="morning">Morning ( 6am to 12noon )</option>
+                            <option value="afternoon">Afternoon ( 12noon to 6pm )</option>
+                            <option value="evening">Night (6pm to 12night ) </option>
+                  </select>
+                  <div class="invalid-tooltip">
+                    Please select a valid time.
+                  </div>
+                </div>
+                <div class="col-12">
+                    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1855480056325912" crossorigin="anonymous" type="ea38ddeeca998a7a6852a2d4-text/javascript"></script>
+<!-- DisplayAdJune17 -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-1855480056325912"
+     data-ad-slot="1473979250"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script type="ea38ddeeca998a7a6852a2d4-text/javascript">
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+                  <button class="btn btn-primary rounded-pill" type="submit"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search-heart" viewBox="0 0 16 16">
+<path d="M6.5 4.482c1.664-1.673 5.825 1.254 0 5.018-5.825-3.764-1.664-6.69 0-5.018"></path>
+<path d="M13 6.5a6.47 6.47 0 0 1-1.258 3.844q.06.044.115.098l3.85 3.85a1 1 0 0 1-1.414 1.415l-3.85-3.85a1 1 0 0 1-.1-.115h.002A6.5 6.5 0 1 1 13 6.5M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11"></path>
+</svg> Search</button>
+                  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1855480056325912" crossorigin="anonymous" type="ea38ddeeca998a7a6852a2d4-text/javascript"></script>
+<!-- respad_Jun4 -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-1855480056325912"
+     data-ad-slot="6235360302"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script type="ea38ddeeca998a7a6852a2d4-text/javascript">
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>  
+                </div>
+              <div style="display:none"><label>Fill This Field</label><input type="text" name="honeypot" value=""></div></form><!-- End Custom Styled Validation with Tooltips -->
+
+            </div>
+        
+
+           <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Frequent searches</h5>
+
+              <!-- List group with Advanced Contents -->
+              <div class="list-group">
+                  
+                <a href="../v3/Find/source/ernakulam/destination/kozhikkode/type/all/timing/all" target="_blank" class="list-group-item list-group-item-action" aria-current="true">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">ERNAKULAM ↣ KOZHIKKODE</h6>
+                  </div>
+                </a>
+                  
+                <a href="../v3/Find/source/changanassery/destination/thodupuzha/type/all/timing/all" target="_blank" class="list-group-item list-group-item-action">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">CHANGANASSERY↣ THODUPUZHA</h6>
+                  </div>
+                </a>
+                  
+              <a href="../v3/Find/source/thiruvananthapuram/destination/ernakulam/type/all/timing/all" target="_blank" class="list-group-item list-group-item-action" aria-current="true">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">TRIVANDRUM ↣ ERNAKULAM</h6>
+                  </div>
+                </a>
+                  
+                <a href="../v3/Find/source/ernakulam/destination/thiruvananthapuram/type/all/timing/all" target="_blank" class="list-group-item list-group-item-action">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">ERNAKULAM ↣ TRIVANDRUM</h6>
+                  </div>
+                </a>
+              <a href="../v3/Find/source/ernakulam/destination/kattappana/type/all/timing/all" target="_blank" class="list-group-item list-group-item-action">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">ERNAKULAM↣ KATTAPPANA</h6>
+                  </div>
+                </a>
+                  
+              <a href="../v3/Find/source/palakkad/destination/guruvayoor/type/all/timing/all" target="_blank" class="list-group-item list-group-item-action" aria-current="true">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">PALAKKAD ↣ GURUVAYOOR</h6>
+                  </div>
+                </a>
+                  
+                <a href="../v3/Find/source/thrissur/destination/kottayam/type/all/timing/all" target="_blank" class="list-group-item list-group-item-action">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">THRISSUR ↣ KOTTAYAM</h6>
+                  </div>
+                </a>
+              
+              </div><!-- End List group Advanced Content -->
+
+            </div>
+          </div>
+      </div>
+         
+    </section>
+
+      <div style="background: linear-gradient(90deg,#4285f4 4%,#34a853 0%) top/100% 34% no-repeat,linear-gradient(90deg,#fbbc04 50%,#34a853 0%) top/100% 82% no-repeat,linear-gradient(90deg,#fbbc04 10%,#ea4335 0%) top/100% 100%;">
+<svg height="90" width="200">
+<defs>
+<linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+<stop offset="9%" style="stop-color:rgb(52,168,83);stop-opacity:1"></stop>
+<stop offset="50%" style="stop-color:rgb(66,133,244);stop-opacity:1"></stop>
+</linearGradient>
+</defs>
+<ellipse cx="100" cy="70" rx="85" ry="55" fill="url(#grad1)"></ellipse>
+<text fill="#ffffff" font-size="36" style="font-weight: 900;
+    font-family: sans-serif;" x="36" y="86">Kbuses</text>
+Sorry, your browser does not support inline SVG.
+</svg>
+</div>
+  </main><!-- End #main -->
+
+
+        <script type="ea38ddeeca998a7a6852a2d4-text/javascript">
+     $( function() {
+		    document.body.scrollTop = 0; // For Safari
+      	document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+      	   window.history.pushState(null, "", window.location.href);        
+        window.onpopstate = function() {
+            window.history.pushState(null, "", window.location.href);
+        };
+		  
+       var unavailStops = ["THIRUVANANTHAPURAM","KOTTAYAM","ALUVA","VYTILLA HUB","THRISSUR","ERNAKULAM","ALAPPUZHA","KOTTARAKKARA","CHANGANASSERY","KOLLAM","THIRUVALLA","CHERTHALA","KOZHIKKODE","KAYAMKULAM","CHALAKUDY","KARUNAGAPPALLY","MUVATTUPUZHA","ANKAMALY","ATTINGAL","NEYYATTINKARA","THRIPPUNITHURA","NEDUMANGAD","ADOOR","ETTUMANOOR","TRIVANDRUM","PUTHUKKAD","VENJARAMOODU","CHENGANNUR","PALA","KATTAKKADA","PERUMBAVOOR","KANIYAPURAM","KILIMANOOR","PUNALUR","PATHANAMTHITTA","OACHIRA","PALAKKAD","NORTH PARAVOOR","HARIPPAD","KANJIRAPALLY","CHATHANNOOR","CHADAYAMANGALAM","PAPPANAMCODE","AYOOR","BALARAMAPURAM","PANDALAM","MANANTHAVADY","KALPETTA","KOTTIYAM","KUNNAMKULAM","AMBALAPPUZHA","KOOTHATTUKULAM","THAMARASSERY","BANGALORE","PARASSALA","EDAPPAL","MEDICAL COLLEGE THIRUVANANTHAPURAM","MUNDAKKAYAM","THODUPUZHA","PONKUNNAM","KAZHAKKOOTTAM","KASARAGOD","KOTTAKKAL","KALIYIKKAVILA","CHAVARA","KUNDARA","KODUNGALLUR","GURUVAYOOR","EAST FORT","POOVAR","KUNNAMANGALAM","CHINNAKKADA","AROOR","KUTTIPPURAM","ERAMALLOOR","THURAVOOR","VAIKKOM","ERNAKULAM JETTY","PATTOM","VIZHINJAM","PATHANAPURAM","EDAPALLI BYE-PASS JN","ERATTUPETTA","ATHANI","CALICUT UNIVERSITY","PEROORKADA","KOZHENCHERRY","THALAYOLAPARAMBU","VARAPPUZHA","KOONAMMAVU","ADIVAARAM","PERINTHALMANNA","SREEKARYAM","VADANAPPALLY","KUTHIYATHODE","KOLENCHERY","KARICODE","ERUMELY","KANHANGAD","KANNUR","EZHUKONE","KARAKULAM","AMBALLUR","PUTHENKURISH","CHAVAKKAD","SULTAN BATHERY","PEYAD","POTHENCODE","PUTHENPALAM","THIRUMALA","KARETTU","VALANCHERY","KALAMASSERY","VELLARADA","VADAKKENCHERRY","KUNDANOOR","VANDANAM MEDICAL COLLEGE","PARIPPALLY","PIRAVOM","MARAMPALLY","KODAKARA","CHINGAVANAM","ANCHAL","THRIPRAYAR","KODUVALLY","VELLANAD","KARAKONAM","MATHILAKAM","MOONUPEEDIKA","CHULLIMANOOR","ARYANAD","UDIYANKULANGARA","KOTHAMANGALAM","ALAMCODE","MANGALAPURAM","VEMBAYAM","KALLAMBALAM","MUKKOLA","KUTTIKKANAM","PAMPADY","ALATHUR","EDATHUVA","VALAKOM","KUZHALMANNAM","OLLUR","VADAKARA","THALASSERY","ANGAMALY","THIRUVALLOM","RAMANATTUKARA","BHARANAMGANAM","KATTAPPANA","KUNNIKODE","KONNI","PANAMARAM","RANNY","THIRUVANKULAM","ENGAPUZHA","KOVALAM","PALODE","K.CHAPPATH","AZHAKULAM","KOZHIKODE","KARUKACHAL","MARANALLOOR","KUMILY","MALAYINKEEZH","KALLARA","POOVACHAL","KALLUVATHUKKAL","KURAVILANGAD","VYTHIRI","MAVELIKKARA","MALAPPURAM","CHAKKULATHUKAVU","THACHOTTU KAVU","RAMANKARI","KOILANDI","VITHURA","KAKKANAD","THOTTAPPALLY","MONCOMBU","KANJIKKUZHY","KORATTY","KALOOR","KANJIRAMKULAM","NILAMEL","NEDUMUDY","MANNARKAD","MALLAPPALLY","THENMALA","KOTTAPURAM","PONNANI","KARUKUTTY","KALAVOOR","NILAMBUR","PATTAMBI","KIDANGARA","LAKKIDI","MEENANGADI","KONDOTTY","PANACHAMOODU","KADUTHURUTHY","VAMANAPURAM","ELANTHOOR","MANNUTHY","KAMBALAKKAD","THOPPUMPADY","MYSORE","BHARANIKKAVU","KUTTICHAL","VANDIPERIYAR","MUHAMMA","PUTHIYATHURA","MANGALORE","KADAKKAL","PEERMEDU","KANJIRAMATTOM","KULATHUPUZHA","UCHAKADA","KIDANGOOR","MAHE","POOTHOTTA","PATTIKKAD","PUTHUKAD","CHARUMMOODU","ELAMBAL","VATTAPPARA","OLATHANI","MADATHARA","THALAPPAADI","WALAYAR","COIMBATORE","MUTTOM (THODUPUZHA)","KALLADIKODE","PAYYANNUR","ENATH","THOTTILPALAM","THAKAZHY","UZHAMALAKKAL","KESAVADASAPURAM","MALA","OTTASEKHARAMANGALAM","PAZHAYAKADA","MANJESHWAR","TIRUR","THALIPARAMBA","UPPALA","NELLIMOODU","ARANMULA","THANNEERMUKKOM BUND ROAD JN","KURUPPANTHARA","KUMBLA","KUTTIADY","OORUTTAMBALAM","KALLISSERY","MANNANCHERY","MANJERI","MANDAPATHINKADAVU","KURAMPALA","MUNDUR","CHERUVATHOOR","EDAKOCHI","CHETTIKULANGARA","MARTHANDAM","ELAPPARA","ULLIYERI","UZHAVOOR","THATTATHUMALA","THEKKADA","THIRUVANANTHAPURAM GENERAL HOSPITAL","IRINJALAKUDA","UCHAKKADA","SASTHAMKOTTA","KALLIKKAD","NEELESWARAM","KURUPPAMPADY","NAGERCOVIL","MARAKKULAM","CHAKKA","CHENGANNUR RAILWAY STATION","OORAMBU","KARAKKAD","MOOLAMATTOM","VARKALA","MANOOR","PERUMATHURA","CHENKAVILA","CHAMRAVATTOM","MUNNAR","VAZHIKKADAVU","NERIAMANGALAM","KUTTIPURAM","THENKASI","POOYAPPALLY","PULLAD","THIRUVAMBADY","MURUKKUMPUZHA","KALAYAPURAM","KUMARAKOM","KARUNAGAPPALLI","ERAVIPEROOR","RAMAPURAM","AMBALAPUZHA","VENJARAMMOODU","ARYANKAVU","PERAMBRA","CHIRAYINKEEZHU","NEDUMKANDAM","NANNIYODE","ADIMALY","PUTHUKURICHY","ANCHALUMMOODU","ARAKKUNNAM","PAIKA","COIMBATORE UKKADAM","KATTANAM","THOLICODE","CHERAI","CHERUTHONI","KUMARAMPUTHUR","THANNEERMUKKOM","NADAKKAVU(THRIPUNITHURA)","MUKKAM","NATTUKAL","NOORANADU","VYPIN","PAZHAKULAM","DHANUVACHAPURAM","NJARACKAL","SHENKOTTAI","MUNDELA","PARIYAARAM MEDICAL COLLEGE","HARIPAD","KOTTAYAM MEDICAL COLLEGE","VILAPPILSALA","ATHIKKATTUKULANGARA","ARUMANOOR","KARIVELLUR","BEKAL","MAKKARAPARAMBA","OYOOR","MANNAR","NELLIKUNNAM","SASTHAMANGALAM","PALLIKKAL","HIGH COURT","OTTAPALAM","VATTIYOORKAVU","CHEMBOOR","ATHOLI","PUTHUPPALLY","CHITTUMALA","MARAYAMUTTOM","VENNIKULAM","THALAYAZHAM","KADAMPANAD","MANIMALA","CHAMPAKULAM","ELATHUR","PUTHOOR","PUTHANANGADY","ERUTHAVOOR","THALAPPUZHA","PULPALLY","IRINCHAYAM","POLLACHI","ANCHALPETTY","CHUNGATHARA","VENGANOOR","YEROOR","ELANJI","KALLODY","MUKKOOTTUTHARA","KOKKADU","KURUMASSERY","KIZHAKKAMBALAM","KATTIKULAM","PAYYOLI","AIMS HOSPITAL","VARANAD","PARAMBATH","EDAKKARA","KARAVALOOR","ARUVIKKARA","KOZHIKODE UNIVERSITY","NAGAROOR","KAVALAM","PARAPPANANGADI","PATHIRIPPALA","URAKAM","PAPPINISSERI","PERAYAM","THEKKUMBHAGAM","NADUVANNUR","CHANGARAMKULAM","THEMPAMMOODU","VEEYAPURAM","KANNANALLOOR","VELLAMUNDA","PATTAZHY","TANUR","PERUMKADAVILA","BALUSSERY","THEVARA","CHITHARA","ODANAVATTOM","PATTIMATTOM","NEYYAR DAM","KOOTTANAD","VELIYAM","KARUNAGAPALLY","PULINKUNNU","VELLANGALLUR","HMT KALAMASSERY","KALLAR","IRITTY","PADAPPANAL","VAZHICHAL","MITHIRMALA","KOZHINJAMPARA","MANNAMKONAM","CHOONDY","ANNAMANADA","KADINAMKULAM","MUTHUVILA","PANAVOOR","PEREKONAM","EDAVANNA","OONNUKAL","KOOVAPPALLY","MONIPPALLY","KOLLAM CIVIL STATION","KUNNATHUR","CHOTTANIKARA","MOOZHY","PERINGAMMALA","KAMUKINCODE","THALACHIRA","WANDOOR","PUNNAMOODU","KOZHIKKODE MEDICAL COLLEGE","POZHIYOOR","ANDOORKONAM","PAKALKURI","POONJAR","ANACHAL","AYATHIL","ASHTAMICHIRA","NIRAVILPUZHA","KUTTAMASSERY","EDAMON","THAMARAKULAM","AMBALAMKUNNU","CHALAKKUDY","PERUVA","AROOKUTTY","GOPALAPURAM","VAZHAKULAM","ELAVUMTHITTA","AREACODE (AREEKODE)","AMBOORI","KAROOR","CHITTOOR","MEEYANNOOR","NEDUMBASSERY AIRPORT","CHERKALA","NIT CALICUT","KADAPUZHA","ELAMKADU","POONOOR","ILLIKKAL","OLAVAKODE","EDAKKAD","ALUR","NADAVAYAL","OMASSERY","PAMBAVALLEY","PANDIKKAD","CHALLIMUKKU","MEPPADI","KAVANATTINKARA","KALADY","MARANGATTUPALLY","THOTTAKKAD","CHELACHUVADU","PUDUNAGARAM","SHORNUR","KOOTTAPPU","VELI","VALLUVAMBRAM","BEENACHI","MANJANIKKARA","ARYANCODE","CHERUPUZHA","VADASSERIKKARA","PLAMOOTTUKADA","KULAMAVU","ANAKKAMPOYIL","TEEKOY","UPPUTHARA","THOOKKUPALAM","NELLAD","PANGODU","GUNDULPET","POOVATHUSSERY","PAIPAD","KUDAPPANAMOODU","MARYKULAM","ANAYADI","KULATHOOR HS","CHATHANAD","MARAPPALAM","CHUNKAPPARA","NANJANGUD","KENGERI","KOODAL","KUNNAMTHANAM","PULLURAMPARA","POOCHAKKAL","CHERIYAKONNI","PARA","MOOLITHODU","KUTTA COORG","KODUNGOOR","UPPUKANDAM","THOLPETTY","KAYAMKULAM RAILWAY STATION","KANJAR","VALAT","MEENKUNNAM","AYIRAMTHENGU","THAMARAKUDY","KOZHIKKOD UNIVERSITY","ALL SAINTS COLLEGE TVM","CHOZHIYAKODU","NELLIMATTOM","KALLOOPPARA","MANDYA","KAKKATTIL","KOTTOOR","PERINGAMALA","CHAKKUVARAKKAL","NADAPURAM","AZHEEKKAL","CHUNAKKARA","PALAPPETTY","KORUTHODU","KOLLAPALLY","CHERIAZHEEKKAL","VALLIKKUNNU","PALLICKATHODU","PERUMBALAM","DASANAKKARA","PAKKOM","PAINGOTTOOR","PUTHUSSERY","SALEM","VELIYANNOOR","KENICHIRA","KANJIRAPPALLY","UMMANNOOR","KUZHIMAVU","PADINJARETHARA","MUTHUKULAM","BHAGAVATHIPURAM","ANAPPARA","ARATTUPUZHA","VLATHANKARA","WADAKKANCHERY","POOZHIKUNNU","NARUVAMOODU","ARTHUNKAL","PUTHUPPADY","RAMANAGARA","KOTTIYOOR","CHANNAPATTANA","SRIRANGAPATNA","KRISHNAPURAM","AMBAYATHODE","KATTILKADAVU","MADDUR","MEDICAL COLLEGE ERNAKULAM","THRIKKUNNAPPUZHA","THUMPODU","KIDANGANNOOR","PERAVOOR","PARAVUR","VALLIKKAVU","KOOTHUPARAMBA","BHARATHANOOR","VAGAMON","KAZHUTHURUTTY","KARIMBAN","POOZHANADU","KOLLAKADAVU","KEEZHAROOR","KAINAKARY","KOODARANJI","CHENAPPADY","MULLERIA","NENMARA","PALIYODU","PARAYAKADAVU","CHELLANAM","PATHARAM","KOCHEEDA JETTY","SULLIA","PUTHENTHOPE","THULAPPALLY","PALLITHURA","NANMINDA","MALAYALAPUZHA","THIRUVANIYOOR","VALAVOOR","KAKKAYANGAD","CHEPRA","EZHUMATTOOR","AYARKUNNAM","JALSOOR","MEENANKAL","VETTIKKAL","KODALY","THADIYAMPAD","PALANI","MATTANNUR","MANEED","POYYA","VYTTILA HUB","ERATTAYAR","INFOPARK","KUMBALAM","ANDHAKARANAZHY","LABBAKKADA","MALIANKARA","MAKKIYAD","MULAYARA","MEENAKSHIPURAM","ARAYANKAVU","TALIPARAMBA","KARIMUGHAL","PAYYANUR","ERUMELI","VELLIKULANGARA","CALICUT AIRPORT","ALAKKODE","KOLLENGODE","ARUVIPPURAM","KONGAD","THENNOOR","MARAYOOR","OTHERA","PAVUMBA","KOZHUVALLOOR","KAKKODI","KANICHUKULANGARA","CHITTAR","CHERPULASSERY","BADIYADKA","CHOORALMALA","PRAKKULAM","MURIKKASSERY","MANARCADU","NADUKANI","MULAGUNNATHUKAVU","ALUMKADAVU","AANAPPARA","HOSUR","CHEMPAZHANTHY","THAMBALAKKADU","GUDALLUR NILGIRIS","VENKODE","ADIMALI","PUNALAL","SULTHAN BATHERY","PERLA","ORKKATTERI","KOTTAVASAL","PANAYAMUTTAM","SEETHATHODE","VILAKKUPARA","MUPLIYAM","CHITTARIKKAL","ERAVATHOOR","MELATTUMOOZHY","VELLARIKUND","PERIKKALLOOR","PUTTUR","POTHANICAD","PUTHUKKULAM","EDAKKUNNAM","PUNCHAVAYAL","THENGAMAM","PUTHUVELI","PANACODE","CHENNAI","VENMONY","SHORANUR","KOOMBARA","POINACHY","KOLOTH JETTY","ANGAMOOZHY","PAMBA","VETTICHIRA","CUMBUMMETTU","UDUMALPET","THACHAMPARA","SARADKA","PERUNAD","PADAPPAKKARA","KOLAHALAMEDU","THURUTHIPURAM","GUDALUR","VECHOOCHIRA","PANNIYODE","CHELAKKARA","THIRUVANVANDOOR","KAPPIL","ADIMALATHURA","KURUVILANGADU","POREDAM","THENI","ALAKODE","KOORACHUNDU","FEROKE","KOTTAVATTOM","THOPRAMKUDY","KANNAMMOOLA","KARAVUR","NEDUMPOIL","KRISHNAN KOTTA","BALAGRAM","DEVIKULAM","NEDUMBASSERY","NEDUMANKAVU","VANNAPURAM","PARAVOOR NORTH","KUNNAMKERY","POOVATTOOR","RAJAKKAD","MUTHAPPANPUZHA","VENGODE","KASARGODE","CHEMBAKAPPARA","BAVALI","KARITHOTTA","KUTTAMALA","VADUVANCHAL","KOPPAM","PAYYAVOOR","PARUTHIKUZHY","HUNSUR","VELIYANAD","PARAPPIL","MUTTAR","POOPPARA","VAZHITHALA","THIRUVANANTHAPURAM CIVIL STATION","KODUVAYUR","SECRETARIAT","NEDUVANNOOR","MALAMPUZHA","KURUTHANCODE","KAMUKUMCHERY","VELLUMANNADI","MOONNANAKUZHY","PANAMBUKADU","MOOKKANNUR","VANDANMEDU","TECHNOPARK","KOTHAD FERRY","CHEEKKAL KADAVU","THATHAPPILLY","SENKOTTAI","GONIKOPPAL","MYLACHAL","KADAMMANITTA","KAVUMANNAM","TV PURAM","KOOTTALIDA","KADALUNDI","CHETTACHAL","KONNAKUZHY","UDUPI","THOLANUR","VELLANATHURUTHU","CHAMAMPATHAL","VENPAKAL","THADIKKAKADAVU","BHEEMANADY","PANTHA","PARUMALA","MANNADY","EDAVA","PUNKULAM","THYCATTUSSERY","NALANCHIRA","CHOONAD","PERUMON","THIDANAD","KODENCHERY","THERTHALLY","POOMALA","ORAVACKAL","PACHAMALA","THURAYIL KADAVU","PARANDODE","MOOTHEDATHUKAVU","PUNNAKULAM","KOOROPPADA","NALKAVALA","KOYILANDY","MADURAI","ADIVARAM","PAINAVU","PERUVANTHANAM","UNDAPPARA","VETTILAPPARA","CHULLIYODE","NARIKKUNNI","ASHTAMUDI","CVR PURAM","CHANNAPETTA","VALIAZHEEKAL","KANYAKUMARI","ATTUKAL TEMPLE","MANAVARY","MULANTHURUTHY","VENNIYODE","VALLIKUNNAM","VENMANY","504 COLONY","KODANKARA","KARIMBIL","PARIPPU","MUTHOLY","CHERAMBADI","KOKKUNNU","KAVALAM LISIO","KOLLADU BOAT JETTY JUNCTION","KUTTIYANI","KULATHOORMOZHY","THEKKADY","KUMMALLOOR","OOTY","VELIYATHUNADU","THAYAMKARI","ERODE","NILAKKAL","CHANGUVETTY","KARUVANCHAL","VALIYAPERUMPUZHA","PONMUDI","THANKAMANI","POOVAMPALLY","THADIYOOR","POOKKATTUPADY","ELOOR","MAYAM","AGRIFARM","KAPPUKAD","KONGORPILLY","THANDIRIKKAL","KALLARKUTTY","CHEPPILODE","VELLARIKUNDU","CHEMBIRIKA","DEVALA","ERNAKULAM SOUTH","THIRUVILWAMALA","GOVINDAPURAM","BAIRAKUPPA","SHANTINAGAR","THADICADU","KAREEPRA","THIRUNELLI TEMPLE","IDUKKI","KEERUKUZHI","ULLOOR","LAHA","RAJAKUMARI","KALADY PLANTATION","VARKALA SIVAGIRI","ADIVAD","MANJAPRA","VADAKKANCHERY","KUZHITHOLU","PANDAPILLY","GOKULAM MEDICAL COLLEGE","THALOOR","SREEKANDAPURAM","PUTHANATHAANI","MANNATHOOR","PADANILAM","EDAPPALLY","MADIWALA ST JOHN HOSPITAL","AGALY","VELIYAMCODE","THAVALAM","KAMBISSERY", "KUTHIRAVATTOM"  ];
+      	 $( "#dest" ).autocomplete({ 
+             source: function( req, rsp ) {
+				 setLoadingColoursForInput("dest");
+                 DestSel = false;
+               if (validateInput(req.term)) {
+                 $.ajax({
+                       url:"../places",
+                 type: 'GET',
+                 dataType: 'JSON',
+                     data: req,
+                     success: function(data){
+                        resetLoadingColoursForInput("dest");
+                         if(data.s == 'true') {
+                            // Map the new keys back to what jQuery UI Autocomplete expects
+                            var mappedData = $.map(data.d, function(item) {
+                                return { label: item.l, value: item.v };
+                            });
+                            rsp(mappedData);
+                         }else{
+      				setFailureColoursForInput("dest");
+      				}
+				 }
+                 });
+               }
+               else
+                 {
+                   alert("Please enter in English");
+                    document.getElementById("dest").value = "";
+                 }
+             },
+             minLength: 2,
+            select : function(event, ui) {
+             if (ui.item) {
+           DestSel = true;
+      	   destination=ui.item.value;
+      	   id_destination=ui.item.id;
+      	  		setSuccessColoursForInput("dest");
+      	} else {
+      		DestSel = false;
+      		setFailureColoursForInput("dest");
+             }
+         }
+         });
+      $( "#sorc" ).autocomplete({ 
+             source: function( req, rsp ) {
+				 setLoadingColoursForInput("sorc");
+                 SorsSel = false;
+               if (validateInput(req.term)) {
+                 $.ajax({
+                 url:"../places",
+                 type: 'GET',
+                 dataType: 'JSON',
+				 data: req,
+				 success: function(data){
+                resetLoadingColoursForInput("sorc");
+				if(data.s == 'true') {
+                        // Map the new keys back to what jQuery UI Autocomplete expects
+                        var mappedData = $.map(data.d, function(item) {
+                            return { label: item.l, value: item.v };
+                        });
+						rsp(mappedData);
+					 }else{
+					setFailureColoursForInput("sorc");
+				}
+				 }
+                 });
+               }
+               else
+                 {
+                   alert("Please enter in English");
+                   document.getElementById("sorc").value = "";
+                 }
+             },
+             minLength: 2,
+            select : function(event, ui) {
+             if (ui.item) {
+      		id_source=ui.item.id;
+      	   SorsSel = true;
+      	  setSuccessColoursForInput("sorc");
+      		$("#dest").focus();
+             } else {
+      		SorsSel = false;
+      		  setFailureColoursForInput("sorc");
+             }
+         }
+         });
+     
+    } );
+          
+          function validateInput(input) { 
+            var regex = /^[\x00-\x7F]*$/; 
+             return regex.test(input);
+              }
+                                         
+       function swapLoc() {
+        var src = document.getElementById('sorc').value;
+      var dst = document.getElementById('dest').value;
+      document.getElementById('sorc').value=dst;
+      document.getElementById('dest').value=src;
+      }
+      function setSuccessColoursForInput(itemName){
+      			 $("#"+itemName).css("color","inherit");
+      	   $("#"+itemName).css("font-weight","800");
+      	    $("#"+itemName).css("font-family"," 'Lato', sans-serif ");
+      	 		$("#"+itemName).css("border-color","#0f0");
+      		$("#msg").html ( "");
+			$("#msg").fadeOut("fast");
+      	}
+      	function setFailureColoursForInput(itemName){
+      			$("#"+itemName).css("color","red");
+      			$("#"+itemName).css("border-color","red");
+      			$("#"+itemName).focus();
+      			$("#msg").html ( "You need to select a stop");
+      	
+      	}
+      	function setLoadingColoursForInput(itemName){
+      			$("#"+itemName).css("background","#f2f3f4 url(../resources/search_loading.gif) no-repeat 99%");
+                         	$("#"+itemName).css("color","#e52b50");
+      	}
+		function resetLoadingColoursForInput(itemName){
+      			$("#"+itemName).css("background","inherit");
+                         	$("#"+itemName).css("color","inherit");
+      					$("#"+itemName).css("border-color","none");
+      	}
+      var SorsSel=false;
+      var DestSel=false;
+      function verifySearch() {
+		  $('#msg').fadeIn("fast");
+      var src = $("#sorc").val();
+      var dst = $("#dest").val();
+      var tpe = $("#svce").val();
+      var tme = $("#time").val();
+      var typeChar= "all";
+      SorsSel ? '' : setFailureColoursForInput("sorc");
+      DestSel ? '' : setFailureColoursForInput("dest");
+      if (src === dst) {
+            document.getElementById("msg").innerHTML = "Enter source and destination";
+      	return false; //prevent the default behavior of the submit event
+          	 		}else if (DestSel===false &&  SorsSel != true) { 
+      		document.getElementById("msg").innerHTML = "Enter source and destination";
+      		return false; //prevent the default behavior of the submit event
+      	}else if (DestSel===true &&  SorsSel != false) {
+      		$('#msg').removeClass("w-form-fail");
+			//$('#msg').addClass("w-form-success");
+			$("#msg").html ( "Searching..! <div class=\"progress-bar\"><div class=\"progress\" style=\"width: 0%;\"><img src=\"https://www.kbuses.in//resources/7308522.gif\" alt=\"Bus icon\" width=\"50\" height=\"50\"> </div></div>");
+			$('#msg').fadeIn("fast");
+			
+      var source = $('#sorc').val().replace(/\s+/g, '-').toUpperCase();
+      	var destination = $('#dest').val().replace(/\s+/g, '-').toUpperCase();
+let plannedJourney = {
+			k_source: source,
+			k_destination: destination,
+			k_bustype: tpe,
+			k_timing : tme,
+			k_expiry:  new Date(new Date().getTime()+999*18)		
+			};	
+	    localStorage.setItem("plannedJourney",JSON.stringify(plannedJourney));
+	  window.location.href='../v3/Find/source/'+source+'/destination/'+destination+'/type/'+tpe+'/timing/'+tme;
+      }else{
+      	return false; //prevent the default behavior of the submit event
+       }
+      return false; //prevent the default behavior of the submit event
+      }
+	 if(localStorage.getItem("plannedJourney") !== null){
+		  DestSel=true;
+		  SorsSel = true;
+		let plannedJourney1 = localStorage.getItem("plannedJourney");
+		plannedJourney1 = JSON.parse(plannedJourney1);	
+let expirationDate = new Date(plannedJourney1.k_expiry);		
+        if (new Date() > expirationDate) {
+			localStorage.removeItem("plannedJourney");
+		}else{		
+				document.getElementById('sorc').value = plannedJourney1.k_source;
+				document.getElementById('dest').value = plannedJourney1.k_destination;
+				document.getElementById('svce').value = plannedJourney1.k_bustype;
+				document.getElementById('time').value = plannedJourney1.k_timing;
+     	}	
+			
+	} 
+   </script>
+  
+  
+    <script type="ea38ddeeca998a7a6852a2d4-text/javascript">
+   
+$(document).ready(function () {
+	   $('body').bind('cut copy paste', function (e) {
+        e.preventDefault();
+    });
+   
+    
+    $("body").on("contextmenu",function(e){
+        
+		e.preventDefault();
+		return false;
+    });
+
+
+});
+      var scrollLock=false;
+       var matches = document.title;
+       var baseurl="..//";
+         
+   var f = document.getElementById('amountOfUsers');  
+      function blinktext() {
+       setInterval(function() {
+         f.style.visibility = (f.style.visibility == 'hidden' ? '' : 'hidden');
+       }, 900); 
+      }
+
+  var space = " ";
+      var speed = "70";
+      var pos = -20;
+      var msg = "|--- HEARTY WELCOME TO KBUSES ---  KBUSES Home |  Bus Timings ,Pictures ,Route details of all buses passing through Kanjirapally , Mundakayam, Erattupetta and near areas timings on KBUS | www.kbuses.in     ****   www.kbuses.in  ---|";
+      function Scroll()
+      {
+      if(scrollLock==true) return false;
+      document.title = msg.substring(pos, msg.length) + space;
+      pos++;
+      if (pos > msg.length + 0) pos = -20;
+      window.setTimeout("Scroll()", speed);
+      }
+      Scroll();
+
+   </script>
+    
+            
+  <!-- ======= Footer ======= -->
+  <footer id="footer" class="footer">
+      <style>
+          .dark-mode marquee {
+              color: var(--dark-text-muted);
+          }
+      </style>
+      <marquee>Disclaimer: Vehicle details may not be exact. Actual timings may vary according to the traffic and road conditions. We are not responsible for any time conflicts. We are not having any affiliation with any of the operators and schedule details may vary significantly depending on the operators. Kbuses is just a directory of buses. Fare is calculated in accordance with the G.O. Image is copyrighted for respective owners. 🗲🗲🗲 https://www.kbuses.in/        
+  </marquee>
+		
+
+    <style>
+        .dot-indicator {
+            height: 1em;
+            width: 1em;
+            border-radius: 50%;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+    </style>
+
+    <div class="copyright">
+       <span class="dot-indicator" title="146" style="background-color: #81d95e;"></span>
+       <span class="dot-indicator" title="bulbs3" style="background-color: #81d95e;"></span>
+    Powered By Team KBUSES
+   
+    © 2017 - 2026    </div>
+    <div class="credits">
+      <span id="google_translate_element"> </span>
+    </div>
+  </footer><!-- End Footer -->
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <!-- Vendor JS Files -->
+  <script src="https://www.kbuses.in/assets/vendor/bootstrap/js/bootstrap.bundle.min.js" type="ea38ddeeca998a7a6852a2d4-text/javascript"></script>
+  <script src="https://www.kbuses.in/assets/vendor/quill/quill.min.js" type="ea38ddeeca998a7a6852a2d4-text/javascript"></script>
+  <script src="https://www.kbuses.in/assets/vendor/tinymce/tinymce.min.js" type="ea38ddeeca998a7a6852a2d4-text/javascript"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer type="ea38ddeeca998a7a6852a2d4-text/javascript"></script>
+  <!-- Template Main JS File -->
+  <script src="https://www.kbuses.in/assets/js/main.js" type="ea38ddeeca998a7a6852a2d4-text/javascript"></script>
+
+
+
+<script type="ea38ddeeca998a7a6852a2d4-text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        const submitButton = document.getElementById('SubMitMe');
+        if (submitButton) {
+            submitButton.disabled = true;
+        }
+    });
+
+    function onCaptchaSuccess(token) {
+        const submitButton = document.getElementById('SubMitMe');
+        if (submitButton) {
+            submitButton.disabled = false; // Enable submit button
+        }
+    }
+
+   function onCaptchaExpired() {
+        console.log('Cloudflare Turnstile token expired. Resetting widget.');
+        document.getElementById('SubMitMe').disabled = true; // Disable button
+       if (typeof turnstile !== 'undefined') { turnstile.reset(); }
+    }
+
+    function resetTurnstileWidget() {
+        if (typeof turnstile !== 'undefined') {
+            turnstile.reset();
+            console.log('Cloudflare Turnstile widget reset via custom call.');
+        } else {
+            console.warn('Cloudflare Turnstile script not loaded or turnstile object not available.');
+        }
+        document.getElementById('SubMitMe').disabled = true; // Ensure button is disabled after reset
+    }
+
+</script>
+
+  <script defer type="ea38ddeeca998a7a6852a2d4-text/javascript">
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement({pageLanguage: 'en',  includedLanguages: 'ar,ja,kn,bn,ms,fa,pl,nl,pt,ro,ru,tl,fr,ta,el,te,tr,hi,ur,ml',
+      layout: google.translate.TranslateElement.InlineLayout.SIMPLE, autoDisplay: false}, 'google_translate_element');
+      }
+   </script>
+
+  <script async defer type="ea38ddeeca998a7a6852a2d4-text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<script async defer data-account="RE42m9NZTZ" src="https://cdn.userway.org/widget.js" type="ea38ddeeca998a7a6852a2d4-text/javascript"></script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1DY8ET55YL" type="ea38ddeeca998a7a6852a2d4-text/javascript"></script>
+<script type="ea38ddeeca998a7a6852a2d4-text/javascript">
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-1DY8ET55YL');
+</script>
+<script type="ea38ddeeca998a7a6852a2d4-text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "ljodxorgq7");
+</script>
+
+<script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="ea38ddeeca998a7a6852a2d4-|49" defer></script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9cb162413f1a8998',t:'MTc3MDYxOTMxNQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
+</html>

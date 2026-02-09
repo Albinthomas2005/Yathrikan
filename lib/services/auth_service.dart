@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -73,6 +74,20 @@ class AuthService {
       throw _handleAuthException(e);
     } catch (e) {
       final errorMessage = e.toString();
+      debugPrint("DEBUG AUTH: Google Sign-in error: $errorMessage");
+
+      // Check for common error codes
+      if (errorMessage.contains('10') ||
+          errorMessage.contains('12500') ||
+          errorMessage.contains('ApiException')) {
+        throw Exception(
+            'Google Sign-In Configuration Error (Code 10/12500).\n\n'
+            'This usually means the SHA-1 fingerprint is missing from Firebase.\n\n'
+            'Developer Action Required:\n'
+            '1. Run "gradlew signingReport" in android folder\n'
+            '2. Copy the SHA-1 debug key\n'
+            '3. Add it to Firebase Console > Project Settings > Android App');
+      }
 
       // Check for People API error
       if (errorMessage.contains('People API') ||

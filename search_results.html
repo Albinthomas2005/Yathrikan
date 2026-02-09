@@ -1,0 +1,1389 @@
+
+<html lang="en">
+<head>
+<title>Kbuses</title>
+<link rel="icon" href="https://www.kbuses.in/staticfiles/favico.png?v=2" />
+<meta property="og:type" content="website">
+<meta property="og:title" content="KBUSES Timings">
+<meta property="og:description" content="Kerala, Karnataka Bus Timings powered by Team KBUSES | Kbuses is an application that&#39;s intuitive, efficient and useful. More than 50000 buses including KSRTC, with bus schedules, image , route map  and mobile access. Bus Timings ,Pictures ,Route details of all buses passing through Kanjirapally , Mundakayam, Erattupetta and near areas timings on KBUSES | www.kbuses.in">
+<meta property="og:url" content="https://www.kbuses.in">
+<meta property="og:image" content="https://www.kbuses.in/staticfiles/2x200.jpg">
+<meta property="og:image:width" content="200px">
+<meta property="og:image:height" content="200px">
+<meta property="fb:app_id" content="973846456153140" />
+<link rel="alternate" href="https://www.kbuses.in" hreflang="x-default" />
+<meta name="Author" content="aNaNthu">
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta name="google-signin-client_id" content="838931125086-7i3c9o32de2cmsc3cphmp7k4op4nqeco.apps.googleusercontent.com">
+<meta name="description" content="Kerala, Karnataka Bus Timings powered by Team KBUSES | Kbuses is an application that&#39;s intuitive, efficient and useful. More than 50000 buses including KSRTC, with bus schedules, image , route map  and mobile access. Bus Timings ,Pictures ,Route details of all buses passing through Kanjirapally , Mundakayam, Erattupetta and near areas timings on KBUSES | www.kbuses.in">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <!-- Google Fonts -->
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+ <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css">
+<link
+  href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css"
+  rel="stylesheet"
+/><link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css"
+    rel="stylesheet"
+/>
+<link href="https://cdn.jsdelivr.net/npm/simple-datatables@latest/dist/style.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" type="2c5e318bf271d8bcc4b9f80a-text/javascript"></script>
+
+  <!-- Template Main CSS File -->
+  <link href="https://www.kbuses.in/assets/css/style.css?v1" rel="stylesheet">
+   <link href="https://www.kbuses.in/assets/css/animations.css" rel="stylesheet">
+
+     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js" type="2c5e318bf271d8bcc4b9f80a-text/javascript"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.14.1/jquery-ui.min.js" type="2c5e318bf271d8bcc4b9f80a-text/javascript"></script>
+<script type="2c5e318bf271d8bcc4b9f80a-text/javascript">
+    // --- Theme Switcher ---
+    document.addEventListener('DOMContentLoaded', function() {
+        const themeToggleWrapper = document.getElementById('theme-toggle-wrapper');
+        const body = document.body;
+
+        const applyTheme = (theme) => {
+            if (theme === 'dark') {
+                body.classList.add('dark-mode');
+            } else {
+                body.classList.remove('dark-mode');
+            }
+        };
+
+        // Apply the saved theme on page load, or system preference
+        const savedTheme = localStorage.getItem('theme');
+        // const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (savedTheme) {
+            applyTheme(savedTheme);
+        } 
+        // else if (prefersDark) {
+        //     applyTheme('dark');
+        //     localStorage.setItem('theme', 'dark'); // Save the preference
+        // }
+
+        const toggleAction = function() {
+            const isDarkMode = body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        };
+
+        // Add event listener for the wrapper for better UX
+        if(themeToggleWrapper) {
+            themeToggleWrapper.addEventListener('click', toggleAction);
+        }
+    });
+</script>
+<style>
+    /* --- Custom Scrollbar (for Webkit browsers) --- */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 5px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+    .dark-mode ::-webkit-scrollbar-track {
+        background: var(--dark-bg);
+    }
+    .dark-mode ::-webkit-scrollbar-thumb {
+        background: #444;
+    }
+    .dark-mode ::-webkit-scrollbar-thumb:hover {
+        background: #666;
+    }
+
+    /* --- Dark Mode Styles --- */
+    :root {
+        --dark-bg: #0d1117;
+        --dark-card-bg: #161b22;
+        --dark-border: #30363d;
+        --dark-text: #c9d1d9;
+        --dark-text-muted: #8b949e;
+        --dark-link: #58a6ff;
+        --dark-primary-btn-bg: #238636;
+        --dark-primary-btn-border: #2ea043;
+    }
+
+    body.dark-mode {
+        background-color: var(--dark-bg);
+        color: var(--dark-text);
+    }
+
+    body, header, .sidebar, .modal-content, .list-group-item, .accordion-item, .pagetitle, .footer {
+        transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+    }
+
+    .dark-mode header, .dark-mode .sidebar {
+        background-color: var(--dark-card-bg);
+        border-color: var(--dark-border);
+    }
+
+    .dark-mode .sidebar .nav-link {
+        background: transparent;
+        color: var(--dark-text);
+    }
+
+    .dark-mode .sidebar .nav-link i {
+        color: var(--dark-text-muted);
+    }
+
+    .dark-mode .sidebar .nav-link:hover,
+    .dark-mode .sidebar .nav-link:not(.collapsed) {
+        background: var(--dark-bg);
+        color: var(--dark-link);
+    }
+
+    .dark-mode .sidebar .nav-link:hover i,
+    .dark-mode .sidebar .nav-link:not(.collapsed) i {
+        color: var(--dark-link);
+    }
+
+    .dark-mode .sidebar .nav-heading {
+        color: var(--dark-text-muted);
+    }
+
+    .dark-mode .pagetitle h1, .dark-mode .pagetitle .breadcrumb-item, .dark-mode .pagetitle .breadcrumb-item.active {
+        color: var(--dark-text);
+    }
+
+    .dark-mode .pagetitle .breadcrumb-item a {
+        color: var(--dark-link);
+    }
+
+    .dark-mode .card, .dark-mode .modal-content, .dark-mode .accordion-item {
+        background-color: var(--dark-card-bg);
+        border: 1px solid var(--dark-border);
+        color: var(--dark-text);
+    }
+
+    .dark-mode .card-title, .dark-mode h1, .dark-mode h2, .dark-mode h3, .dark-mode h4, .dark-mode h5, .dark-mode h6 {
+        color: var(--dark-text);
+    }
+
+    .dark-mode .list-group-item {
+        background-color: var(--dark-card-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-text);
+    }
+
+    .dark-mode a:not(.btn) {
+        color: var(--dark-link);
+    }
+
+    .dark-mode .list-group-item-action:hover, .dark-mode .list-group-item-action:focus {
+        background-color: #222831;
+    }
+
+    .dark-mode .form-control, .dark-mode .form-select {
+        background-color: var(--dark-bg);
+        color: var(--dark-text);
+        border-color: var(--dark-border);
+    }
+
+    .form-control, .form-select {
+        transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        transform: scale(1.01);
+    }
+
+    .dark-mode .form-control:focus, .dark-mode .form-select:focus {
+        background-color: var(--dark-bg);
+        color: var(--dark-text);
+        border-color: var(--dark-link);
+        box-shadow: 0 0 0 0.25rem rgba(88, 166, 255, 0.25);
+    }
+
+    .dark-mode .table {
+        --bs-table-color: var(--dark-text);
+        --bs-table-bg: transparent;
+        --bs-table-border-color: var(--dark-border);
+        --bs-table-striped-bg: rgba(255, 255, 255, 0.05);
+        --bs-table-striped-color: var(--dark-text);
+        --bs-table-hover-bg: #222831;
+        --bs-table-hover-color: var(--dark-text);
+        color: var(--bs-table-color);
+    }
+
+    .dark-mode .nav-tabs-bordered {
+        border-bottom-color: var(--dark-border);
+    }
+
+    .dark-mode .nav-tabs-bordered .nav-link {
+        border-color: transparent;
+        color: var(--dark-text-muted);
+    }
+
+    .dark-mode .nav-tabs-bordered .nav-link.active {
+        background-color: var(--dark-card-bg);
+        color: var(--dark-link);
+        border-bottom: 2px solid var(--dark-link);
+    }
+
+    .dark-mode .btn-primary {
+        background-color: var(--dark-primary-btn-bg);
+        border-color: var(--dark-primary-btn-border);
+    }
+
+    .dark-mode .footer {
+        background-color: var(--dark-card-bg);
+        color: var(--dark-text-muted);
+    }
+
+    .dark-mode .credits a {
+        color: var(--dark-link);
+    }
+
+    /* --- Pagination Dark Mode --- */
+    .dark-mode .pagination .page-link {
+        background-color: var(--dark-card-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-link);
+    }
+    .dark-mode .pagination .page-link:hover {
+        background-color: #222831;
+        border-color: var(--dark-border);
+    }
+    .dark-mode .pagination .page-item.active .page-link {
+        background-color: var(--dark-link);
+        border-color: var(--dark-link);
+        color: var(--dark-card-bg);
+    }
+    .dark-mode .pagination .page-item.disabled .page-link {
+        background-color: var(--dark-card-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-text-muted);
+    }
+
+    /* --- Modern Alert Styles --- */
+    .alert {
+        border-left-width: 5px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .dark-mode .alert-warning {
+        background-color: #3d3421;
+        color: #fdeec9;
+    }
+
+    /* --- Modern Theme Toggle Button --- */
+    .theme-toggle-btn {
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        color: #212529; /* Default icon color for light mode */
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        transition: color 0.3s ease;
+    }
+
+    .theme-toggle-btn:hover {
+        color: #007bff; /* Hover color for light mode */
+    }
+
+    .dark-mode .theme-toggle-btn {
+        color: var(--dark-text);
+    }
+
+    .dark-mode .theme-toggle-btn:hover {
+        color: var(--dark-link);
+    }
+
+    .sun-and-moon {
+        width: 1.5rem; /* 24px */
+        height: 1.5rem; /* 24px */
+        stroke-linecap: round;
+    }
+
+    .sun-and-moon > .sun,
+    .sun-and-moon > .sun-beams {
+        transform-origin: center center;
+        transition: transform 0.5s cubic-bezier(0.5, 1.5, 0.75, 1.25);
+    }
+
+    .sun-and-moon > .sun-beams {
+        transition-property: transform, opacity;
+    }
+
+    .sun-and-moon .moon > circle {
+        transition: transform .25s ease-out;
+    }
+
+  @keyframes sway {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(5px); } /* Adjust for more or less sway */
+  100% { transform: translateX(0); }
+}
+
+/* --- Card Hover Effect --- */
+.indibus, .unsurebusinfo, .card, .journey-timeline {
+    transition: transform 0.25s ease-out, box-shadow 0.25s ease-out;
+}
+.indibus:hover, .unsurebusinfo:hover, .card:hover, .journey-timeline:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+}
+.dark-mode .indibus:hover, .dark-mode .unsurebusinfo:hover, .dark-mode .card:hover, .dark-mode .journey-timeline:hover {
+    box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+}
+.card:hover {
+    z-index: 10; /* Ensure hovered card comes to the front */
+}
+
+.wind-image-sway {
+  animation: sway 3s ease-in-out infinite; /* 3s duration, smooth ease, repeats forever */
+}
+@keyframes gentle-breeze {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(9deg); }
+  75% { transform: rotate(3deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.wind-image-rotate {
+  animation: gentle-breeze 4s ease-in-out infinite;
+  transform-origin: bottom center; /* Adjust origin based on your image */
+}
+     .logo2img {
+    max-height: 9vh;
+    margin-right: 6px;
+    margin-top: 18px;
+} 
+.loading-image {
+      background-image: url('https://www.kbuses.in/resources/loading3.svg');
+	  width: auto;
+    height: 180px;
+	  background-repeat: space;
+  }
+    .loaded-img {
+      width: auto;
+        height: auto;
+  }
+    table {
+    table-layout: fixed;
+    width: 100%;
+}
+ .vertical-text {
+        writing-mode: vertical-lr;
+        transform: rotate(180deg);
+    }
+    .cell1 {
+            width: 100%;
+        }
+    .cell7 {
+            width: 72%;
+        }
+
+        .cell3 {
+            width: 28%;
+        }
+  /* Bootstrap styling for jQuery UI Autocomplete */
+.ui-autocomplete {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    float: left;
+    display: none;
+    min-width: 160px;
+    padding: 4px 0;
+    margin: 0 0 10px 25px;
+    list-style: none;
+    background-color: #ffffff;
+    border-color: #ccc;
+    /* Add other styles as needed */
+}
+
+.ui-menu-item > a.ui-corner-all {
+    display: block;
+    padding: 3px 15px;
+    clear: both;
+    font-weight: normal;
+    line-height: 18px;
+    color: #555555;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.ui-state-hover,
+.ui-state-active {
+    color: #ffffff;
+    font-weight: bold;
+    text-decoration:underline;
+    text-align: center;
+    background-color: #34a853;
+    border-radius: 9px;
+}
+
+.dark-mode .indibus, .dark-mode .unsurebusinfo {
+    background-color: var(--dark-card-bg);
+    border: 1px solid var(--dark-border);
+    color: var(--dark-text);
+}
+
+.dark-mode .busname {
+    color: #38a3a5;
+}
+
+.dark-mode .bustype {
+    color: #e0e0e0 !important;
+}
+
+.dark-mode .journey-timeline {
+    background-color: var(--dark-card-bg);
+    border: 1px solid var(--dark-border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.dark-mode .journey-timeline .place, .dark-mode .journey-timeline .stop-name, .dark-mode .journey-timeline .time, .dark-mode .journey-timeline .reg-no {
+    color: var(--dark-text);
+}
+.dark-mode .journey-timeline .text-muted {
+    color: var(--dark-text-muted) !important;
+}
+
+.dark-mode .journey-timeline .timeline-point {
+    background-color: #222831;
+}
+
+.dark-mode .journey-timeline .timeline-line {
+    background-color: var(--dark-border);
+}
+
+.dark-mode .journey-timeline .timeline-bus-info {
+    background-color: var(--dark-card-bg);
+    border-radius: 10px; /* Add rounded corners for a modern look */
+}
+
+.dark-mode .accordion-button::after {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+.dark-mode .accordion-button:not(.collapsed) {
+    background-color: #1f2937;
+}
+
+/* --- Breadcrumb Styling --- */
+.breadcrumb-item + .breadcrumb-item::before {
+    content: '›'; /* Use a more elegant separator */
+    font-weight: bold;
+}
+.dark-mode .breadcrumb-item + .breadcrumb-item::before {
+    color: var(--dark-text-muted);
+}
+
+    /* Dark mode active */
+    .dark-mode .sun-and-moon > .sun {
+        transform: scale(1.75);
+    }
+
+    .dark-mode .sun-and-moon > .sun-beams {
+        transform: rotateZ(-90deg);
+        opacity: 0;
+    }
+
+    .dark-mode .sun-and-moon .moon > circle {
+        transform: translateX(-7px);
+    }
+
+.bus-list .hideplay::before {
+  content: "";
+  position: absolute;
+  left: 0%;
+  top: 0;
+  height: 100%;
+  width: 99%;
+  background: linear-gradient(to right, #e2e2e2 25%, #d5d5d5 50%, #e2e2e2 100%);
+  animation-name: gradient-animation;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
+  filter: blur(5px);
+}
+@keyframes gradient-animation {
+  from {
+    left: 0%;
+  }
+  to {
+    left: 100%;
+  }
+}
+.progress-bar {
+  width: 100%;
+  height: 50px;
+  background-color: white;
+  border-radius: 5px;
+}
+
+.progress {
+ height: 100%;
+  background-color: white;
+  transition: width 1s ease-in-out;
+}
+.progress img {
+  position: absolute;
+  animation: moveBus 2s linear;
+}
+
+@keyframes moveBus {
+  0% {
+    left: -50px;
+  }
+  100% {
+    left: calc(100% + 50px);
+  }
+}
+.smalltxt
+    {
+        font-size: small;
+    }
+    
+.large_bold{
+        font-size: large;
+    font-weight: 900;
+    }
+    
+    .busname {
+    font-size: 1.02em;
+    font-weight: 900;
+    color: #34a853;
+        display: flex
+}
+    
+            ul.pagination li a {
+                border: solid 1px;
+                border-radius: 3px;
+                -moz-border-radius: 3px;
+                -webkit-border-radius: 3px;
+                padding: 6px 9px 6px 9px
+            }
+
+            ul.pagination li {
+                padding-bottom: 1px
+            }
+
+            ul.pagination li a.current,ul.pagination li a:hover {
+                color: #fff;
+                box-shadow: 0 1px #ededed;
+                -moz-box-shadow: 0 1px #ededed;
+                -webkit-box-shadow: 0 1px #ededed
+            }
+
+            ul.pagination {
+                margin: 4px 0;
+                padding: 0;
+                overflow: hidden;
+                font: 12px Tahoma;
+                list-style-type: none
+            }
+
+            ul.pagination li {
+                float: left;
+                margin: 0;
+                padding: 0;
+                margin-left: 5px
+            }
+
+            ul.pagination li a {
+                color: #000;
+                display: block;
+                text-decoration: none;
+                padding: 7px 10px 7px 10px
+            }
+    
+            ul.pagination li.active a{
+                background-color: #fff;
+                border: #34a853 3px dotted;
+            }
+            ul.pagination li a img {
+                border: none
+            }
+
+            ul.pagination li a.current,ul.pagination li a:hover {
+                text-shadow: 0 1px #388dbe;
+                border-color: #3390ca;
+                background: green;
+                background: -moz-linear-gradient(top,#b4f6ff 1px,#63d0fe 1px,#58b0e7);
+            }
+    .dot {
+    transform: scaleX(-1);
+    position: absolute;
+    right: 18%;
+    content: "";
+    width: 1em;
+    height: 1em;
+    border-radius: 50%;
+    background: #f46965;
+    box-shadow: 1.4em 0 #e9cd06, 2.8em 0 #81d95e;
+}
+    
+    .btn-primary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #34a853;
+    }
+    
+    .modal {
+background-color: #f6f9ff;
+    }
+
+    .lightning-svg {
+            filter: drop-shadow(0 0 8px rgba(255, 255, 0, 0.8)) drop-shadow(0 0 20px rgba(255, 255, 0, 0.5));
+        }
+
+        .lightning-bolt {
+            stroke: #fff300; /* Gold outline */
+            stroke-width: 0.9;
+            animation: flicker 6.3s infinite alternate; /* The flickering animation */
+            transform-origin: center; /* Ensure scaling is from the center */
+        }
+
+        @keyframes flicker {
+            0% {
+                opacity: 0.8;
+                transform: scale(1);
+                filter: drop-shadow(0 0 5px rgba(255, 255, 0, 0.8));
+            }
+            20% {
+                opacity: 1;
+                transform: scale(1.02);
+                filter: drop-shadow(0 0 10px rgba(255, 255, 0, 0.9));
+            }
+            40% {
+                opacity: 0.7;
+                transform: scale(0.98);
+                filter: drop-shadow(0 0 3px rgba(255, 255, 0, 0.7));
+            }
+            60% {
+                opacity: 1;
+                transform: scale(1.03);
+                filter: drop-shadow(0 0 12px rgba(255, 255, 0, 1));
+            }
+            80% {
+                opacity: 0.9;
+                transform: scale(1.01);
+                filter: drop-shadow(0 0 7px rgba(255, 255, 0, 0.85));
+            }
+            100% {
+                opacity: 0.85;
+                transform: scale(1);
+                filter: drop-shadow(0 0 8px rgba(255, 255, 0, 0.8));
+            }
+          }
+          
+
+       
+    </style>
+	 
+<script type="2c5e318bf271d8bcc4b9f80a-text/javascript">
+var progress = document.querySelector('.progress-bar .progress');
+progress.style.width = '100%';
+   var modal = document.getElementsByClassName("modal");
+window.onclick = function(event) {
+	for (const div of modal) {
+  if (event.target == div) { 
+            div.style.display = "none";
+        }
+  }
+}
+const $el = document.querySelector("body");
+
+ $(window).on("load", function() {
+ $el
+    .querySelectorAll(".hideplay")
+    .forEach((el) => el.classList.remove("hideplay"));
+	document.querySelector('.progress-bar').remove("progress-bar");
+});
+
+</script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1855480056325912" crossorigin="anonymous" type="2c5e318bf271d8bcc4b9f80a-text/javascript"></script>
+
+      <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-HT041R14H9" type="2c5e318bf271d8bcc4b9f80a-text/javascript"></script>
+<script type="2c5e318bf271d8bcc4b9f80a-text/javascript">
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-HT041R14H9');
+</script>
+  </head>
+
+<body><a href="https://www.kbuses.in/cdn-cgi/content?id=fPCLWUkYdOguScN46LVtZp13Y4JfYGXTGhktHTFhSyM-1770619361.3463073-1.0.1.1-RzwyJKhIN2H.rCZ8SVglPRHvOJ015dw1fp2zAMRsREM" aria-hidden="true" rel="nofollow noopener" style="display: none !important; visibility: hidden !important"></a>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="header fixed-top d-flex align-items-center">
+    <i class="bi bi-list toggle-sidebar-btn"></i>
+    <div class="d-flex align-items-center justify-content-between">
+         <a href="https://www.kbuses.in/" class="logo d-flex align-items-center">
+        <img src="https://www.kbuses.in//assets/img/green_heading_logo_v3.png" alt="">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-lightning lightning-svg" viewBox="0 0 16 16">
+          <path class="lightning-bolt" d="M5.52.359A.5.5 0 0 1 6 0h4a.5.5 0 0 1 .474.658L8.694 6H12.5a.5.5 0 0 1 .395.807l-7 9a.5.5 0 0 1-.873-.454L6.823 9.5H3.5a.5.5 0 0 1-.48-.641zM6.374 1 4.168 8.5H7.5a.5.5 0 0 1 .478.647L6.78 13.04 11.478 7H8a.5.5 0 0 1-.474-.658L9.306 1z"/>
+            </svg>
+              </a>
+    </div><!-- End Logo -->
+        <span class="dot"></span>  
+  <!-- ======= Sidebar ======= -->
+  <aside id="sidebar" class="sidebar">
+    <ul class="sidebar-nav" id="sidebar-nav">
+
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="https://www.kbuses.in/">
+          <i class="bi bi-house"></i>
+          <span>Home</span>
+        </a>
+      </li><!-- End Home Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="https://www.kbuses.in/privacy">
+          <i class="bi bi-receipt-cutoff"></i>
+          <span>Privacy Policy</span>
+        </a>
+      </li><!-- End Privacy Policy Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="https://www.kbuses.in/tc">
+          <i class="bi bi-card-list"></i>
+          <span>Terms &amp; Conditions</span>
+        </a>
+      </li><!-- End T&C Nav -->
+
+      <li class="nav-heading">Settings</li>
+
+      <li class="nav-item">
+        <div class="nav-link collapsed" style="display: flex; align-items: center; width: 100%; cursor: pointer;" id="theme-toggle-wrapper">
+          <i class="bi bi-moon-stars"></i>
+          <span>Night Mode</span>
+          <button id="theme-toggle" class="theme-toggle-btn ms-auto">
+            <svg class="sun-and-moon" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24">
+                <mask class="moon" id="moon-mask">
+                    <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                    <circle cx="24" cy="10" r="6" fill="black" />
+                </mask>
+                <circle class="sun" cx="12" cy="12" r="6" mask="url(#moon-mask)" fill="currentColor" />
+                <g class="sun-beams" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="23" />
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                    <line x1="1" y1="12" x2="3" y2="12" />
+                    <line x1="21" y1="12" x2="23" y2="12" />
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </g>
+            </svg>
+          </button>
+        </div>
+      </li>
+
+      <li class="nav-heading">Pages</li>
+
+      <li class="nav-item">
+    <a class="nav-link collapsed" href="https://www.kbuses.in/depots">
+        <i class="bi bi-building"></i>
+        <span>Depot Enquiry</span>
+    </a>
+</li>
+
+
+    
+    <!-- <li class="nav-item">
+        <a class="nav-link collapsed" href="https://www.kbuses.in/contact">
+          <i class="bi bi-envelope"></i>
+          <span>Send feedback</span>
+        </a>
+      </li> -->
+     
+        
+              <li class="nav-item">
+            <a class="nav-link collapsed" href="https://www.kbuses.in/login">
+                <i class="bi bi-box-arrow-in-right"></i>
+                <span>Login</span>
+            </a>
+        </li>
+          </ul>
+
+  </aside><!-- End Sidebar-->
+
+  </header><!-- End Header -->
+
+       <div class="progress-bar">
+  <div class="progress" style="width: 0%;">
+    <img src="https://www.kbuses.in/resources/7308522.gif" alt="Bus icon" width="50" height="50">
+  </div>
+</div>
+  
+       <div id="servqtymodal" class="modal hashbrown" style="display:none;">
+  <style>
+    .dark-mode .modal-content {
+        background-color: var(--dark-card-bg) !important;
+        color: var(--dark-text) !important;
+    }
+    .dark-mode .modal-content i, .dark-mode .modal-content li, .dark-mode .modal-content font {
+        color: var(--dark-text) !important;
+    }
+    .dark-mode .modal-content font[style*="color:green"] {
+        color: #238636 !important;
+    }
+    .dark-mode .modal-content font[style*="color:orange"] {
+        color: #f39c12 !important;
+    }
+    .dark-mode .modal-content font[style*="color:red"] {
+        color: #e74c3c !important;
+    }
+    .dark-mode .modal-content .fa-times-circle {
+        color: var(--dark-text) !important;
+    }
+  </style>
+  <div class="modal-content" style="top:36%;    padding: 12px;"> 
+  <i title="Close this message" class="fas fa-times-circle" style="float: right;color: black;font-size: x-large;" onclick="if (!window.__cfRLUnblockHandlers) return false; document.getElementById('servqtymodal').style.display = 'none';" data-cf-modified-2c5e318bf271d8bcc4b9f80a-=""></i>
+ Service quality is determined by the realtime users who reported about this bus. This helps to identify whether a bus is running regularly or not
+<li><font style="color:green;font-weight:bold;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-check hideplay" viewBox="0 0 16 16">
+  <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m1.679-4.493-1.335 2.226a.75.75 0 0 1-1.174.144l-.774-.773a.5.5 0 0 1 .708-.708l.547.548 1.17-1.951a.5.5 0 1 1 .858.514M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/>
+  <path d="M8.256 14a4.5 4.5 0 0 1-.229-1.004H3c.001-.246.154-.986.832-1.664C4.484 10.68 5.711 10 8 10q.39 0 .74.025c.226-.341.496-.65.804-.918Q8.844 9.002 8 9c-5 0-6 3-6 4s1 1 1 1z"/>
+</svg></i> Verified</font> - <i>This bus is conducting service. Verified by users recently.</i></li>
+<li><font style="color:orange;font-weight:bold;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-diamond hideplay" viewBox="0 0 16 16">
+  <path d="M6.95.435c.58-.58 1.52-.58 2.1 0l6.515 6.516c.58.58.58 1.519 0 2.098L9.05 15.565c-.58.58-1.519.58-2.098 0L.435 9.05a1.48 1.48 0 0 1 0-2.098zm1.4.7a.495.495 0 0 0-.7 0L1.134 7.65a.495.495 0 0 0 0 .7l6.516 6.516a.495.495 0 0 0 .7 0l6.516-6.516a.495.495 0 0 0 0-.7L8.35 1.134z"/>
+  <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+</svg> Unsure</font> - <i>Unsure about the bus! This bus may not be running</i></li>
+<li><font style="color:red;font-weight:bold;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-octagon hideplay" viewBox="0 0 16 16">
+  <path d="M4.54.146A.5.5 0 0 1 4.893 0h6.214a.5.5 0 0 1 .353.146l4.394 4.394a.5.5 0 0 1 .146.353v6.214a.5.5 0 0 1-.146.353l-4.394 4.394a.5.5 0 0 1-.353.146H4.893a.5.5 0 0 1-.353-.146L.146 11.46A.5.5 0 0 1 0 11.107V4.893a.5.5 0 0 1 .146-.353zM5.1 1 1 5.1v5.8L5.1 15h5.8l4.1-4.1V5.1L10.9 1z"/>
+  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+</svg> No Service</font> - <i>This trip is not conducted. Possibly schedule is cancelled</i></li>
+</div>
+</div>  
+<main id="main" class="main">
+
+    <div class="pagetitle">
+      <nav>
+        <ol class="breadcrumb">
+           <li class="breadcrumb-item"><a href="https://www.kbuses.in/">Home</a></li>
+             <li class="breadcrumb-item active"> 
+                 KOTTAYAM<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#34a853" class="bi bi-arrow-right" viewBox="0 0 16 16">
+<path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"></path>
+</svg> ERNAKULAM    
+    </li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+       
+    <!-- Search & Filter Controls -->
+
+    <div id="loadingIndicator" style="display: none; text-align: center; padding: 20px;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p>Updating results...</p>
+    </div>
+
+        <section id = "bulllist" class="section dashboard">
+            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1855480056325912" crossorigin="anonymous" type="2c5e318bf271d8bcc4b9f80a-text/javascript"></script>
+<!-- dAd-P2 -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-1855480056325912"
+     data-ad-slot="3530887331"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script type="2c5e318bf271d8bcc4b9f80a-text/javascript">
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+
+
+      <p>There may be 299 All buses available All time</p><div class="row">
+    <div class="indibus">
+<div class="bus-info" style="width: 75%;">
+     <span id="bus_name" class= "busname">KSRTC<span class="hideplay" title="Click for more info" onclick="if (!window.__cfRLUnblockHandlers) return false; document.getElementById('servqtymodal').style.display = 'block';" style="font-size:90%;color:orange;" data-cf-modified-2c5e318bf271d8bcc4b9f80a-=""><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-diamond hideplay" viewBox="0 0 16 16">
+  <path d="M6.95.435c.58-.58 1.52-.58 2.1 0l6.515 6.516c.58.58.58 1.519 0 2.098L9.05 15.565c-.58.58-1.519.58-2.098 0L.435 9.05a1.48 1.48 0 0 1 0-2.098zm1.4.7a.495.495 0 0 0-.7 0L1.134 7.65a.495.495 0 0 0 0 .7l6.516 6.516a.495.495 0 0 0 .7 0l6.516-6.516a.495.495 0 0 0 0-.7L8.35 1.134z"/>
+  <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+</svg> </span></span>
+          <span style="color: chocolate;"></span>
+  <span class="card-text" style="overflow-wrap: break-word; white-space: pre-line;">Thiruvananthapuram</span>
+<img src="https://www.kbuses.in/assets/img/journey.png" style="display: inline-block;">
+<span class="card-text" style="overflow-wrap: break-word; white-space: pre-line;"> Thrissur</span>
+<div style="color:#8db900" class="text-block-9 bustype">Ac Premium Superfast</div>	
+        </div>
+    <div class="bus-info" style="width:25%;" >
+         <span id="bus_time" class="large_bold">02:00 am</span>   
+<div>
+    <a class="btn btn-outline-success hideplay" target='_blank' href="https://www.kbuses.in/v3/travelinfo/bus/2205TVMTSR/route/3282/from/KOTTAYAM/to/ERNAKULAM">
+<script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="2c5e318bf271d8bcc4b9f80a-|49"></script><img onerror="this.src='https://www.kbuses.in/resources/water_busimages/Bus.svg'" src="https://www.kbuses.in/resources/thumbs/tn_sf_premium_2.jpg" class="img-thumbnail" alt="Bus Thumbnail" width="75" height="auto"> More... </a>
+</div> 
+    </div>
+    
+
+<details>
+  <summary class="hideplay">Route<svg xmlns="http://www.w3.org/2000/svg" width="09" height="09" fill="currentColor" class="bi bi-arrow-down-right-square hideplay" viewBox="0 0 16 16">
+  <path fill-rule="evenodd" d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm5.854 3.146a.5.5 0 1 0-.708.708L9.243 9.95H6.475a.5.5 0 1 0 0 1h3.975a.5.5 0 0 0 .5-.5V6.475a.5.5 0 1 0-1 0v2.768z"/>
+</svg></summary>
+ <p>Kottayam ⤞ Ettumanoor ⤞ Kaduthuruthy ⤞ Thrippunithura ⤞ Vytilla Hub ⤞ Ernakulam</p>
+</details>
+ 
+            </div> 
+            </div> 
+    <div class="row">
+    <div class="indibus">
+<div class="bus-info" style="width: 75%;">
+     <span id="bus_name" class= "busname">KSRTC<span class="hideplay" title="Click for more info" onclick="if (!window.__cfRLUnblockHandlers) return false; document.getElementById('servqtymodal').style.display = 'block';" style="font-size:90%;color:orange;" data-cf-modified-2c5e318bf271d8bcc4b9f80a-=""><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-diamond hideplay" viewBox="0 0 16 16">
+  <path d="M6.95.435c.58-.58 1.52-.58 2.1 0l6.515 6.516c.58.58.58 1.519 0 2.098L9.05 15.565c-.58.58-1.519.58-2.098 0L.435 9.05a1.48 1.48 0 0 1 0-2.098zm1.4.7a.495.495 0 0 0-.7 0L1.134 7.65a.495.495 0 0 0 0 .7l6.516 6.516a.495.495 0 0 0 .7 0l6.516-6.516a.495.495 0 0 0 0-.7L8.35 1.134z"/>
+  <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+</svg> </span></span>
+          <span style="color: chocolate;"></span>
+  <span class="card-text" style="overflow-wrap: break-word; white-space: pre-line;">Kottayam</span>
+<img src="https://www.kbuses.in/assets/img/journey.png" style="display: inline-block;">
+<span class="card-text" style="overflow-wrap: break-word; white-space: pre-line;"> Ernakulam</span>
+<div style="color:#1e90ff" class="text-block-9 bustype">Limited Stop Ordinary</div>	
+        </div>
+    <div class="bus-info" style="width:25%;" >
+         <span id="bus_time" class="large_bold">04:20 am</span>   
+<div>
+    <a class="btn btn-outline-success hideplay" target='_blank' href="https://www.kbuses.in/v3/travelinfo/bus/AB235/route/235/from/KOTTAYAM/to/ERNAKULAM">
+<script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="2c5e318bf271d8bcc4b9f80a-|49"></script><img onerror="this.src='https://www.kbuses.in/resources/water_busimages/Bus.svg'" src="https://www.kbuses.in/resources/thumbs/tn_ord9.jpg" class="img-thumbnail" alt="Bus Thumbnail" width="75" height="auto"> More... </a>
+</div> 
+    </div>
+    
+
+<details>
+  <summary class="hideplay">Route<svg xmlns="http://www.w3.org/2000/svg" width="09" height="09" fill="currentColor" class="bi bi-arrow-down-right-square hideplay" viewBox="0 0 16 16">
+  <path fill-rule="evenodd" d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm5.854 3.146a.5.5 0 1 0-.708.708L9.243 9.95H6.475a.5.5 0 1 0 0 1h3.975a.5.5 0 0 0 .5-.5V6.475a.5.5 0 1 0-1 0v2.768z"/>
+</svg></summary>
+ <p>Kottayam ⤞ Ettumanoor ⤞ Kaduthuruthy ⤞ Thalayolaparambu ⤞ Kanjiramattom ⤞ Thrippunithura ⤞ Vytilla Hub ⤞ Ernakulam</p>
+</details>
+ 
+            </div> 
+            </div> 
+    <div class="row">
+    <div class="indibus">
+<div class="bus-info" style="width: 75%;">
+     <span id="bus_name" class= "busname">KSRTC<span class="hideplay" title="Click for more info" onclick="if (!window.__cfRLUnblockHandlers) return false; document.getElementById('servqtymodal').style.display = 'block';" style="font-size:90%;color:orange;" data-cf-modified-2c5e318bf271d8bcc4b9f80a-=""><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-diamond hideplay" viewBox="0 0 16 16">
+  <path d="M6.95.435c.58-.58 1.52-.58 2.1 0l6.515 6.516c.58.58.58 1.519 0 2.098L9.05 15.565c-.58.58-1.519.58-2.098 0L.435 9.05a1.48 1.48 0 0 1 0-2.098zm1.4.7a.495.495 0 0 0-.7 0L1.134 7.65a.495.495 0 0 0 0 .7l6.516 6.516a.495.495 0 0 0 .7 0l6.516-6.516a.495.495 0 0 0 0-.7L8.35 1.134z"/>
+  <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+</svg> </span></span>
+          <span style="color: chocolate;"></span>
+  <span class="card-text" style="overflow-wrap: break-word; white-space: pre-line;">Kottayam</span>
+<img src="https://www.kbuses.in/assets/img/journey.png" style="display: inline-block;">
+<span class="card-text" style="overflow-wrap: break-word; white-space: pre-line;"> Ernakulam</span>
+<div style="color:#8b0000" class="text-block-9 bustype">Fast Passenger</div>	
+        </div>
+    <div class="bus-info" style="width:25%;" >
+         <span id="bus_time" class="large_bold">05:00 am</span>   
+<div>
+    <a class="btn btn-outline-success hideplay" target='_blank' href="https://www.kbuses.in/v3/travelinfo/bus/AB311/route/311/from/KOTTAYAM/to/ERNAKULAM">
+<script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="2c5e318bf271d8bcc4b9f80a-|49"></script><img onerror="this.src='https://www.kbuses.in/resources/water_busimages/Bus.svg'" src="https://www.kbuses.in/resources/thumbs/tn_fp1.jpg" class="img-thumbnail" alt="Bus Thumbnail" width="75" height="auto"> More... </a>
+</div> 
+    </div>
+    
+
+<details>
+  <summary class="hideplay">Route<svg xmlns="http://www.w3.org/2000/svg" width="09" height="09" fill="currentColor" class="bi bi-arrow-down-right-square hideplay" viewBox="0 0 16 16">
+  <path fill-rule="evenodd" d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm5.854 3.146a.5.5 0 1 0-.708.708L9.243 9.95H6.475a.5.5 0 1 0 0 1h3.975a.5.5 0 0 0 .5-.5V6.475a.5.5 0 1 0-1 0v2.768z"/>
+</svg></summary>
+ <p>Kottayam ⤞ Ettumanoor ⤞ Thalayolaparambu ⤞ Kanjiramattom ⤞ Thrippunithura ⤞ Vytilla Hub ⤞ Ernakulam</p>
+</details>
+ 
+            </div> 
+            </div> 
+    <div class="row">
+    <div class="indibus">
+<div class="bus-info" style="width: 75%;">
+     <span id="bus_name" class= "busname">MARIYA TRAVELS<span class="hideplay" title="Click for more info" onclick="if (!window.__cfRLUnblockHandlers) return false; document.getElementById('servqtymodal').style.display = 'block';" style="font-size:90%;color:orange;" data-cf-modified-2c5e318bf271d8bcc4b9f80a-=""><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-diamond hideplay" viewBox="0 0 16 16">
+  <path d="M6.95.435c.58-.58 1.52-.58 2.1 0l6.515 6.516c.58.58.58 1.519 0 2.098L9.05 15.565c-.58.58-1.519.58-2.098 0L.435 9.05a1.48 1.48 0 0 1 0-2.098zm1.4.7a.495.495 0 0 0-.7 0L1.134 7.65a.495.495 0 0 0 0 .7l6.516 6.516a.495.495 0 0 0 .7 0l6.516-6.516a.495.495 0 0 0 0-.7L8.35 1.134z"/>
+  <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+</svg> </span></span>
+          <span style="color: chocolate;"></span>
+  <span class="card-text" style="overflow-wrap: break-word; white-space: pre-line;">Kaipuzhamuttu</span>
+<img src="https://www.kbuses.in/assets/img/journey.png" style="display: inline-block;">
+<span class="card-text" style="overflow-wrap: break-word; white-space: pre-line;"> Ernakulam</span>
+<div style="color:#ff1493" class="text-block-9 bustype">Limited Stop</div>	
+        </div>
+    <div class="bus-info" style="width:25%;" >
+         <span id="bus_time" class="large_bold">05:05 am</span>   
+<div>
+    <a class="btn btn-outline-success hideplay" target='_blank' href="https://www.kbuses.in/v3/travelinfo/bus/05ae3285/route/1/from/KOTTAYAM/to/ERNAKULAM">
+<script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="2c5e318bf271d8bcc4b9f80a-|49"></script><img onerror="this.src='https://www.kbuses.in/resources/water_busimages/Bus.svg'" src="https://www.kbuses.in/resources/thumbs/tn_kl05ae3285.jpg" class="img-thumbnail" alt="Bus Thumbnail" width="75" height="auto"> More... </a>
+</div> 
+    </div>
+    
+
+<details>
+  <summary class="hideplay">Route<svg xmlns="http://www.w3.org/2000/svg" width="09" height="09" fill="currentColor" class="bi bi-arrow-down-right-square hideplay" viewBox="0 0 16 16">
+  <path fill-rule="evenodd" d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm5.854 3.146a.5.5 0 1 0-.708.708L9.243 9.95H6.475a.5.5 0 1 0 0 1h3.975a.5.5 0 0 0 .5-.5V6.475a.5.5 0 1 0-1 0v2.768z"/>
+</svg></summary>
+ <p>Kottayam ⤞ Gandhinagar ⤞ Kottayam Medical College ⤞ Mg University ⤞ Athirampuzha ⤞ Ettumanoor ⤞ Kanakkari ⤞ Kuruppanthara ⤞ Ceylon Junction ⤞ Thalayolaparambu ⤞ Kanjiramattom ⤞ Puthenkavu ⤞ Thrippunithura ⤞ Vytilla Hub ⤞ Pallimukku ⤞ Jetty Menaka ⤞ Ernakulam</p>
+</details>
+ 
+            </div> 
+            </div> 
+    <div class="row">
+    <div class="indibus">
+<div class="bus-info" style="width: 75%;">
+     <span id="bus_name" class= "busname">KSRTC<span class="hideplay" title="Click for more info" onclick="if (!window.__cfRLUnblockHandlers) return false; document.getElementById('servqtymodal').style.display = 'block';" style="font-size:90%;color:orange;" data-cf-modified-2c5e318bf271d8bcc4b9f80a-=""><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-diamond hideplay" viewBox="0 0 16 16">
+  <path d="M6.95.435c.58-.58 1.52-.58 2.1 0l6.515 6.516c.58.58.58 1.519 0 2.098L9.05 15.565c-.58.58-1.519.58-2.098 0L.435 9.05a1.48 1.48 0 0 1 0-2.098zm1.4.7a.495.495 0 0 0-.7 0L1.134 7.65a.495.495 0 0 0 0 .7l6.516 6.516a.495.495 0 0 0 .7 0l6.516-6.516a.495.495 0 0 0 0-.7L8.35 1.134z"/>
+  <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+</svg> </span></span>
+          <span style="color: chocolate;"></span>
+  <span class="card-text" style="overflow-wrap: break-word; white-space: pre-line;">Kottayam</span>
+<img src="https://www.kbuses.in/assets/img/journey.png" style="display: inline-block;">
+<span class="card-text" style="overflow-wrap: break-word; white-space: pre-line;"> Ernakulam</span>
+<div style="color:#8b0000" class="text-block-9 bustype">Fast Passenger</div>	
+        </div>
+    <div class="bus-info" style="width:25%;" >
+         <span id="bus_time" class="large_bold">05:20 am</span>   
+<div>
+    <a class="btn btn-outline-success hideplay" target='_blank' href="https://www.kbuses.in/v3/travelinfo/bus/AB360/route/360/from/KOTTAYAM/to/ERNAKULAM">
+<script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="2c5e318bf271d8bcc4b9f80a-|49"></script><img onerror="this.src='https://www.kbuses.in/resources/water_busimages/Bus.svg'" src="https://www.kbuses.in/resources/thumbs/tn_fp6.jpg" class="img-thumbnail" alt="Bus Thumbnail" width="75" height="auto"> More... </a>
+</div> 
+    </div>
+    
+
+<details>
+  <summary class="hideplay">Route<svg xmlns="http://www.w3.org/2000/svg" width="09" height="09" fill="currentColor" class="bi bi-arrow-down-right-square hideplay" viewBox="0 0 16 16">
+  <path fill-rule="evenodd" d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm5.854 3.146a.5.5 0 1 0-.708.708L9.243 9.95H6.475a.5.5 0 1 0 0 1h3.975a.5.5 0 0 0 .5-.5V6.475a.5.5 0 1 0-1 0v2.768z"/>
+</svg></summary>
+ <p>Kottayam ⤞ Ettumanoor ⤞ Thalayolaparambu ⤞ Kanjiramattom ⤞ Thrippunithura ⤞ Vytilla Hub ⤞ Ernakulam</p>
+</details>
+ 
+            </div> 
+            </div> 
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1855480056325912" crossorigin="anonymous" type="2c5e318bf271d8bcc4b9f80a-text/javascript"></script>
+<!-- dAd-P2-N2 -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-1855480056325912"
+     data-ad-slot="9066208097"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script type="2c5e318bf271d8bcc4b9f80a-text/javascript">
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script><div class="row">
+    <div class="indibus">
+<div class="bus-info" style="width: 75%;">
+     <span id="bus_name" class= "busname">KSRTC<span class="hideplay" title="Click for more info" onclick="if (!window.__cfRLUnblockHandlers) return false; document.getElementById('servqtymodal').style.display = 'block';" style="font-size:90%;color:orange;" data-cf-modified-2c5e318bf271d8bcc4b9f80a-=""><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-diamond hideplay" viewBox="0 0 16 16">
+  <path d="M6.95.435c.58-.58 1.52-.58 2.1 0l6.515 6.516c.58.58.58 1.519 0 2.098L9.05 15.565c-.58.58-1.519.58-2.098 0L.435 9.05a1.48 1.48 0 0 1 0-2.098zm1.4.7a.495.495 0 0 0-.7 0L1.134 7.65a.495.495 0 0 0 0 .7l6.516 6.516a.495.495 0 0 0 .7 0l6.516-6.516a.495.495 0 0 0 0-.7L8.35 1.134z"/>
+  <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+</svg> </span></span>
+          <span style="color: chocolate;"></span>
+  <span class="card-text" style="overflow-wrap: break-word; white-space: pre-line;">Mallappally</span>
+<img src="https://www.kbuses.in/assets/img/journey.png" style="display: inline-block;">
+<span class="card-text" style="overflow-wrap: break-word; white-space: pre-line;"> Amrita Hospital</span>
+<div style="color:#8b0000" class="text-block-9 bustype">Fast Passenger</div>	
+        </div>
+    <div class="bus-info" style="width:25%;" >
+         <span id="bus_time" class="large_bold">05:40 am</span>   
+<div>
+    <a class="btn btn-outline-success hideplay" target='_blank' href="https://www.kbuses.in/v3/travelinfo/bus/0500MPYAIMSH/route/5465/from/KOTTAYAM/to/ERNAKULAM">
+<script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="2c5e318bf271d8bcc4b9f80a-|49"></script><img onerror="this.src='https://www.kbuses.in/resources/water_busimages/Bus.svg'" src="https://www.kbuses.in/resources/thumbs/tn_fp1.jpg" class="img-thumbnail" alt="Bus Thumbnail" width="75" height="auto"> More... </a>
+</div> 
+    </div>
+    
+
+<details>
+  <summary class="hideplay">Route<svg xmlns="http://www.w3.org/2000/svg" width="09" height="09" fill="currentColor" class="bi bi-arrow-down-right-square hideplay" viewBox="0 0 16 16">
+  <path fill-rule="evenodd" d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm5.854 3.146a.5.5 0 1 0-.708.708L9.243 9.95H6.475a.5.5 0 1 0 0 1h3.975a.5.5 0 0 0 .5-.5V6.475a.5.5 0 1 0-1 0v2.768z"/>
+</svg></summary>
+ <p>Kottayam ⤞ Ettumanoor ⤞ Kaduthuruthy ⤞ Thalayolaparambu ⤞ Thrippunithura ⤞ Vytilla Hub ⤞ Ernakulam</p>
+</details>
+ 
+            </div> 
+            </div> 
+    <div class="row">
+    <div class="indibus">
+<div class="bus-info" style="width: 75%;">
+     <span id="bus_name" class= "busname">KSRTC<span class="hideplay" title="Click for more info" onclick="if (!window.__cfRLUnblockHandlers) return false; document.getElementById('servqtymodal').style.display = 'block';" style="font-size:90%;color:orange;" data-cf-modified-2c5e318bf271d8bcc4b9f80a-=""><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-diamond hideplay" viewBox="0 0 16 16">
+  <path d="M6.95.435c.58-.58 1.52-.58 2.1 0l6.515 6.516c.58.58.58 1.519 0 2.098L9.05 15.565c-.58.58-1.519.58-2.098 0L.435 9.05a1.48 1.48 0 0 1 0-2.098zm1.4.7a.495.495 0 0 0-.7 0L1.134 7.65a.495.495 0 0 0 0 .7l6.516 6.516a.495.495 0 0 0 .7 0l6.516-6.516a.495.495 0 0 0 0-.7L8.35 1.134z"/>
+  <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+</svg> </span></span>
+          <span style="color: chocolate;"></span>
+  <span class="card-text" style="overflow-wrap: break-word; white-space: pre-line;">Kottayam</span>
+<img src="https://www.kbuses.in/assets/img/journey.png" style="display: inline-block;">
+<span class="card-text" style="overflow-wrap: break-word; white-space: pre-line;"> Ernakulam</span>
+<div style="color:#1e90ff" class="text-block-9 bustype">Limited Stop Ordinary</div>	
+        </div>
+    <div class="bus-info" style="width:25%;" >
+         <span id="bus_time" class="large_bold">05:40 am</span>   
+<div>
+    <a class="btn btn-outline-success hideplay" target='_blank' href="https://www.kbuses.in/v3/travelinfo/bus/AB473/route/473/from/KOTTAYAM/to/ERNAKULAM">
+<script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="2c5e318bf271d8bcc4b9f80a-|49"></script><img onerror="this.src='https://www.kbuses.in/resources/water_busimages/Bus.svg'" src="https://www.kbuses.in/resources/thumbs/tn_ord11.jpg" class="img-thumbnail" alt="Bus Thumbnail" width="75" height="auto"> More... </a>
+</div> 
+    </div>
+    
+
+<details>
+  <summary class="hideplay">Route<svg xmlns="http://www.w3.org/2000/svg" width="09" height="09" fill="currentColor" class="bi bi-arrow-down-right-square hideplay" viewBox="0 0 16 16">
+  <path fill-rule="evenodd" d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm5.854 3.146a.5.5 0 1 0-.708.708L9.243 9.95H6.475a.5.5 0 1 0 0 1h3.975a.5.5 0 0 0 .5-.5V6.475a.5.5 0 1 0-1 0v2.768z"/>
+</svg></summary>
+ <p>Kottayam ⤞ Kumarakom ⤞ Vaikkom ⤞ Poothotta ⤞ Thrippunithura ⤞ Vytilla Hub ⤞ Ernakulam</p>
+</details>
+ 
+            </div> 
+            </div> 
+    <div class="row">
+    <div class="indibus">
+<div class="bus-info" style="width: 75%;">
+     <span id="bus_name" class= "busname">KSRTC<span class="hideplay" title="Click for more info" onclick="if (!window.__cfRLUnblockHandlers) return false; document.getElementById('servqtymodal').style.display = 'block';" style="font-size:90%;color:orange;" data-cf-modified-2c5e318bf271d8bcc4b9f80a-=""><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-diamond hideplay" viewBox="0 0 16 16">
+  <path d="M6.95.435c.58-.58 1.52-.58 2.1 0l6.515 6.516c.58.58.58 1.519 0 2.098L9.05 15.565c-.58.58-1.519.58-2.098 0L.435 9.05a1.48 1.48 0 0 1 0-2.098zm1.4.7a.495.495 0 0 0-.7 0L1.134 7.65a.495.495 0 0 0 0 .7l6.516 6.516a.495.495 0 0 0 .7 0l6.516-6.516a.495.495 0 0 0 0-.7L8.35 1.134z"/>
+  <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+</svg> </span></span>
+          <span style="color: chocolate;"></span>
+  <span class="card-text" style="overflow-wrap: break-word; white-space: pre-line;">Mallappally</span>
+<img src="https://www.kbuses.in/assets/img/journey.png" style="display: inline-block;">
+<span class="card-text" style="overflow-wrap: break-word; white-space: pre-line;"> Aims Hospital</span>
+<div class="alert alert-secondary p-1 mt-2 mb-1" style="font-size: 0.8rem;">
+                  <i class="bi bi-geo-alt-fill"></i> This bus goes from <strong>Kottayam</strong> to <strong>Vytilla Hub</strong>
+              </div><div style="color:#8b0000" class="text-block-9 bustype">Fast Passenger</div>	
+        </div>
+    <div class="bus-info" style="width:25%;" >
+         <span id="bus_time" class="large_bold">05:45 am</span>   
+<div>
+    <a class="btn btn-outline-success hideplay" target='_blank' href="https://www.kbuses.in/v3/travelinfo/bus/AB382/route/382/from/KOTTAYAM/to/VYTILLA-HUB">
+<script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="2c5e318bf271d8bcc4b9f80a-|49"></script><img onerror="this.src='https://www.kbuses.in/resources/water_busimages/Bus.svg'" src="https://www.kbuses.in/resources/thumbs/tn_fp2.jpg" class="img-thumbnail" alt="Bus Thumbnail" width="75" height="auto"> More... </a>
+</div> 
+    </div>
+    
+
+<details>
+  <summary class="hideplay">Route<svg xmlns="http://www.w3.org/2000/svg" width="09" height="09" fill="currentColor" class="bi bi-arrow-down-right-square hideplay" viewBox="0 0 16 16">
+  <path fill-rule="evenodd" d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm5.854 3.146a.5.5 0 1 0-.708.708L9.243 9.95H6.475a.5.5 0 1 0 0 1h3.975a.5.5 0 0 0 .5-.5V6.475a.5.5 0 1 0-1 0v2.768z"/>
+</svg></summary>
+ <p>Kottayam ⤞ Ettumanoor ⤞ Thalayolaparambu ⤞ Kanjiramattom ⤞ Thrippunithura ⤞ Vytilla Hub</p>
+</details>
+ 
+            </div> 
+            </div> 
+    <div class="row">
+    <div class="indibus">
+<div class="bus-info" style="width: 75%;">
+     <span id="bus_name" class= "busname">KSRTC<span class="hideplay" title="Click for more info" onclick="if (!window.__cfRLUnblockHandlers) return false; document.getElementById('servqtymodal').style.display = 'block';" style="font-size:90%;color:orange;" data-cf-modified-2c5e318bf271d8bcc4b9f80a-=""><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-diamond hideplay" viewBox="0 0 16 16">
+  <path d="M6.95.435c.58-.58 1.52-.58 2.1 0l6.515 6.516c.58.58.58 1.519 0 2.098L9.05 15.565c-.58.58-1.519.58-2.098 0L.435 9.05a1.48 1.48 0 0 1 0-2.098zm1.4.7a.495.495 0 0 0-.7 0L1.134 7.65a.495.495 0 0 0 0 .7l6.516 6.516a.495.495 0 0 0 .7 0l6.516-6.516a.495.495 0 0 0 0-.7L8.35 1.134z"/>
+  <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+</svg> </span></span>
+          <span style="color: chocolate;"></span>
+  <span class="card-text" style="overflow-wrap: break-word; white-space: pre-line;">Kottayam</span>
+<img src="https://www.kbuses.in/assets/img/journey.png" style="display: inline-block;">
+<span class="card-text" style="overflow-wrap: break-word; white-space: pre-line;"> Ernakulam</span>
+<div style="color:#1e90ff" class="text-block-9 bustype">Limited Stop Ordinary</div>	
+        </div>
+    <div class="bus-info" style="width:25%;" >
+         <span id="bus_time" class="large_bold">05:45 am</span>   
+<div>
+    <a class="btn btn-outline-success hideplay" target='_blank' href="https://www.kbuses.in/v3/travelinfo/bus/AB515/route/515/from/KOTTAYAM/to/ERNAKULAM">
+<script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="2c5e318bf271d8bcc4b9f80a-|49"></script><img onerror="this.src='https://www.kbuses.in/resources/water_busimages/Bus.svg'" src="https://www.kbuses.in/resources/thumbs/tn_ord8.jpg" class="img-thumbnail" alt="Bus Thumbnail" width="75" height="auto"> More... </a>
+</div> 
+    </div>
+    
+
+<details>
+  <summary class="hideplay">Route<svg xmlns="http://www.w3.org/2000/svg" width="09" height="09" fill="currentColor" class="bi bi-arrow-down-right-square hideplay" viewBox="0 0 16 16">
+  <path fill-rule="evenodd" d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm5.854 3.146a.5.5 0 1 0-.708.708L9.243 9.95H6.475a.5.5 0 1 0 0 1h3.975a.5.5 0 0 0 .5-.5V6.475a.5.5 0 1 0-1 0v2.768z"/>
+</svg></summary>
+ <p>Kottayam ⤞ Ettumanoor ⤞ Kaduthuruthy ⤞ Thalayolaparambu ⤞ Kanjiramattom ⤞ Thrippunithura ⤞ Vytilla Hub ⤞ Ernakulam</p>
+</details>
+ 
+            </div> 
+            </div> 
+     </ul></div> Page 
+<nav aria-label="Page navigation">
+	<ul class="pagination">
+		
+					<li class="active">
+				<a href="https://www.kbuses.in/v3/Find/source/kottayam/destination/ernakulam/type/all/timing/all?page=1">
+					1				</a>
+			</li>
+					<li >
+				<a href="https://www.kbuses.in/v3/Find/source/kottayam/destination/ernakulam/type/all/timing/all?page=2">
+					2				</a>
+			</li>
+					<li >
+				<a href="https://www.kbuses.in/v3/Find/source/kottayam/destination/ernakulam/type/all/timing/all?page=3">
+					3				</a>
+			</li>
+		
+					<li>
+				<a href="https://www.kbuses.in/v3/Find/source/kottayam/destination/ernakulam/type/all/timing/all?page=4" aria-label="Next">
+					<span aria-hidden="true">Next</span>
+				</a>
+			</li>
+			<li>
+				<a href="https://www.kbuses.in/v3/Find/source/kottayam/destination/ernakulam/type/all/timing/all?page=20" aria-label="Last">
+					<span aria-hidden="true">Last</span>
+				</a>
+			</li>
+			</ul>
+</nav>
+ 
+<h6><a target="_blank" href="https://www.kbuses.in/v3/Find/source/ernakulam/destination/kottayam/type/all/timing/all"> See ernakulam-kottayam buses?</a><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-right-square-fill" viewBox="0 0 16 16">
+  <path d="M14 0a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2zM5.904 10.803 10 6.707v2.768a.5.5 0 0 0 1 0V5.5a.5.5 0 0 0-.5-.5H6.525a.5.5 0 1 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 .707.707"/>
+</svg></h6>
+                 
+     <div class="d-flex justify-content-center flex-wrap gap-2 my-3">
+    <h5>See additonal special buses online in this route:</h5>
+        </div>
+
+<script type="2c5e318bf271d8bcc4b9f80a-text/javascript">
+    $(document).ready(function() {
+   $('#flexSwitchCheckReservation').change(function() {
+        if (this.checked) {
+            //$("#flexSwitchCheckReservation").prop("disabled", true);
+             $('#bulllist').html('Loading...');
+            let caller= 'https://www.kbuses.in/v3/Find/source/kottayam/destination/ernakulam/type/bking/timing/now';
+            $.ajax({
+                url: caller,
+                type: 'GET',
+                success: function(response) {
+                     var specificContent = $(response).find('#bulllist').html();
+                  if(specificContent)
+                    $('#bulllist').html(specificContent);
+                    else{
+                         $('#bulllist').html("We couldn't find anything matching the search");
+                    }
+                },
+                error: function(error) {
+                    console.error('failed:', error);
+                }
+            });
+        }
+       else {
+             $('#bulllist').html('Loading...');
+            let caller= 'https://www.kbuses.in/v3/Find/source/kottayam/destination/ernakulam/type/all/timing/now';
+             history.pushState(null, null, caller);
+            $.ajax({
+                url: caller,
+                type: 'GET',
+                success: function(response) {
+                     var specificContent = $(response).find('#bulllist').html();
+                    $('#bulllist').html(specificContent);
+                },
+                error: function(error) {
+                    console.error('failed:', error);
+                }
+            });
+        }
+    });
+});
+
+document.title = "Kottayam to Ernakulam bus  timings on KBUSES | www.kbuses.in";
+
+document.addEventListener('DOMContentLoaded', () => {
+    });
+</script>
+                    
+  <!-- ======= Footer ======= -->
+  <footer id="footer" class="footer">
+      <style>
+          .dark-mode marquee {
+              color: var(--dark-text-muted);
+          }
+      </style>
+      <marquee>Disclaimer: Vehicle details may not be exact. Actual timings may vary according to the traffic and road conditions. We are not responsible for any time conflicts. We are not having any affiliation with any of the operators and schedule details may vary significantly depending on the operators. Kbuses is just a directory of buses. Fare is calculated in accordance with the G.O. Image is copyrighted for respective owners. 🗲🗲🗲 https://www.kbuses.in/        
+  </marquee>
+		
+
+    <style>
+        .dot-indicator {
+            height: 1em;
+            width: 1em;
+            border-radius: 50%;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+    </style>
+
+    <div class="copyright">
+       <span class="dot-indicator" title="146" style="background-color: #81d95e;"></span>
+       <span class="dot-indicator" title="bulbs3" style="background-color: #81d95e;"></span>
+    Powered By Team KBUSES
+   
+    © 2017 - 2026    </div>
+    <div class="credits">
+      <span id="google_translate_element"> </span>
+    </div>
+  </footer><!-- End Footer -->
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <!-- Vendor JS Files -->
+  <script src="https://www.kbuses.in/assets/vendor/bootstrap/js/bootstrap.bundle.min.js" type="2c5e318bf271d8bcc4b9f80a-text/javascript"></script>
+  <script src="https://www.kbuses.in/assets/vendor/quill/quill.min.js" type="2c5e318bf271d8bcc4b9f80a-text/javascript"></script>
+  <script src="https://www.kbuses.in/assets/vendor/tinymce/tinymce.min.js" type="2c5e318bf271d8bcc4b9f80a-text/javascript"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer type="2c5e318bf271d8bcc4b9f80a-text/javascript"></script>
+  <!-- Template Main JS File -->
+  <script src="https://www.kbuses.in/assets/js/main.js" type="2c5e318bf271d8bcc4b9f80a-text/javascript"></script>
+
+
+
+<script type="2c5e318bf271d8bcc4b9f80a-text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        const submitButton = document.getElementById('SubMitMe');
+        if (submitButton) {
+            submitButton.disabled = true;
+        }
+    });
+
+    function onCaptchaSuccess(token) {
+        const submitButton = document.getElementById('SubMitMe');
+        if (submitButton) {
+            submitButton.disabled = false; // Enable submit button
+        }
+    }
+
+   function onCaptchaExpired() {
+        console.log('Cloudflare Turnstile token expired. Resetting widget.');
+        document.getElementById('SubMitMe').disabled = true; // Disable button
+       if (typeof turnstile !== 'undefined') { turnstile.reset(); }
+    }
+
+    function resetTurnstileWidget() {
+        if (typeof turnstile !== 'undefined') {
+            turnstile.reset();
+            console.log('Cloudflare Turnstile widget reset via custom call.');
+        } else {
+            console.warn('Cloudflare Turnstile script not loaded or turnstile object not available.');
+        }
+        document.getElementById('SubMitMe').disabled = true; // Ensure button is disabled after reset
+    }
+
+</script>
+
+  <script defer type="2c5e318bf271d8bcc4b9f80a-text/javascript">
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement({pageLanguage: 'en',  includedLanguages: 'ar,ja,kn,bn,ms,fa,pl,nl,pt,ro,ru,tl,fr,ta,el,te,tr,hi,ur,ml',
+      layout: google.translate.TranslateElement.InlineLayout.SIMPLE, autoDisplay: false}, 'google_translate_element');
+      }
+   </script>
+
+  <script async defer type="2c5e318bf271d8bcc4b9f80a-text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<script async defer data-account="RE42m9NZTZ" src="https://cdn.userway.org/widget.js" type="2c5e318bf271d8bcc4b9f80a-text/javascript"></script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1DY8ET55YL" type="2c5e318bf271d8bcc4b9f80a-text/javascript"></script>
+<script type="2c5e318bf271d8bcc4b9f80a-text/javascript">
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-1DY8ET55YL');
+</script>
+<script type="2c5e318bf271d8bcc4b9f80a-text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "ljodxorgq7");
+</script>
+
+<script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="2c5e318bf271d8bcc4b9f80a-|49" defer></script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9cb163606e55ce8a',t:'MTc3MDYxOTM2MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
+</html>
