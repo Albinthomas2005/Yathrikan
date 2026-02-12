@@ -1,0 +1,70 @@
+{
+  "project_info": {
+    "project_number": "153229951872",
+    "project_id": "yathrikan-mini",
+    "storage_bucket": "yathrikan-mini.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:153229951872:android:5494d6c467ddc40846b765",
+        "android_client_info": {
+          "package_name": "com.example.busway"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "153229951872-56bc5m0ht8vlncarb078arguon7n43g7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.busway",
+            "certificate_hash": "55cc595976bb09d359dbd58aa30252afef02cc4f"
+          }
+        },
+        {
+          "client_id": "153229951872-5jskgnaf0p9bomtiq9v380h7g4dl98dc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.busway",
+            "certificate_hash": "7d9ba57a1ae3a93a62f2ac1d35b8f49e12293684"
+          }
+        },
+        {
+          "client_id": "153229951872-rqk4l3dc2uaop0s9edt4m2d93qd0jhjb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.busway",
+            "certificate_hash": "e5a92e162805305d0ddcffeacef9c2c33e69629d"
+          }
+        },
+        {
+          "client_id": "153229951872-2pah3mphjv1n5ajjhf89embq4c1epu33.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhGRfieuFymjiPUV1GxhJgB9akS6w1H8c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "153229951872-2pah3mphjv1n5ajjhf89embq4c1epu33.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "153229951872-09v5mc9hssvr24oinka5s8c7qf3oju58.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.busway"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
