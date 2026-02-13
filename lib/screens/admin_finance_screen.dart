@@ -28,8 +28,30 @@ class AdminFinanceScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.calendar_today),
-            onPressed: () {
-              // TODO: Open date picker
+            onPressed: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: DateTime(2025),
+                lastDate: DateTime.now(),
+                builder: (context, child) {
+                  return Theme(
+                    data: Theme.of(context).copyWith(
+                      colorScheme: const ColorScheme.dark(
+                        primary: AppColors.primaryYellow,
+                        onPrimary: Colors.black,
+                        surface: Color(0xFF1E293B),
+                        onSurface: Colors.white,
+                      ),
+                      dialogBackgroundColor: const Color(0xFF1E293B),
+                    ),
+                    child: child!,
+                  );
+                },
+              );
+              if (date != null) {
+                // TODO: Filter by date
+              }
             },
           ),
         ],
@@ -59,7 +81,7 @@ class AdminFinanceScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '\$142,850.00',
+                      '₹85,42,850',
                       style: GoogleFonts.inter(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -133,7 +155,51 @@ class AdminFinanceScreen extends StatelessWidget {
                   ),
                   TextButton(
                     onPressed: () {
-                      // TODO: Show all transactions
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: const Color(0xFF1E293B),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                        ),
+                        builder: (context) => ListView(
+                          padding: const EdgeInsets.all(20),
+                          children: const [
+                            Text(
+                              'All Transactions',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            _TransactionItem(
+                              ticketId: 'BW-9210',
+                              provider: 'KSRTC',
+                              time: '2 mins ago',
+                              amount: '+₹850.50',
+                            ),
+                            _TransactionItem(
+                              ticketId: 'BW-9209',
+                              provider: 'Private Bus',
+                              time: '15 mins ago',
+                              amount: '+₹420.00',
+                            ),
+                            _TransactionItem(
+                              ticketId: 'BW-9208',
+                              provider: 'Private Bus',
+                              time: '32 mins ago',
+                              amount: '+₹1,250.00',
+                            ),
+                             _TransactionItem(
+                              ticketId: 'BW-9207',
+                              provider: 'Private Bus',
+                              time: '1 hour ago',
+                              amount: '+₹350.25',
+                            ),
+                          ],
+                        ),
+                      );
                     },
                     child: Text(
                       'See All',
@@ -153,19 +219,19 @@ class AdminFinanceScreen extends StatelessWidget {
                 ticketId: 'BW-9210',
                 provider: 'KSRTC',
                 time: '2 mins ago',
-                amount: '+\$24.50',
+                amount: '+₹850.50',
               ),
               const _TransactionItem(
                 ticketId: 'BW-9209',
                 provider: 'Private Bus',
                 time: '15 mins ago',
-                amount: '+\$18.00',
+                amount: '+₹420.00',
               ),
               const _TransactionItem(
                 ticketId: 'BW-9208',
                 provider: 'Private Bus',
                 time: '32 mins ago',
-                amount: '+\$45.00',
+                amount: '+₹1,250.00',
               ),
               const SizedBox(height: 16),
 
@@ -215,7 +281,7 @@ class AdminFinanceScreen extends StatelessWidget {
                 ticketId: 'BW-9207',
                 provider: 'Private Bus',
                 time: '1 hour ago',
-                amount: '+\$12.25',
+                amount: '+₹350.25',
               ),
             ],
           ),

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:latlong2/latlong.dart'; // For random location
+import 'dart:math';
 import '../utils/constants.dart';
+import '../services/bus_location_service.dart';
+import '../models/live_bus_model.dart';
 
 class AdminRoutesScreen extends StatefulWidget {
   const AdminRoutesScreen({super.key});
@@ -11,63 +15,183 @@ class AdminRoutesScreen extends StatefulWidget {
 
 class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _newBusIdController = TextEditingController();
+  
   String _searchQuery = '';
-
-  // Mock data - replace with real Firestore data later
-  final List<Map<String, dynamic>> _routes = [
-    {
-      'id': '1',
-      'routeName': 'Kottayam → Pala',
-      'stops': 12,
-      'distance': 28.5,
-      'isActive': true,
-      'lastUpdated': '2 hrs ago',
-      'busesOnline': 4,
-    },
-    {
-      'id': '2',
-      'routeName': 'Kochi → Aluva',
-      'stops': 8,
-      'distance': 14.2,
-      'isActive': true,
-      'lastUpdated': 'Today, 08:30 AM',
-      'busesOnline': 2,
-    },
-    {
-      'id': '3',
-      'routeName': 'Thrissur → Palakkad',
-      'stops': 15,
-      'distance': 67.0,
-      'isActive': false,
-      'lastUpdated': 'Oct 24',
-      'busesOnline': 0,
-      'maintenanceScheduled': 'Maintenance Scheduled: Oct 24',
-    },
-    {
-      'id': '4',
-      'routeName': 'Idukki → Munnar',
-      'stops': 22,
-      'distance': 45.1,
-      'isActive': true,
-      'lastUpdated': 'Yesterday',
-      'busesOnline': 1,
-    },
-  ];
+  String? _selectedOrigin;
+  String? _selectedDestination;
+  final BusLocationService _busService = BusLocationService();
 
   @override
   void dispose() {
     _searchController.dispose();
+    _newBusIdController.dispose();
     super.dispose();
   }
 
-  List<Map<String, dynamic>> get _filteredRoutes {
-    if (_searchQuery.isEmpty) return _routes;
-    return _routes
-        .where((route) => route['routeName']
-            .toString()
-            .toLowerCase()
-            .contains(_searchQuery.toLowerCase()))
-        .toList();
+  List<LiveBus> _filterBuses(List<LiveBus> buses) {
+    if (_searchQuery.isEmpty) return buses;
+    return buses.where((bus) {
+      final query = _searchQuery.toLowerCase();
+      return bus.busId.toLowerCase().contains(query) ||
+             bus.routeName.toLowerCase().contains(query);
+    }).toList();
+  }
+
+  void _showAddBusDialog(BuildContext context) {
+    _selectedOrigin = null;
+    _selectedDestination = null;
+    _newBusIdController.clear();
+
+    final cities = _busService.availableCities;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF1E293B),
+              title: Text('Add New Bus', style: GoogleFonts.inter(color: Colors.white)),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: _newBusIdController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'Bus ID (e.g. KTM-101)',
+                        labelStyle: TextStyle(color: Colors.white70),
+                        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: _selectedOrigin,
+                      dropdownColor: const Color(0xFF1E293B),
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'Origin',
+                        labelStyle: TextStyle(color: Colors.white70),
+                        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
+                      ),
+                      items: cities.map((city) {
+                        return DropdownMenuItem(
+                          value: city,
+                          child: Text(city),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setDialogState(() => _selectedOrigin = value);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: _selectedDestination,
+                      dropdownColor: const Color(0xFF1E293B),
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'Destination',
+                        labelStyle: TextStyle(color: Colors.white70),
+                        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
+                      ),
+                      items: cities.map((city) {
+                        return DropdownMenuItem(
+                          value: city,
+                          child: Text(city),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setDialogState(() => _selectedDestination = value);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (_newBusIdController.text.isNotEmpty &&
+                        _selectedOrigin != null &&
+                        _selectedDestination != null &&
+                        _selectedOrigin != _selectedDestination) {
+                      
+                      // Construct route name
+                      final routeName = '$_selectedOrigin - $_selectedDestination';
+                      
+                      // Create a new bus 
+                      // Note: Lat/Lon will be auto-corrected by BusLocationService based on Origin
+                      final newBus = LiveBus(
+                        busId: _newBusIdController.text.toUpperCase(),
+                        routeName: routeName,
+                        lat: 9.5916, // Temporary, will snap to Origin
+                        lon: 76.5222,
+                        speedKmph: 40, // Set meaningful speed so it moves
+                        headingDeg: 0,
+                        lastUpdated: DateTime.now(),
+                        status: 'RUNNING', // Start as RUNNING
+                      );
+                      
+                      _busService.addBus(newBus);
+                      
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Bus Added & Started Successfully')),
+                      );
+                    } else if (_selectedOrigin == _selectedDestination) {
+                       ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Origin and Destination cannot be same')),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryYellow,
+                    foregroundColor: Colors.black
+                  ),
+                  child: const Text('Add Bus'),
+                ),
+              ],
+            );
+          }
+        );
+      },
+    );
+  }
+
+  void _confirmDeleteBus(BuildContext context, String busId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        title: Text('Delete Bus?', style: GoogleFonts.inter(color: Colors.white)),
+        content: Text(
+          'Are you sure you want to delete bus $busId?',
+          style: GoogleFonts.inter(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _busService.removeBus(busId);
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Bus $busId deleted')),
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -83,21 +207,13 @@ class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Manage Routes',
+          'Manage Fleet',
           style: GoogleFonts.inter(
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.white,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {
-              // TODO: Show menu
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -118,7 +234,7 @@ class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
                 },
                 style: GoogleFonts.inter(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: 'Search routes, stops or IDs...',
+                  hintText: 'Search Bus ID or Route...',
                   hintStyle: GoogleFonts.inter(
                     color: Colors.white38,
                     fontSize: 14,
@@ -134,178 +250,167 @@ class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
             ),
           ),
 
-          // Routes List
+          // Bus List
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _filteredRoutes.length,
-              itemBuilder: (context, index) {
-                final route = _filteredRoutes[index];
-                return _RouteCard(route: route);
+            child: StreamBuilder<List<LiveBus>>(
+              stream: _busService.busStream,
+              initialData: _busService.buses,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'No buses online',
+                      style: GoogleFonts.inter(color: Colors.white54),
+                    ),
+                  );
+                }
+
+                final buses = _filterBuses(snapshot.data!);
+
+                if (buses.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'No buses found matching "$_searchQuery"',
+                      style: GoogleFonts.inter(color: Colors.white54),
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: buses.length,
+                  itemBuilder: (context, index) {
+                    final bus = buses[index];
+                    return _BusCard(
+                      bus: bus,
+                      onDelete: () => _confirmDeleteBus(context, bus.busId),
+                      onStatusToggle: (bool isRunning) {
+                        final newStatus = isRunning ? "RUNNING" : "IDLE";
+                        _busService.updateBusStatus(bus.busId, newStatus);
+                      },
+                    );
+                  },
+                );
               },
             ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Add new route
-        },
+        onPressed: () => _showAddBusDialog(context),
         backgroundColor: AppColors.primaryYellow,
-        foregroundColor: const Color(0xFF0F172A),
-        child: const Icon(Icons.add, size: 28),
+        child: const Icon(Icons.add, color: Colors.black),
       ),
     );
   }
 }
 
-class _RouteCard extends StatelessWidget {
-  final Map<String, dynamic> route;
+class _BusCard extends StatelessWidget {
+  final LiveBus bus;
+  final VoidCallback onDelete;
+  final Function(bool) onStatusToggle;
 
-  const _RouteCard({required this.route});
+  const _BusCard({
+    required this.bus,
+    required this.onDelete,
+    required this.onStatusToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final bool isActive = route['isActive'] as bool;
-    final int busesOnline = route['busesOnline'] as int;
+    final bool isRunning = bus.status == "RUNNING";
+    final Color statusColor = isRunning ? Colors.green : Colors.orange;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFF1E293B),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white10),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Row
+          // Header: Bus ID, Status Switch, Delete
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: Text(
-                  route['routeName'],
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+              // Bus ID
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isActive
-                      ? Colors.green.withValues(alpha: 0.2)
-                      : Colors.grey.withValues(alpha: 0.2),
+                  color: AppColors.primaryYellow.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  isActive ? 'ACTIVE' : 'INACTIVE',
+                  bus.busId,
                   style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: isActive ? Colors.green : Colors.grey,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.edit, size: 20),
-                color: Colors.white70,
-                onPressed: () {
-                  // TODO: Edit route
-                },
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Stops and Distance
-          Row(
-            children: [
-              const Icon(
-                Icons.location_on,
-                size: 16,
-                color: Colors.white38,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${route['stops']} Stops',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  color: Colors.white70,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Icon(
-                Icons.straighten,
-                size: 16,
-                color: Colors.white38,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${route['distance']} km',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  color: Colors.white70,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Last Updated and Buses Online / Maintenance
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Last updated: ${route['lastUpdated']}',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: Colors.white38,
-                ),
-              ),
-              if (isActive)
-                Text(
-                  '$busesOnline Bus${busesOnline != 1 ? 'es' : ''} Online',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.bold,
                     color: AppColors.primaryYellow,
-                  ),
-                )
-              else
-                Text(
-                  'Offline',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: Colors.white38,
-                    fontStyle: FontStyle.italic,
+                    fontSize: 14,
                   ),
                 ),
+              ),
+              
+              const Spacer(),
+
+              // Status Switch
+              Row(
+                children: [
+                  Text(
+                    isRunning ? "RUNNING" : "IDLE",
+                     style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: statusColor,
+                    ),
+                  ),
+                  Switch(
+                    value: isRunning,
+                    activeColor: Colors.green,
+                    inactiveThumbColor: Colors.orange,
+                    inactiveTrackColor: Colors.orange.withOpacity(0.3),
+                    onChanged: onStatusToggle,
+                  ),
+                ],
+              ),
+
+              const SizedBox(width: 8),
+
+              // Delete Button
+              IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                onPressed: onDelete,
+              ),
             ],
           ),
+          const SizedBox(height: 12),
 
-          // Maintenance info for inactive routes
-          if (!isActive && route['maintenanceScheduled'] != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              route['maintenanceScheduled'],
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                color: Colors.white38,
-                fontStyle: FontStyle.italic,
-              ),
+          // Route Name
+          Text(
+            bus.routeName,
+            style: GoogleFonts.inter(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
             ),
-          ],
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 8),
+
+          // Metadata Row: Speed
+          Row(
+            children: [
+              const Icon(Icons.speed, size: 16, color: Colors.white54),
+              const SizedBox(width: 4),
+              Text(
+                '${bus.speedKmph.toStringAsFixed(0)} km/h',
+                style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
+              ),
+            ],
+          ),
         ],
       ),
     );

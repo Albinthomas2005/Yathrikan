@@ -4,7 +4,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../utils/constants.dart';
 import '../utils/app_localizations.dart';
 import '../models/payment_model.dart';
-import 'mock_payment_screen.dart';
+import 'payment_screen.dart';
 import 'ticket_details_screen.dart';
 
 class TicketValidationScreen extends StatefulWidget {
@@ -43,11 +43,24 @@ class _TicketValidationScreenState extends State<TicketValidationScreen> {
     if (!mounted) return;
     Navigator.pop(context); // Close loader
 
-    // Navigate to ticket details screen
+    // Create dummy ticket data for manual entry
+    // In a real app, we would fetch this from an API based on the ticketId
+    final ticketData = TicketData(
+      routeName: 'CHANGANASSERY - MUNDAKKAYAM',
+      busId: 'KL33B7747',
+      fromLocation: 'KARUKACHAL',
+      toLocation: 'KANJIRAPALLY',
+      fare: 10.0,
+      qrCodeData: ticketId,
+    );
+
+    // Navigate to payment screen (Razorpay)
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TicketDetailsScreen(ticketId: ticketId),
+        builder: (context) => PaymentScreen(
+          ticketData: ticketData,
+        ),
       ),
     );
   }
@@ -313,7 +326,7 @@ class _TicketValidationScreenState extends State<TicketValidationScreen> {
                                               context,
                                               MaterialPageRoute(
                                                 builder: (context) =>
-                                                    MockPaymentScreen(
+                                                    PaymentScreen(
                                                   ticketData: ticketData!,
                                                 ),
                                               ),

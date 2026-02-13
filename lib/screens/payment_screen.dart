@@ -3,97 +3,91 @@ import 'package:flutter/services.dart';
 import '../models/payment_model.dart';
 import '../utils/constants.dart';
 import 'payment_success_screen.dart';
+import '../services/auth_service.dart';
 
-class MockPaymentScreen extends StatefulWidget {
+import 'package:razorpay_flutter/razorpay_flutter.dart';
+
+class PaymentScreen extends StatefulWidget {
   final TicketData ticketData;
 
-  const MockPaymentScreen({
+  const PaymentScreen({
     super.key,
     required this.ticketData,
   });
 
   @override
-  State<MockPaymentScreen> createState() => _MockPaymentScreenState();
+  State<PaymentScreen> createState() => _PaymentScreenState();
 }
 
-class _MockPaymentScreenState extends State<MockPaymentScreen> {
+class _PaymentScreenState extends State<PaymentScreen> {
   String? _selectedPaymentMethod;
   bool _isProcessing = false;
+  late Razorpay _razorpay;
+
   @override
   void initState() {
     super.initState();
-    // No initialization needed
+    
+    // Initialize Razorpay
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+
   }
 
   @override
   void dispose() {
+    _razorpay.clear(); // Removes all listeners
     super.dispose();
   }
 
-  final List<PaymentMethodOption> _paymentMethods = [
-    PaymentMethodOption(
-      id: 'credit_card',
-      name: 'Credit Card',
-      icon: Icons.credit_card,
-      color: Colors.purple,
-    ),
-    PaymentMethodOption(
-      id: 'debit_card',
-      name: 'Debit Card',
-      icon: Icons.credit_card,
-      color: Colors.blue,
-    ),
-    PaymentMethodOption(
-      id: 'upi',
-      name: 'UPI',
-      icon: Icons.account_balance,
-      color: Colors.green,
-    ),
-    PaymentMethodOption(
-      id: 'google_pay',
-      name: 'Google Pay',
-      icon: Icons.payment,
-      color: Colors.orange,
-    ),
-    PaymentMethodOption(
-      id: 'phonepe',
-      name: 'PhonePe',
-      icon: Icons.phone_android,
-      color: const Color(0xFF5F259F),
-    ),
-    PaymentMethodOption(
-      id: 'paytm',
-      name: 'Paytm',
-      icon: Icons.wallet,
-      color: const Color(0xFF00BAF2),
-    ),
-  ];
 
-  void _handlePayment() async {
-    if (_selectedPaymentMethod == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a payment method'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
 
+  void _handlePayment() {
     setState(() => _isProcessing = true);
-    HapticFeedback.mediumImpact();
+    
+    // Get current user for prefill
+    final user = AuthService().currentUser;
+    final userEmail = user?.email ?? '';
+    final userPhone = user?.phoneNumber ?? ''; // Likely null for email/google auth
 
-    // Simulate payment processing delay
-    await Future.delayed(const Duration(seconds: 2));
+    // Calculate amount in paise (multiply by 100)
+    final amountInPaise = (widget.ticketData.fare * 100).toInt();
 
+    var options = {
+      'key': 'rzp_test_SFUd2kBebgkaCv',
+      'amount': amountInPaise,
+      'name': 'Yathrikan Bus Ticket',
+      'description': 'Ticket from ${widget.ticketData.fromLocation} to ${widget.ticketData.toLocation}',
+      'prefill': {
+        'contact': userPhone, // Will be empty if not available, Razorpay will ask
+        'email': userEmail
+      }
+    };
+
+    try {
+      _razorpay.open(options);
+    } catch (e) {
+      debugPrint('Error: $e');
+      setState(() => _isProcessing = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error initiating payment: $e')),
+      );
+    }
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) {
     if (!mounted) return;
-
-    final transactionId = PaymentTransaction.generateTransactionId();
+    
+    setState(() => _isProcessing = false);
+    
+    final transactionId = response.paymentId ?? PaymentTransaction.generateTransactionId();
 
     // Create success transaction
     final completeTransaction = PaymentTransaction(
       transactionId: transactionId,
-      paymentMethod: _selectedPaymentMethod!.toUpperCase(),
+      paymentMethod: 'RAZORPAY',
       amount: widget.ticketData.fare,
       timestamp: DateTime.now(),
       status: PaymentStatus.success,
@@ -102,8 +96,6 @@ class _MockPaymentScreenState extends State<MockPaymentScreen> {
       fromLocation: widget.ticketData.fromLocation,
       toLocation: widget.ticketData.toLocation,
     );
-
-    setState(() => _isProcessing = false);
 
     // Navigate to success screen
     Navigator.pushReplacement(
@@ -114,6 +106,27 @@ class _MockPaymentScreenState extends State<MockPaymentScreen> {
           ticketData: widget.ticketData,
         ),
       ),
+    );
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    if (!mounted) return;
+    
+    setState(() => _isProcessing = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Payment Failed: ${response.message}"),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    if (!mounted) return;
+    
+    setState(() => _isProcessing = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("External Wallet Selected: ${response.walletName}")),
     );
   }
 
@@ -131,7 +144,7 @@ class _MockPaymentScreenState extends State<MockPaymentScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Select Payment Method',
+          'Confirm Payment',
           style: AppTextStyles.heading2
               .copyWith(color: theme.textTheme.titleLarge?.color),
         ),
@@ -234,89 +247,6 @@ class _MockPaymentScreenState extends State<MockPaymentScreen> {
                       ],
                     ),
                   ),
-
-                  const SizedBox(height: 32),
-
-                  // Payment Methods Title
-                  Text(
-                    'Choose Payment Method',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: theme.textTheme.bodyLarge?.color,
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Payment Method Options
-                  ...(_paymentMethods.map((method) {
-                    final isSelected = _selectedPaymentMethod == method.id;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: InkWell(
-                        onTap: _isProcessing
-                            ? null
-                            : () {
-                                setState(() {
-                                  _selectedPaymentMethod = method.id;
-                                });
-                                HapticFeedback.selectionClick();
-                              },
-                        borderRadius: BorderRadius.circular(16),
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? method.color.withValues(alpha: 0.1)
-                                : theme.cardColor,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isSelected
-                                  ? method.color
-                                  : Colors.grey.withValues(alpha: 0.2),
-                              width: isSelected ? 2 : 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: method.color.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  method.icon,
-                                  color: method.color,
-                                  size: 24,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Text(
-                                  method.name,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: isSelected
-                                        ? FontWeight.bold
-                                        : FontWeight.w600,
-                                    color: theme.textTheme.bodyLarge?.color,
-                                  ),
-                                ),
-                              ),
-                              if (isSelected)
-                                Icon(
-                                  Icons.check_circle,
-                                  color: method.color,
-                                  size: 24,
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList()),
                 ],
               ),
             ),
@@ -345,7 +275,7 @@ class _MockPaymentScreenState extends State<MockPaymentScreen> {
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(50),
+                    borderRadius: BorderRadius.circular(50),
                     ),
                     elevation: 0,
                   ),

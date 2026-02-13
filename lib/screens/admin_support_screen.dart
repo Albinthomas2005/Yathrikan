@@ -54,6 +54,75 @@ class _AdminSupportScreenState extends State<AdminSupportScreen>
     super.dispose();
   }
 
+  void _showTicketDetails(Map<String, dynamic> ticket) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          ticket['title'],
+          style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _detailRow('Ticket ID', ticket['id']),
+            const SizedBox(height: 8),
+            _detailRow('Priority', ticket['priority']),
+            const SizedBox(height: 16),
+            Text(
+              'Description:',
+              style: GoogleFonts.inter(color: Colors.white54, fontSize: 12),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              ticket['description'],
+              style: GoogleFonts.inter(color: Colors.white70),
+            ),
+            if (ticket['userName'] != null) ...[
+              const SizedBox(height: 16),
+              _detailRow('Reported By', ticket['userName']),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Close', style: GoogleFonts.inter(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Ticket status updated'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryYellow,
+              foregroundColor: Colors.black,
+            ),
+            child: Text('Resolve', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: GoogleFonts.inter(color: Colors.white54)),
+        Text(value, style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,7 +147,9 @@ class _AdminSupportScreenState extends State<AdminSupportScreen>
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
-              // TODO: Implement search
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Search functionality coming soon')),
+              );
             },
           ),
         ],
@@ -120,7 +191,11 @@ class _AdminSupportScreenState extends State<AdminSupportScreen>
                       icon: Icons.support_agent,
                       label: 'User\nSupport',
                       isActive: true,
-                      onTap: () {},
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('You are already on User Support')),
+                        );
+                      },
                     ),
                     _QuickActionItem(
                       icon: Icons.trending_up,
@@ -165,7 +240,10 @@ class _AdminSupportScreenState extends State<AdminSupportScreen>
                   padding: const EdgeInsets.all(16),
                   itemCount: _pendingTickets.length,
                   itemBuilder: (context, index) {
-                    return _TicketCard(ticket: _pendingTickets[index]);
+                    return _TicketCard(
+                      ticket: _pendingTickets[index],
+                      onTap: () => _showTicketDetails(_pendingTickets[index]),
+                    );
                   },
                 ),
                 // In Progress Tab
@@ -250,8 +328,9 @@ class _QuickActionItem extends StatelessWidget {
 
 class _TicketCard extends StatelessWidget {
   final Map<String, dynamic> ticket;
+  final VoidCallback? onTap;
 
-  const _TicketCard({required this.ticket});
+  const _TicketCard({required this.ticket, this.onTap});
 
   Color _getPriorityColor(String priority) {
     switch (priority) {
@@ -386,9 +465,7 @@ class _TicketCard extends StatelessWidget {
 
               // Open Ticket Button
               ElevatedButton(
-                onPressed: () {
-                  // TODO: Open ticket details
-                },
+                onPressed: onTap,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryYellow,
                   foregroundColor: const Color(0xFF0F172A),

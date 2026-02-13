@@ -64,6 +64,11 @@ class LiveBus {
   /// Simulates bus movement along predefined route waypoints
   /// Returns a new LiveBus object with updated position
   LiveBus simulateMovement(int secondsElapsed) {
+    // If status is IDLE, do not move
+    if (status == 'IDLE') {
+      return this;
+    }
+
     // If no route path is defined, fall back to simple movement
     if (routePath == null || routePath!.waypoints.length < 2) {
       return _simulateSimpleMovement(secondsElapsed);

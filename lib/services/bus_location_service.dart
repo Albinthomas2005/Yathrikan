@@ -120,32 +120,146 @@ class BusLocationService {
     debugPrint('   - Total buses: ${_buses.length}');
   }
 
-  /// Extract destination from route name
-  /// Examples: "Kottayam - Changanassery" -> Changanassery coordinates
+  // Known locations for route generation
+  static final Map<String, LatLng> knownLocations = {
+    'Kottayam': const LatLng(9.5916, 76.5222),
+    'Changanassery': const LatLng(9.4450, 76.5488),
+    'Ettumanoor': const LatLng(9.6691, 76.5622),
+    'Vaikom': const LatLng(9.7188, 76.4066),
+    'Pala': const LatLng(9.7101, 76.6841),
+    'Kanjirappally': const LatLng(9.5244, 76.8141),
+    'Kumarakom': const LatLng(9.6100, 76.4300),
+    'Tiruvalla': const LatLng(9.3830, 76.5740),
+    'Erattupetta': const LatLng(9.7004, 76.7803),
+    'Mundakayam': const LatLng(9.6213, 76.8566),
+    'Thalayolaparambu': const LatLng(9.7481, 76.4855),
+    'Pampady': const LatLng(9.5863, 76.5855),
+    'Ponkunnam': const LatLng(9.5431, 76.7003),
+    'Erumely': const LatLng(9.4820, 76.8830),
+    'Aluva': const LatLng(10.1076, 76.3516),
+    'Kochi': const LatLng(9.9312, 76.2673),
+    'Thrissur': const LatLng(10.5276, 76.2144),
+    'Palakkad': const LatLng(10.7867, 76.6548),
+    'Idukki': const LatLng(9.8490, 76.9740),
+    'Munnar': const LatLng(10.0889, 77.0595),
+    'Trivandrum': const LatLng(8.5241, 76.9366),
+    'Kollam': const LatLng(8.8932, 76.6141),
+    'Alappuzha': const LatLng(9.4981, 76.3388),
+    'Pathanamthitta': const LatLng(9.2648, 76.7870),
+  };
+
+  List<String> get availableCities => knownLocations.keys.toList()..sort();
+
+  // --- BUS MANAGEMENT API ---
+
+  /// Add a new bus to the fleet
+  void addBus(LiveBus bus) {
+    _buses.add(bus);
+    _busStreamController.add(List.from(_buses));
+    
+    // If it has a route name, try to assign a path
+    if (bus.routePath == null) {
+      _assignRoutePathToBus(bus).then((updatedBus) {
+        final index = _buses.indexWhere((b) => b.busId == bus.busId);
+        if (index != -1) {
+          // Snap the bus to the start of the valid route
+          if (updatedBus.routePath != null && updatedBus.routePath!.waypoints.isNotEmpty) {
+             final startPoint = updatedBus.routePath!.waypoints.first;
+             final snappedBus = updatedBus.copyWith(
+                lat: startPoint.latitude,
+                lon: startPoint.longitude,
+                currentWaypointIndex: 0
+             );
+             _buses[index] = snappedBus;
+          } else {
+             _buses[index] = updatedBus;
+          }
+          _busStreamController.add(List.from(_buses));
+        }
+      });
+    }
+  }
+
+  /// Remove a bus from the fleet
+  void removeBus(String busId) {
+    _buses.removeWhere((bus) => bus.busId == busId);
+    _busStreamController.add(List.from(_buses));
+  }
+
+  /// Update bus status (e.g. RUNNING / IDLE)
+  void updateBusStatus(String busId, String newStatus) {
+    final index = _buses.indexWhere((bus) => bus.busId == busId);
+    if (index != -1) {
+      _buses[index] = _buses[index].copyWith(status: newStatus);
+      _busStreamController.add(List.from(_buses));
+    }
+  }
+
+  /// Helper to assign route path to a single bus
+  Future<LiveBus> _assignRoutePathToBus(LiveBus bus) async {
+      RoutePath? routePath;
+      
+      // Strategy 1: Predefined
+      routePath = RoutePathsData.getRoutePath(bus.routeName);
+      
+      if (routePath == null) {
+         // Strategy 2: OSRM with improved Origin/Dest parsing
+         LatLng currentPos = LatLng(bus.lat, bus.lon);
+         LatLng? destination;
+         
+         // Try to parse "Origin - Destination"
+         if (bus.routeName.contains(' - ')) {
+            final parts = bus.routeName.split(' - ');
+            if (parts.length >= 2) {
+               final originName = parts[0].trim();
+               final destName = parts[1].trim();
+               
+               // Look up coordinates
+               if (knownLocations.containsKey(originName)) {
+                  currentPos = knownLocations[originName]!;
+               }
+               if (knownLocations.containsKey(destName)) {
+                  destination = knownLocations[destName]!;
+               }
+            }
+         }
+         
+         // If destination still null, try old extraction (fallback)
+         destination ??= _extractDestinationFromRouteName(bus.routeName, currentPos);
+         
+         routePath = await OSRMRoutingService.fetchRoute(
+            start: currentPos,
+            end: destination,
+            routeName: bus.routeName,
+         );
+         
+         if (routePath == null) {
+            // Strategy 3: Fallback
+            routePath = RoutePathsData.generateSimplePath(
+              bus.routeName, 
+              currentPos, 
+              destination
+            );
+         }
+      }
+      
+      final currentPos = LatLng(bus.lat, bus.lon);
+      final closestWaypointIndex = routePath!.findClosestWaypoint(currentPos);
+      
+      return bus.copyWith(
+        routePath: routePath,
+        currentWaypointIndex: closestWaypointIndex,
+        progressInSegment: 0.0
+      );
+  }
+
+  /// Extract destination from route name (Legacy/Fallback)
   LatLng _extractDestinationFromRouteName(String routeName, LatLng start) {
-    // Parse route name to extract destination
     if (routeName.contains(' - ')) {
       final parts = routeName.split(' - ');
       final destination = parts.length > 1 ? parts[1].trim() : '';
 
-      // Map of known destinations in Kerala
-      final knownDestinations = {
-        'Changanassery': const LatLng(9.4450, 76.5488),
-        'Ettumanoor': const LatLng(9.6691, 76.5622),
-        'Vaikom': const LatLng(9.7188, 76.4066),
-        'Pala': const LatLng(9.7101, 76.6841),
-        'Kanjirappally': const LatLng(9.5244, 76.8141),
-        'Kumarakom': const LatLng(9.6100, 76.4300),
-        'Tiruvalla': const LatLng(9.3830, 76.5740),
-        'Erattupetta': const LatLng(9.7004, 76.7803),
-        'Mundakayam': const LatLng(9.6213, 76.8566),
-        'Thalayolaparambu': const LatLng(9.7481, 76.4855),
-        'Pampady': const LatLng(9.5863, 76.5855),
-        'Kottayam': const LatLng(9.5916, 76.5222),
-      };
-
-      // Check if destination is in our known list
-      for (final entry in knownDestinations.entries) {
+      for (final entry in knownLocations.entries) {
         if (destination.toLowerCase().contains(entry.key.toLowerCase())) {
           return entry.value;
         }
@@ -176,6 +290,8 @@ class BusLocationService {
     }
     _busStreamController.add(List.from(_buses));
   }
+
+
 
   void dispose() {
     _updateTimer?.cancel();
