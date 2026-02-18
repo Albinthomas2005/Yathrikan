@@ -29,7 +29,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   late FlutterTts _flutterTts;
   bool _isListening = false;
   bool _speechEnabled = false;
-  bool _isTyping = false; // Add typing state
+  bool _isTyping = false;
+  bool _voiceSent = false; // Prevent double-send from both _stopListening and _onSpeechStatus
 
   // Location Context
   String? _currentCity;
@@ -167,10 +168,14 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   void _onSpeechStatus(String status) {
     debugPrint('Speech status: $status');
     if (status == 'done' || status == 'notListening') {
-      if (mounted) {
+      if (mounted && !_voiceSent) {
+        final text = _messageController.text.trim();
         setState(() => _isListening = false);
-        if (_messageController.text.isNotEmpty) {
-           _sendMessage(_messageController.text);
+        if (text.isNotEmpty) {
+          _voiceSent = true;
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (mounted) _sendMessage(text);
+          });
         }
       }
     }
@@ -205,18 +210,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
 
   void _startListening() async {
-    // 1. Check Permission Explicitly
+    // 1. Check Permission
     var status = await Permission.microphone.status;
     if (status.isDenied) {
       status = await Permission.microphone.request();
     }
-
     if (status.isPermanentlyDenied) {
-      // Open settings
       openAppSettings();
       return;
     }
-
     if (!status.isGranted) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -226,34 +228,41 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       return;
     }
 
-    // 2. Initialize if not already (Double check)
+    // 2. Initialize if needed
     if (!_speechEnabled) {
       bool available = await _speech.initialize(
-        onError: (error) => debugPrint('Speech error: $error'),
+        onError: (error) {
+          debugPrint('Speech error: $error');
+          if (mounted) setState(() => _isListening = false);
+        },
         onStatus: _onSpeechStatus,
       );
-      if (available) {
-        setState(() => _speechEnabled = true);
-      } else {
-         if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
+      if (!available) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Speech recognition not available on this device')),
           );
-         }
+        }
         return;
       }
+      _speechEnabled = true;
     }
 
+    // 3. Clear previous text and start
+    _messageController.clear();
+    _voiceSent = false;
     setState(() => _isListening = true);
 
     await _speech.listen(
       onResult: (result) {
-        setState(() {
-          _messageController.text = result.recognizedWords;
-          _messageController.selection = TextSelection.fromPosition(
-            TextPosition(offset: _messageController.text.length),
-          );
-        });
+        if (mounted) {
+          setState(() {
+            _messageController.text = result.recognizedWords;
+            _messageController.selection = TextSelection.fromPosition(
+              TextPosition(offset: _messageController.text.length),
+            );
+          });
+        }
       },
       listenFor: const Duration(seconds: 30),
       pauseFor: const Duration(seconds: 3),
@@ -266,8 +275,16 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   void _stopListening() async {
+    final text = _messageController.text.trim();
     await _speech.stop();
     setState(() => _isListening = false);
+    // Auto-send whatever was recognized
+    if (text.isNotEmpty && !_voiceSent) {
+      _voiceSent = true;
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (mounted) _sendMessage(text);
+      });
+    }
   }
 
 
@@ -297,19 +314,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
         // Check if response warrants a navigation button
         String? action;
-        // Always offer route check if we found something OR if it's a "to [City]" query
-        // The bot response format for found buses is "Found buses from..." or "Here are the buses..."
-        if (botResponse.contains("Here are the buses") || 
-            botResponse.contains("Found buses from") ||
-            botResponse.contains("Found it!") ||
-            botResponse.contains("couldn't find any buses")) {
-           
-           String? city = _findCityInMessage(message);
-           if (city != null) {
-             action = 'navigate_shortest_route:$city';
-           } else {
-             action = 'navigate_shortest_route';
-           }
+        String? city = _findCityInMessage(message);
+        if (botResponse.contains('Here are the buses') ||
+            botResponse.contains('next bus is') ||
+            botResponse.contains('ETA:') ||
+            botResponse.contains('currently running') ||
+            botResponse.contains('arriving in')) {
+          action = city != null
+              ? 'navigate_shortest_route:$city'
+              : 'navigate_shortest_route';
         }
 
         if (mounted) {
@@ -361,8 +374,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     }
 
     // 1. GREETINGS
-    if (_matches(msg, ['hello', 'hi', 'hey', 'morning', 'evening', 'yo'])) {
-       // Random greeting
+    if (_matches(msg, ['hello', 'hi', 'hey', 'morning', 'evening', 'yo']) && msg.length < 15) {
        final greetings = [
          "Hello there! Where are you planning to go today?",
          "Hi! I'm ready to find the best bus for you. Just name the city!",
@@ -377,59 +389,108 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     }
 
     // 2. BUS SPECIFIC QUERY (By Bus ID)
-    // RegExp for "KTM-XXX" or just "KTM 001"
-    final busIdRegex = RegExp(r'(ktm|kl)[-\s]?(\d+)', caseSensitive: false);
+    final busIdRegex = RegExp(r'(kl[-\s]?eru|eru)[-\s]?(\d+)', caseSensitive: false);
     final busIdMatch = busIdRegex.firstMatch(msg);
     if (busIdMatch != null) {
-      // User is asking about a specific bus
-      final searchId = busIdMatch.group(0)!.replaceAll(' ', '-').toUpperCase(); // Normalize
-      // Try fuzzy search in list
+      final num = busIdMatch.group(2)!.padLeft(3, '0');
+      final searchId = 'KL-ERU-$num';
       final allBuses = BusLocationService().buses;
       try {
-        final bus = allBuses.firstWhere((b) => b.busId.toLowerCase().contains(searchId.toLowerCase()));
+        final bus = allBuses.firstWhere((b) => b.busId == searchId);
         return _formatBusStatus(bus);
       } catch (e) {
-        return "I couldn't find a live bus with ID containing '$searchId'. Please check the number.";
+        return "I couldn't find bus '$searchId'. We have KL-ERU-001 to KL-ERU-030. Try asking about one of those!";
       }
     }
 
-    // 3. ROUTE QUERY (The big one)
-    // Check for "to [City]" or just "[City]"
-    String? city = _findCityInMessage(msg);
-    if (city != null) {
-       // Allow user to say "from [City] to [City]"
-       String? origin = _findCityInMessage(msg.replaceAll(city.toLowerCase(), '')); // Hacky way to find second city
-       
-       String startLocation = origin ?? _currentCity ?? "Koovappally"; // Default or current
-       
-       // Use new Schedule Logic
-       final results = BusLocationService().findBusesForUser(
-         startLocation: startLocation,
-         endLocation: city,
-         userCurrentTime: TimeOfDay.now()
-       );
-       
-       if (results.isEmpty) {
-         if (origin == null && _currentCity == null) {
-            return "I couldn't find a direct bus to $city. Please tell me where you are starting from!";
-         }
-         return "I checked the schedule, but I couldn't find any upcoming buses from $startLocation to $city right now.";
-       } else {
-         return _formatScheduleOptions(city, results, fromLocation: startLocation);
-       }
+    // 3. HOW MANY / COUNT
+    if (_matches(msg, ['how many', 'count', 'total'])) {
+      final svc = BusLocationService();
+      final running = svc.buses.where((b) => b.status == 'RUNNING').length;
+      return "There are $running buses currently running on the Erumely → Kottayam route. ${svc.buses.length} total including scheduled.";
     }
 
-    // 4. GENERAL QUERIES
-    if (_matches(msg, ['ticket', 'book'])) {
+    // 4. NEAREST / NEXT BUS
+    if (_matches(msg, ['nearest', 'next bus', 'coming soon', 'next one', 'soonest'])) {
+      final svc = BusLocationService();
+      final incoming = svc.buses.where((b) => svc.isIncoming(b) && b.status == 'RUNNING').toList();
+      incoming.sort((a, b) => svc.etaMinutes(a).compareTo(svc.etaMinutes(b)));
+      if (incoming.isNotEmpty) {
+        final b = incoming.first;
+        final eta = svc.etaMinutes(b);
+        return "The next bus is ${b.busName} (${b.busId}), arriving in approximately $eta minutes!";
+      }
+      return "No buses are currently approaching your location.";
+    }
+
+    // 5. ROUTE QUERY — detect city anywhere in the message
+    String? city = _findCityInMessage(msg);
+    if (city != null) {
+       String? origin = _findCityInMessage(msg.replaceAll(city.toLowerCase(), ''));
+       String startLocation = origin ?? _currentCity ?? "Koovappally";
+       
+       final svc = BusLocationService();
+       final incoming = svc.buses.where((b) => svc.isIncoming(b) && b.status == 'RUNNING').toList();
+       incoming.sort((a, b) => svc.etaMinutes(a).compareTo(svc.etaMinutes(b)));
+       
+       if (incoming.isEmpty) {
+         return "No buses are currently approaching $startLocation. They run on the Erumely → Kottayam route via $city.";
+       }
+       
+       final top = incoming.take(5).toList();
+       final buf = StringBuffer();
+       buf.writeln('Here are the buses heading through $city:');
+       buf.writeln();
+       for (final b in top) {
+         final eta = svc.etaMinutes(b);
+         buf.writeln('🚌 ${b.busName} (${b.busId})');
+         buf.writeln('   ETA: $eta min');
+         buf.writeln();
+       }
+       buf.writeln('Tap "View Route" to track them on the map!');
+       return buf.toString();
+    }
+
+    // 6. SHOW ALL BUSES (no city detected, but bus-related keywords)
+    if (_matches(msg, ['bus', 'buses', 'show', 'list', 'all', 'running', 'available', 'route', 'schedule', 'going', 'travel', 'trip'])) {
+      final svc = BusLocationService();
+      final incoming = svc.buses.where((b) => svc.isIncoming(b) && b.status == 'RUNNING').toList();
+      incoming.sort((a, b) => svc.etaMinutes(a).compareTo(svc.etaMinutes(b)));
+      
+      if (incoming.isEmpty) {
+        return "No buses are currently approaching your location on the Erumely → Kottayam route.";
+      }
+      
+      final top = incoming.take(5).toList();
+      final buf = StringBuffer();
+      buf.writeln('Here are the buses currently approaching:');
+      buf.writeln();
+      for (final b in top) {
+        final eta = svc.etaMinutes(b);
+        buf.writeln('🚌 ${b.busName} (${b.busId})');
+        buf.writeln('   ETA: $eta min');
+        buf.writeln();
+      }
+      buf.writeln('You can also try: "Bus to Kottayam" or "KL-ERU-005"');
+      return buf.toString();
+    }
+
+    // 7. TICKET / BOOKING
+    if (_matches(msg, ['ticket', 'book', 'fare', 'price'])) {
       return "You can book tickets in the 'Shortest Route' section. I'm just here to track them!";
     }
     
-    if (_matches(msg, ['delay', 'late'])) {
-      return "Delays happen! If you tell me your bus number (e.g., KTM-005), I can tell you exactly where it is.";
+    // 8. DELAY
+    if (_matches(msg, ['delay', 'late', 'slow'])) {
+      return "Delays happen! If you tell me your bus number (e.g., KL-ERU-005), I can tell you exactly where it is.";
     }
 
-    // 5. FALLBACK
-    return "I didn't catch that location. Try saying something like 'Bus to Pala' or 'Where is KTM-005?'.";
+    // 9. FALLBACK
+    return "I can help you find buses! Try:\n\n"
+           "• Type a city name: \"Kottayam\"\n"
+           "• Ask for a bus: \"Bus to Pala\"\n"
+           "• Track by ID: \"KL-ERU-005\"\n"
+           "• Ask: \"Next bus\" or \"Show buses\"";
   }
 
   // --- LOGIC HELPERS ---
@@ -475,39 +536,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
            // In a real app we'd decode lat/lng to a place name here
   }
 
-  String _formatScheduleOptions(String destination, List<Map<String, dynamic>> buses, {String? fromLocation}) {
-    // pick top 3
-    final topBuses = buses.take(3).toList();
-    final buffer = StringBuffer();
-    
-    buffer.writeln("Found buses from **$fromLocation** to **$destination**:");
-    buffer.writeln("");
-    
-    for (var bus in topBuses) {
-      buffer.writeln("🚌 **${bus['busName']}**");
-      buffer.writeln("   Departs: **${bus['arrivalTime']}**");
-      buffer.writeln("   Arrives: ${bus['reachTime']} (${bus['duration']})");
-      buffer.writeln("");
-    }
-    
-    if (buses.length > 3) {
-      buffer.writeln("...and ${buses.length - 3} more.");
-    }
-    
-    return buffer.toString();
-  }
+
 
 
 
   /// List of supported cities for fuzzy matching
-  final List<String> _supportedCities = [
-    'Kottayam', 'Aluva', 'Kochi', 'Ernakulam', 'Pala', 'Kannur', 
-    'Trivandrum', 'Thiruvananthapuram', 'Thrissur', 'Kozhikode', 
-    'Mundakayam', 'Kumily', 'Changanassery', 'Munnar', 'Wayanad',
-    'Vaikom', 'Ponkunnam', 'Ettumanoor', 'Kanjirappally', 
-    'Koovappally', 'Pathanamthitta', 'Erattupetta', 'Alappuzha', 
-    'Punalur', 'Adoor', 'Ranni', 'Kattappana', 'Thodupuzha', 'Muvattupuzha'
-  ];
+  final List<String> _supportedCities = BusLocationService.allPlaces;
 
   /// Detects if any supported city is present in the message
   String? _findCityInMessage(String message) {
