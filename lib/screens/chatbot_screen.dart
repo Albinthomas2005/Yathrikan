@@ -169,14 +169,17 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     debugPrint('Speech status: $status');
     if (status == 'done' || status == 'notListening') {
       if (mounted && !_voiceSent) {
-        final text = _messageController.text.trim();
+        _voiceSent = true;
         setState(() => _isListening = false);
-        if (text.isNotEmpty) {
-          _voiceSent = true;
-          Future.delayed(const Duration(milliseconds: 300), () {
-            if (mounted) _sendMessage(text);
-          });
-        }
+        
+        Future.delayed(const Duration(milliseconds: 800), () {
+          if (mounted) {
+            final text = _messageController.text.trim();
+            if (text.isNotEmpty) {
+              _sendMessage(text);
+            }
+          }
+        });
       }
     }
   }
@@ -275,14 +278,16 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   void _stopListening() async {
-    final text = _messageController.text.trim();
     await _speech.stop();
     setState(() => _isListening = false);
-    // Auto-send whatever was recognized
-    if (text.isNotEmpty && !_voiceSent) {
+    
+    if (!_voiceSent) {
       _voiceSent = true;
-      Future.delayed(const Duration(milliseconds: 200), () {
-        if (mounted) _sendMessage(text);
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) {
+          final text = _messageController.text.trim();
+          if (text.isNotEmpty) _sendMessage(text);
+        }
       });
     }
   }
