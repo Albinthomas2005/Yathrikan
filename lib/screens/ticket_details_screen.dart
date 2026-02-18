@@ -77,7 +77,7 @@ class TicketDetailsScreen extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(
-            loc.translate('ticket_details'),
+            loc['ticket_details'],
             style: AppTextStyles.heading2
                 .copyWith(color: theme.textTheme.titleLarge?.color),
           ),
@@ -119,7 +119,7 @@ class TicketDetailsScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          loc.translate('ticket_details'),
+          loc['ticket_details'],
           style: AppTextStyles.heading2
               .copyWith(color: theme.textTheme.titleLarge?.color),
         ),

@@ -75,15 +75,15 @@ class _HomeScreenState extends State<HomeScreen> {
           items: [
             BottomNavigationBarItem(
               icon: const Icon(Icons.home_filled),
-              label: loc.translate('home'),
+              label: loc['home'],
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.map_outlined),
-              label: loc.translate('route'),
+              label: loc['route'],
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.person_outline),
-              label: loc.translate('profile'),
+              label: loc['profile'],
             ),
           ],
         ),
@@ -447,7 +447,7 @@ class _HomeViewState extends State<_HomeView> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    loc.translate('live_buses'),
+                    loc['live_buses'],
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -634,7 +634,7 @@ class _HomeViewState extends State<_HomeView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          loc.translate('quick_actions'),
+          loc['quick_actions'],
           style: AppTextStyles.heading2.copyWith(
               fontSize: 18,
               color: Theme.of(context).textTheme.titleLarge?.color),
@@ -651,7 +651,7 @@ class _HomeViewState extends State<_HomeView> {
             _buildActionCard(
               context: context,
               icon: Icons.alt_route,
-              label: loc.translate('shortest_route'),
+              label: loc['shortest_route'],
               color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFF1E1E1E),
               iconColor: AppColors.primaryYellow,
               delay: 500,
@@ -659,7 +659,7 @@ class _HomeViewState extends State<_HomeView> {
             _buildActionCard(
               context: context,
               icon: Icons.confirmation_number_outlined,
-              label: loc.translate('my_ticket'),
+              label: loc['my_ticket'],
               color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFF1E1E1E),
               iconColor: AppColors.primaryYellow,
               delay: 550,
@@ -667,7 +667,7 @@ class _HomeViewState extends State<_HomeView> {
             _buildActionCard(
               context: context,
               icon: Icons.campaign_outlined,
-              label: loc.translate('complaint'),
+              label: loc['complaint'],
               color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFF1E1E1E),
               iconColor: AppColors.primaryYellow,
               delay: 600,
@@ -675,7 +675,7 @@ class _HomeViewState extends State<_HomeView> {
             _buildActionCard(
               context: context,
               icon: Icons.security,
-              label: loc.translate('safety'),
+              label: loc['safety'],
               color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFF1E1E1E),
               iconColor: AppColors.primaryYellow,
               delay: 650,

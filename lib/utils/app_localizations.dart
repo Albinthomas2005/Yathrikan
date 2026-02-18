@@ -91,6 +91,54 @@ class AppLocalizations {
       // General
       'submit': 'Submit',
       'cancel': 'Cancel',
+
+      // Admin Finance
+      'admin_finance_title': 'Admin Finance Reports',
+      'total_system_revenue': 'Total System Revenue',
+      'growth': 'Growth',
+      'current_month': 'Current Month',
+      'last_month': 'Last Month',
+      'daily_comparison': 'Daily Comparison',
+      'transaction_history': 'Transaction History',
+      'see_all': 'See All',
+      'all_transactions': 'All Transactions',
+      'success': 'Success',
+      'export_report': 'Export Report',
+      'report_exported': 'Report exported successfully!',
+      'filter_by_date': 'Filter by date',
+
+      // Admin Support
+      'user_support': 'User Support',
+      'quick_actions_title': 'QUICK ACTIONS',
+      'manage_routes': 'Manage\nRoutes',
+      'fleet_track': 'Fleet\nTrack',
+      'finance': 'Finance',
+      'pending': 'Pending',
+      'in_progress': 'In Progress',
+      'resolved': 'Resolved',
+      'no_tickets_in_progress': 'No tickets in progress',
+      'resolved_tickets_count': 'resolved tickets',
+      'ticket_id': 'Ticket ID',
+      'priority': 'Priority',
+      'description': 'Description:',
+      'reported_by': 'Reported By',
+      'close': 'Close',
+      'resolve': 'Resolve',
+      'ticket_status_updated': 'Ticket status updated',
+      'search_coming_soon': 'Search functionality coming soon',
+      'already_on_support': 'You are already on User Support',
+      'open_ticket': 'Open Ticket',
+
+      // Days
+      'mon': 'Mon',
+      'tue': 'Tue',
+      'wed': 'Wed',
+      'thu': 'Thu',
+      'fri': 'Fri',
+      'sat': 'Sat',
+      'sun': 'Sun',
+      'ksrtc': 'KSRTC',
+      'private': 'Private',
     },
     'ml': {
       'app_title': 'യാത്രികൻ',
@@ -171,12 +219,62 @@ class AppLocalizations {
       // General
       'submit': 'സമർപ്പിക്കുക',
       'cancel': 'റദ്ദാക്കുക',
+
+      // Admin Finance
+      'admin_finance_title': 'അഡ്മിൻ ഫിനാൻസ് റിപ്പോർട്ടുകൾ',
+      'total_system_revenue': 'മൊത്തം വരുമാനം',
+      'growth': 'വളർച്ച',
+      'current_month': 'ഈ മാസം',
+      'last_month': 'കഴിഞ്ഞ മാസം',
+      'daily_comparison': 'ദിവസേനയുള്ള താരതമ്യം',
+      'transaction_history': 'ഇടപാട് ചരിത്രം',
+      'see_all': 'എല്ലാം കാണുക',
+      'all_transactions': 'എല്ലാ ഇടപാടുകളും',
+      'success': 'വിജയിച്ചു',
+      'export_report': 'റിപ്പോർട്ട് എക്സ്പോർട്ട് ചെയ്യുക',
+      'report_exported': 'റിപ്പോർട്ട് വിജയകരമായി എക്സ്പോർട്ട് ചെയ്തു!',
+      'filter_by_date': 'തീയതി പ്രകാരം ഫിൽട്ടർ ചെയ്യുക',
+
+      // Admin Support
+      'user_support': 'ഉപഭോക്തൃ സഹായം',
+      'quick_actions_title': 'സേവനങ്ങൾ',
+      'manage_routes': 'റൂട്ടുകൾ\nനിയന്ത്രിക്കുക',
+      'fleet_track': 'ഫ്ലീറ്റ്\nട്രാക്ക്',
+      'finance': 'ഫിനാൻസ്',
+      'pending': 'തീർപ്പുകൽപ്പിക്കാത്തവ',
+      'in_progress': 'പുരോഗമിക്കുന്നു',
+      'resolved': 'പരിഹരിച്ചവ',
+      'no_tickets_in_progress': 'പുരോഗതിയിലുള്ള ടിക്കറ്റുകളില്ല',
+      'resolved_tickets_count': 'പരിഹരിച്ച ടിക്കറ്റുകൾ',
+      'ticket_id': 'ടിക്കറ്റ് ഐഡി',
+      'priority': 'മുൻഗണന',
+      'description': 'വിവരണം:',
+      'reported_by': 'റിപ്പോർട്ട് ചെയ്തത്',
+      'close': 'അടയ്ക്കുക',
+      'resolve': 'പരിഹരിക്കുക',
+      'ticket_status_updated': 'ടിക്കറ്റ് നില അപ്‌ഡേറ്റുചെയ്‌തു',
+      'search_coming_soon': 'തിരയൽ ഉടൻ വരുന്നു',
+      'already_on_support': 'നിങ്ങൾ ഇതിനകം തന്നെ ഉപഭോക്തൃ സഹായത്തിലാണ്',
+      'open_ticket': 'ടിക്കറ്റ് തുറക്കുക',
+
+      // Days
+      'mon': 'തിങ്കൾ',
+      'tue': 'ചൊവ്വ',
+      'wed': 'ബുധൻ',
+      'thu': 'വ്യാഴം',
+      'fri': 'വെള്ളി',
+      'sat': 'ശനി',
+      'sun': 'ഞായർ',
+      'ksrtc': 'കെഎസ്ആർടിസി',
+      'private': 'സ്വകാര്യം',
     },
   };
 
   String translate(String key) {
     return _localizedValues[locale.languageCode]?[key] ?? key;
   }
+
+  String operator [](String key) => translate(key);
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

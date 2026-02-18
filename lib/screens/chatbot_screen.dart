@@ -5,6 +5,7 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'shortest_route_screen.dart';
 
@@ -163,11 +164,24 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     );
   }
 
+  void _onSpeechStatus(String status) {
+    debugPrint('Speech status: $status');
+    if (status == 'done' || status == 'notListening') {
+      if (mounted) {
+        setState(() => _isListening = false);
+        if (_messageController.text.isNotEmpty) {
+           _sendMessage(_messageController.text);
+        }
+      }
+    }
+  }
+
   void _initSpeech() async {
     _speech = stt.SpeechToText();
     _speechEnabled = await _speech.initialize(
       onError: (error) => debugPrint('Speech error: $error'),
-      onStatus: (status) => debugPrint('Speech status: $status'),
+      onStatus: _onSpeechStatus,
+      debugLogging: true,
     );
     setState(() {});
   }
@@ -188,12 +202,46 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     super.dispose();
   }
 
+
+
   void _startListening() async {
-    if (!_speechEnabled) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Speech recognition not available')),
-      );
+    // 1. Check Permission Explicitly
+    var status = await Permission.microphone.status;
+    if (status.isDenied) {
+      status = await Permission.microphone.request();
+    }
+
+    if (status.isPermanentlyDenied) {
+      // Open settings
+      openAppSettings();
       return;
+    }
+
+    if (!status.isGranted) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Microphone permission is required for voice commands')),
+        );
+      }
+      return;
+    }
+
+    // 2. Initialize if not already (Double check)
+    if (!_speechEnabled) {
+      bool available = await _speech.initialize(
+        onError: (error) => debugPrint('Speech error: $error'),
+        onStatus: _onSpeechStatus,
+      );
+      if (available) {
+        setState(() => _speechEnabled = true);
+      } else {
+         if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Speech recognition not available on this device')),
+          );
+         }
+        return;
+      }
     }
 
     setState(() => _isListening = true);
@@ -202,29 +250,27 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       onResult: (result) {
         setState(() {
           _messageController.text = result.recognizedWords;
+          _messageController.selection = TextSelection.fromPosition(
+            TextPosition(offset: _messageController.text.length),
+          );
         });
       },
       listenFor: const Duration(seconds: 30),
       pauseFor: const Duration(seconds: 3),
-      partialResults: true,
-      cancelOnError: false,
-      listenMode: stt.ListenMode.dictation,
+      listenOptions: stt.SpeechListenOptions(
+        partialResults: true,
+        cancelOnError: false,
+        listenMode: stt.ListenMode.dictation,
+      ),
     );
   }
 
   void _stopListening() async {
     await _speech.stop();
     setState(() => _isListening = false);
-
-    // Send the recognized message
-    if (_messageController.text.isNotEmpty) {
-      _sendMessage(_messageController.text);
-    }
   }
 
-  Future<void> _speak(String text) async {
-    await _flutterTts.speak(text);
-  }
+
 
   void _sendMessage(String message) {
     if (message.trim().isEmpty) return;
@@ -276,7 +322,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             });
           });
           // Speak the bot response
-          _speak(botResponse);
+          //_speak(botResponse);
         }
       } catch (e) {
         debugPrint("Chatbot Error: $e");
@@ -351,21 +397,25 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     // Check for "to [City]" or just "[City]"
     String? city = _findCityInMessage(msg);
     if (city != null) {
-       // Search for buses going TO this city
-       // If we know current city, filter by "From Current -> To Destination"
-       final routes = _findBusesTo(city);
+       // Allow user to say "from [City] to [City]"
+       String? origin = _findCityInMessage(msg.replaceAll(city.toLowerCase(), '')); // Hacky way to find second city
        
-       if (routes.isEmpty) {
-         // Fallback: Try searching specifically without current location restriction if we applied it
-         if (_currentCity != null) {
-            final allRoutes = _findBusesTo(city, ignoreLocation: true);
-            if (allRoutes.isNotEmpty) {
-               return _formatRouteOptions(city, allRoutes, fromLocation: "anywhere");
-            }
+       String startLocation = origin ?? _currentCity ?? "Koovappally"; // Default or current
+       
+       // Use new Schedule Logic
+       final results = BusLocationService().findBusesForUser(
+         startLocation: startLocation,
+         endLocation: city,
+         userCurrentTime: TimeOfDay.now()
+       );
+       
+       if (results.isEmpty) {
+         if (origin == null && _currentCity == null) {
+            return "I couldn't find a direct bus to $city. Please tell me where you are starting from!";
          }
-         return "I checked the live network, but I couldn't find any buses heading specifically to $city right now.";
+         return "I checked the schedule, but I couldn't find any upcoming buses from $startLocation to $city right now.";
        } else {
-         return _formatRouteOptions(city, routes, fromLocation: _currentCity);
+         return _formatScheduleOptions(city, results, fromLocation: startLocation);
        }
     }
 
@@ -425,23 +475,18 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
            // In a real app we'd decode lat/lng to a place name here
   }
 
-  String _formatRouteOptions(String destination, List<LiveBus> buses, {String? fromLocation}) {
+  String _formatScheduleOptions(String destination, List<Map<String, dynamic>> buses, {String? fromLocation}) {
     // pick top 3
     final topBuses = buses.take(3).toList();
     final buffer = StringBuffer();
     
-    if (fromLocation != null && fromLocation != "anywhere") {
-       buffer.writeln("Found buses from **$fromLocation** to **$destination**:");
-    } else {
-       buffer.writeln("Here are the buses going to **$destination**:");
-    }
+    buffer.writeln("Found buses from **$fromLocation** to **$destination**:");
     buffer.writeln("");
     
     for (var bus in topBuses) {
-      // Calculate simplistic ETA/Distance visual
-      buffer.writeln("🚌 **${bus.routeName}**");
-      buffer.writeln("   ID: ${bus.busId} | Speed: ${bus.speedKmph} km/h");
-      buffer.writeln("   ⏳ ETA: ${bus.etaMin} mins");
+      buffer.writeln("🚌 **${bus['busName']}**");
+      buffer.writeln("   Departs: **${bus['arrivalTime']}**");
+      buffer.writeln("   Arrives: ${bus['reachTime']} (${bus['duration']})");
       buffer.writeln("");
     }
     
@@ -449,42 +494,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       buffer.writeln("...and ${buses.length - 3} more.");
     }
     
-    buffer.writeln("Check the map for live tracking!");
     return buffer.toString();
   }
 
-  List<LiveBus> _findBusesTo(String destination, {bool ignoreLocation = false}) {
-    final allBuses = BusLocationService().buses;
-    final destLower = destination.toLowerCase();
-    
-    // Filter buses where route name contains the destination
-    // e.g. "Kottayam - Pala" contains "Pala"
-    return allBuses.where((bus) {
-      final route = bus.routeName.toLowerCase();
-      // Simple heuristic: if route contains city name
-      bool matchesDest = route.contains(destLower);
-      
-      if (!matchesDest) return false;
-      
-      // If we have a current location, check if the bus ALSO contains our location?
-      // Or maybe check if the bus is heading TOWARDS destination?
-      // For this simplified version, we'll check if route name contains both
-      // "Kottayam - Pala" contains "Kottayam" AND "Pala"
-      if (!ignoreLocation && _currentCity != null) {
-         final currentLower = _currentCity!.toLowerCase();
-         // But only if current city is in our supported list or route names
-         if (route.contains(currentLower)) {
-            return true;
-         }
-         // If generic route doesn't match current city, maybe exclude it? 
-         // But "Kottayam - Pala" matches if I am in Kottayam. 
-         // If I am in "Aluva", "Kottayam - Pala" should NOT match.
-         return false; 
-      }
-      
-      return true;
-    }).toList();
-  }
+
 
   /// List of supported cities for fuzzy matching
   final List<String> _supportedCities = [
@@ -523,7 +536,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     List<int> v0 = List<int>.filled(t.length + 1, 0);
     List<int> v1 = List<int>.filled(t.length + 1, 0);
 
-    for (int i = 0; i < t.length + 1; i++) v0[i] = i;
+    for (int i = 0; i < t.length + 1; i++) {
+      v0[i] = i;
+    }
 
     for (int i = 0; i < s.length; i++) {
       v1[0] = i + 1;
@@ -531,7 +546,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         int cost = (s[i] == t[j]) ? 0 : 1;
         v1[j + 1] = [v1[j] + 1, v0[j + 1] + 1, v0[j] + cost].reduce((a, b) => a < b ? a : b);
       }
-      for (int j = 0; j < t.length + 1; j++) v0[j] = v1[j];
+      for (int j = 0; j < t.length + 1; j++) {
+        v0[j] = v1[j];
+      }
     }
     return v1[t.length];
   }

@@ -17,7 +17,7 @@ class SettingsScreen extends StatelessWidget {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          loc.translate('settings'),
+          loc['settings'],
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -32,8 +32,8 @@ class SettingsScreen extends StatelessWidget {
               children: [
                 _buildSwitchItem(
                   context,
-                  loc.translate('notifications'),
-                  loc.translate('receive_updates'),
+                  loc['notifications'],
+                  loc['receive_updates'],
                   true,
                   (val) {
                     // Placeholder for notification logic
@@ -41,8 +41,8 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 _buildSwitchItem(
                   context,
-                  loc.translate('dark_mode'),
-                  loc.translate('enable_dark_theme'),
+                  loc['dark_mode'],
+                  loc['enable_dark_theme'],
                   isDark,
                   (val) {
                     settings.toggleTheme(val);
@@ -50,8 +50,8 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 _buildSwitchItem(
                   context,
-                  loc.translate('location_access'),
-                  loc.translate('allow_location'),
+                  loc['location_access'],
+                  loc['allow_location'],
                   settings.isLocationEnabled,
                   (val) {
                     settings.toggleLocation(val);
@@ -60,7 +60,7 @@ class SettingsScreen extends StatelessWidget {
                 const Divider(height: 40),
                 _buildActionItem(
                   context,
-                  loc.translate('language'),
+                  loc['language'],
                   settings.locale.languageCode == 'ml' ? 'മലയാളം' : 'English',
                   () => _showLanguageDialog(context, settings),
                 ),
@@ -73,10 +73,10 @@ class SettingsScreen extends StatelessWidget {
                   },
                 ),
                 _buildActionItem(
-                    context, loc.translate('privacy_policy'), "", () {}),
+                    context, loc['privacy_policy'], "", () {}),
                 _buildActionItem(
-                    context, loc.translate('terms_of_service'), "", () {}),
-                _buildActionItem(context, loc.translate('about_app'),
+                    context, loc['terms_of_service'], "", () {}),
+                _buildActionItem(context, loc['about_app'],
                     "Version 1.0.0", () {}),
               ],
             ),

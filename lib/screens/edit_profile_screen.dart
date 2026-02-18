@@ -69,7 +69,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          loc.translate('edit_profile'),
+          loc['edit_profile'],
           style: TextStyle(
               color: Theme.of(context).textTheme.titleLarge?.color,
               fontWeight: FontWeight.bold),
@@ -80,12 +80,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                    content: Text(loc.translate('profile_updated')),
+                    content: Text(loc['profile_updated']),
                     backgroundColor: Colors.green),
               );
               Navigator.pop(context);
             },
-            child: Text(loc.translate('save'),
+            child: Text(loc['save'],
                 style: const TextStyle(
                     color: AppColors.primaryYellow,
                     fontWeight: FontWeight.bold)),
@@ -138,11 +138,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
             ),
             const SizedBox(height: 40),
-            _buildTextField(loc.translate('full_name'), _nameController,
+            _buildTextField(loc['full_name'], _nameController,
                 CupertinoIcons.person),
             const SizedBox(height: 20),
             _buildTextField(
-                loc.translate('email'), _emailController, CupertinoIcons.mail,
+                loc['email'], _emailController, CupertinoIcons.mail,
                 readOnly: true),
           ],
         ),

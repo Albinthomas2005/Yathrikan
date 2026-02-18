@@ -56,4 +56,11 @@ class StringUtils {
 
     return null;
   }
+
+  static String formatTime(DateTime dt) {
+    int h = dt.hour;
+    String ampm = h >= 12 ? 'PM' : 'AM';
+    int dh = h > 12 ? h - 12 : (h == 0 ? 12 : h);
+    return "$dh:${dt.minute.toString().padLeft(2, '0')} $ampm";
+  }
 }

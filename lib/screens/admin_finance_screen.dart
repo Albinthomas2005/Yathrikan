@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/constants.dart';
+import '../utils/app_localizations.dart';
 
 class AdminFinanceScreen extends StatelessWidget {
   const AdminFinanceScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context); // FORCE REBUILD
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
@@ -18,7 +20,7 @@ class AdminFinanceScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Admin Finance Reports',
+          loc['admin_finance_title'],
           style: GoogleFonts.inter(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -73,7 +75,7 @@ class AdminFinanceScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Total System Revenue',
+                      loc['total_system_revenue'],
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         color: Colors.white70,
@@ -107,13 +109,64 @@ class AdminFinanceScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'vs last month',
+                          loc['growth'],
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             color: Colors.white54,
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                loc['current_month'],
+                                style: GoogleFonts.inter(
+                                    fontSize: 12, color: Colors.white54),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '₹85,42,850',
+                                style: GoogleFonts.inter(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
+                              ),
+                            ],
+                          ),
+                          Container(
+                              width: 1, height: 30, color: Colors.white10),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                loc['last_month'],
+                                style: GoogleFonts.inter(
+                                    fontSize: 12, color: Colors.white54),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '₹75,93,644',
+                                style: GoogleFonts.inter(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white70),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -122,7 +175,7 @@ class AdminFinanceScreen extends StatelessWidget {
 
               // Daily Comparison
               Text(
-                'Daily Comparison',
+                loc['daily_comparison'],
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -146,7 +199,7 @@ class AdminFinanceScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Transaction History',
+                    loc['transaction_history'],
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -159,39 +212,40 @@ class AdminFinanceScreen extends StatelessWidget {
                         context: context,
                         backgroundColor: const Color(0xFF1E293B),
                         shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(20)),
                         ),
                         builder: (context) => ListView(
                           padding: const EdgeInsets.all(20),
-                          children: const [
+                          children: [
                             Text(
-                              'All Transactions',
-                              style: TextStyle(
+                              loc['all_transactions'],
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            SizedBox(height: 16),
-                            _TransactionItem(
+                            const SizedBox(height: 16),
+                            const _TransactionItem(
                               ticketId: 'BW-9210',
                               provider: 'KSRTC',
                               time: '2 mins ago',
                               amount: '+₹850.50',
                             ),
-                            _TransactionItem(
+                            const _TransactionItem(
                               ticketId: 'BW-9209',
                               provider: 'Private Bus',
                               time: '15 mins ago',
                               amount: '+₹420.00',
                             ),
-                            _TransactionItem(
+                            const _TransactionItem(
                               ticketId: 'BW-9208',
                               provider: 'Private Bus',
                               time: '32 mins ago',
                               amount: '+₹1,250.00',
                             ),
-                             _TransactionItem(
+                            const _TransactionItem(
                               ticketId: 'BW-9207',
                               provider: 'Private Bus',
                               time: '1 hour ago',
@@ -202,7 +256,7 @@ class AdminFinanceScreen extends StatelessWidget {
                       );
                     },
                     child: Text(
-                      'See All',
+                      loc['see_all'],
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -243,7 +297,7 @@ class AdminFinanceScreen extends StatelessWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          'Report exported successfully!',
+                          loc['report_exported'],
                           style: GoogleFonts.inter(),
                         ),
                         backgroundColor: Colors.green,
@@ -265,7 +319,7 @@ class AdminFinanceScreen extends StatelessWidget {
                       const Icon(Icons.download),
                       const SizedBox(width: 8),
                       Text(
-                        'Export Report',
+                        loc['export_report'],
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -296,6 +350,7 @@ class _DailyComparisonChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
     return Column(
       children: [
         // Legend
@@ -314,7 +369,7 @@ class _DailyComparisonChart extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'KSRTC',
+                  loc['ksrtc'],
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     color: Colors.white70,
@@ -335,7 +390,7 @@ class _DailyComparisonChart extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Private',
+                  loc['private'],
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     color: Colors.white70,
@@ -347,17 +402,17 @@ class _DailyComparisonChart extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         // Simplified Bar Chart
-        const Expanded(
+        Expanded(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              _ChartBar(height: 0.4, label: 'Mon'),
-              _ChartBar(height: 0.6, label: 'Tue'),
-              _ChartBar(height: 0.9, label: 'Wed'),
-              _ChartBar(height: 0.5, label: 'Thu'),
-              _ChartBar(height: 1.0, label: 'Fri'),
-              _ChartBar(height: 0.7, label: 'Sat'),
+              _ChartBar(height: 0.4, label: loc['mon']),
+              _ChartBar(height: 0.6, label: loc['tue']),
+              _ChartBar(height: 0.9, label: loc['wed']),
+              _ChartBar(height: 0.5, label: loc['thu']),
+              _ChartBar(height: 1.0, label: loc['fri']),
+              _ChartBar(height: 0.7, label: loc['sat']),
             ],
           ),
         ),
@@ -427,6 +482,7 @@ class _TransactionItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -454,7 +510,7 @@ class _TransactionItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Ticket ID: $ticketId',
+                  '${loc['ticket_id']}: $ticketId',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -489,7 +545,7 @@ class _TransactionItem extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Success',
+                loc['success'],
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   color: Colors.white54,

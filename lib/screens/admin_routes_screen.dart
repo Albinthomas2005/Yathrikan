@@ -34,6 +34,7 @@ class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
     return buses.where((bus) {
       final query = _searchQuery.toLowerCase();
       return bus.busId.toLowerCase().contains(query) ||
+             (bus.busName != null && bus.busName!.toLowerCase().contains(query)) ||
              bus.routeName.toLowerCase().contains(query);
     }).toList();
   }
@@ -128,6 +129,7 @@ class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
                       // Note: Lat/Lon will be auto-corrected by BusLocationService based on Origin
                       final newBus = LiveBus(
                         busId: _newBusIdController.text.toUpperCase(),
+                        busName: "Bus ${_newBusIdController.text}", // Default name
                         routeName: routeName,
                         lat: 9.5916, // Temporary, will snap to Origin
                         lon: 76.5222,
@@ -340,7 +342,7 @@ class _BusCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryYellow.withOpacity(0.2),
+                  color: AppColors.primaryYellow.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -370,7 +372,7 @@ class _BusCard extends StatelessWidget {
                     value: isRunning,
                     activeColor: Colors.green,
                     inactiveThumbColor: Colors.orange,
-                    inactiveTrackColor: Colors.orange.withOpacity(0.3),
+                    inactiveTrackColor: Colors.orange.withValues(alpha: 0.3),
                     onChanged: onStatusToggle,
                   ),
                 ],

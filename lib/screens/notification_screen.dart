@@ -15,21 +15,21 @@ class NotificationScreen extends StatelessWidget {
     // Dynamic list construction to support localization
     final List<Map<String, dynamic>> notifications = [
       {
-        'title': loc.translate('bus_arriving_soon'),
-        'message': loc.translate('bus_arriving_message'),
-        'time': loc.translate('just_now'),
+        'title': loc['bus_arriving_soon'],
+        'message': loc['bus_arriving_message'],
+        'time': loc['just_now'],
         'icon': CupertinoIcons.bus,
       },
       {
-        'title': loc.translate('ticket_confirmed'),
-        'message': loc.translate('ticket_confirmed_message'),
-        'time': loc.translate('hours_ago'),
+        'title': loc['ticket_confirmed'],
+        'message': loc['ticket_confirmed_message'],
+        'time': loc['hours_ago'],
         'icon': CupertinoIcons.ticket_fill,
       },
       {
-        'title': loc.translate('welcome_title'),
-        'message': loc.translate('welcome_message'),
-        'time': loc.translate('day_ago'),
+        'title': loc['welcome_title'],
+        'message': loc['welcome_message'],
+        'time': loc['day_ago'],
         'icon': CupertinoIcons.hand_thumbsup_fill,
       },
     ];
@@ -45,7 +45,7 @@ class NotificationScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          loc.translate('notifications'),
+          loc['notifications'],
           style: TextStyle(
               color: theme.textTheme.titleLarge?.color,
               fontWeight: FontWeight.bold),

@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../utils/constants.dart';
+// import '../utils/constants.dart'; // Unused
 
 class AnalyticsScreen extends StatelessWidget {
   const AnalyticsScreen({super.key});
@@ -139,7 +139,7 @@ class ChartPainter extends CustomPainter {
       ..close();
       
     final gradient = LinearGradient(
-      colors: [color.withOpacity(0.3), color.withOpacity(0.0)],
+      colors: [color.withValues(alpha: 0.3), color.withValues(alpha: 0.0)],
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
     );

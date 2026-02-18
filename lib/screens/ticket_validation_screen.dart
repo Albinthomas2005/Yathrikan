@@ -5,7 +5,7 @@ import '../utils/constants.dart';
 import '../utils/app_localizations.dart';
 import '../models/payment_model.dart';
 import 'payment_screen.dart';
-import 'ticket_details_screen.dart';
+
 
 class TicketValidationScreen extends StatefulWidget {
   const TicketValidationScreen({super.key});
@@ -81,7 +81,7 @@ class _TicketValidationScreenState extends State<TicketValidationScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          loc.translate('ticket_validation'),
+          loc['ticket_validation'],
           style: AppTextStyles.heading2
               .copyWith(color: theme.textTheme.titleLarge?.color),
         ),
@@ -93,13 +93,13 @@ class _TicketValidationScreenState extends State<TicketValidationScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              loc.translate('validate_ride'),
+              loc['validate_ride'],
               style: AppTextStyles.heading1.copyWith(
                   fontSize: 24, color: theme.textTheme.displayLarge?.color),
             ),
             const SizedBox(height: 8),
             Text(
-              loc.translate('choose_verify_method'),
+              loc['choose_verify_method'],
               style: TextStyle(
                   color: isDark ? Colors.grey[400] : Colors.grey.shade600,
                   fontSize: 14),
@@ -137,7 +137,7 @@ class _TicketValidationScreenState extends State<TicketValidationScreen> {
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        loc.translate('manual_entry'),
+                        loc['manual_entry'],
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -148,7 +148,7 @@ class _TicketValidationScreenState extends State<TicketValidationScreen> {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    loc.translate('enter_pin_hint'),
+                    loc['enter_pin_hint'],
                     style: const TextStyle(color: Colors.grey, height: 1.5),
                   ),
                   const SizedBox(height: 20),
@@ -195,7 +195,7 @@ class _TicketValidationScreenState extends State<TicketValidationScreen> {
                         elevation: 0,
                       ),
                       child: Text(
-                        loc.translate('verify_ticket'),
+                        loc['verify_ticket'],
                         style: const TextStyle(
                             fontSize: 16, fontWeight: FontWeight.bold),
                       ),
@@ -259,7 +259,7 @@ class _TicketValidationScreenState extends State<TicketValidationScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          loc.translate('scan_qr'),
+                          loc['scan_qr'],
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -268,7 +268,7 @@ class _TicketValidationScreenState extends State<TicketValidationScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          loc.translate('scan_qr_desc'),
+                          loc['scan_qr_desc'],
                           style: const TextStyle(
                             color: Colors.white70,
                             height: 1.5,
@@ -284,7 +284,7 @@ class _TicketValidationScreenState extends State<TicketValidationScreen> {
                                 MaterialPageRoute(
                                   builder: (context) => Scaffold(
                                     appBar: AppBar(
-                                      title: Text(loc.translate('scan_ticket')),
+                                      title: Text(loc['scan_ticket']),
                                       backgroundColor: Colors.black,
                                       foregroundColor: Colors.white,
                                     ),
@@ -350,7 +350,7 @@ class _TicketValidationScreenState extends State<TicketValidationScreen> {
                               );
                             },
                             icon: const Icon(Icons.camera_alt_outlined),
-                            label: Text(loc.translate('scan_now')),
+                            label: Text(loc['scan_now']),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primaryYellow,
                               foregroundColor: Colors.black,
@@ -377,7 +377,7 @@ class _TicketValidationScreenState extends State<TicketValidationScreen> {
                       size: 16, color: Colors.grey.shade600),
                   const SizedBox(width: 8),
                   Text(
-                    loc.translate('contact_support'),
+                    loc['contact_support'],
                     style: TextStyle(
                       color: Colors.grey.shade600,
                       fontWeight: FontWeight.w600,

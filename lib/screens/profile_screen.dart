@@ -16,16 +16,16 @@ class ProfileScreen extends StatelessWidget {
     bool? confirm = await showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-              title: Text(loc.translate('logout')),
-              content: Text(loc.translate('logout_confirm')),
+              title: Text(loc['logout']),
+              content: Text(loc['logout_confirm']),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, false),
-                  child: Text(loc.translate('cancel')),
+                  child: Text(loc['cancel']),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, true),
-                  child: Text(loc.translate('logout'),
+                  child: Text(loc['logout'],
                       style: const TextStyle(color: Colors.red)),
                 ),
               ],
@@ -69,7 +69,7 @@ class ProfileScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 20),
               Text(
-                loc.translate('profile'),
+                loc['profile'],
                 style: AppTextStyles.heading1.copyWith(
                     fontSize: 32, color: theme.textTheme.titleLarge?.color),
               ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.2, end: 0),
@@ -156,7 +156,7 @@ class ProfileScreen extends StatelessWidget {
               _buildMenuItem(
                 context: context,
                 icon: CupertinoIcons.person,
-                title: loc.translate('edit_profile'),
+                title: loc['edit_profile'],
                 onTap: () {
                   Navigator.pushNamed(context, '/edit-profile');
                 },
@@ -165,7 +165,7 @@ class ProfileScreen extends StatelessWidget {
               _buildMenuItem(
                 context: context,
                 icon: CupertinoIcons.bell,
-                title: loc.translate('notifications'),
+                title: loc['notifications'],
                 onTap: () {
                   Navigator.pushNamed(context, '/notifications');
                 },
@@ -174,7 +174,7 @@ class ProfileScreen extends StatelessWidget {
               _buildMenuItem(
                 context: context,
                 icon: CupertinoIcons.settings,
-                title: loc.translate('settings'),
+                title: loc['settings'],
                 onTap: () {
                   Navigator.pushNamed(context, '/settings');
                 },
@@ -183,7 +183,7 @@ class ProfileScreen extends StatelessWidget {
               _buildMenuItem(
                 context: context,
                 icon: CupertinoIcons.question_circle,
-                title: loc.translate('help_support'),
+                title: loc['help_support'],
                 onTap: () {
                   Navigator.pushNamed(context, '/help');
                 },
@@ -211,7 +211,7 @@ class ProfileScreen extends StatelessWidget {
                       const Icon(CupertinoIcons.arrow_right_square, size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        loc.translate('logout'),
+                        loc['logout'],
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

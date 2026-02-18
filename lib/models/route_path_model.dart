@@ -6,15 +6,23 @@ class RoutePath {
   final String routeName;
   final List<LatLng> waypoints;
   final bool isCircular;
+  
+  // Added fields to match usage in ShortestRouteScreen
+  final double totalDistanceMeters;
+  final double totalDurationSeconds;
 
   RoutePath({
     required this.routeName,
     required this.waypoints,
     this.isCircular = false,
+    this.totalDistanceMeters = 0.0,
+    this.totalDurationSeconds = 0.0,
   });
 
   /// Get total distance of the route in meters
   double getTotalDistance() {
+    if (totalDistanceMeters > 0) return totalDistanceMeters;
+    
     double total = 0;
     for (int i = 0; i < waypoints.length - 1; i++) {
       total += _calculateDistance(waypoints[i], waypoints[i + 1]);
