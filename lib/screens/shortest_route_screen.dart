@@ -40,7 +40,16 @@ class BusOption {
 
 class ShortestRouteScreen extends StatefulWidget {
   final String? initialDestination;
-  const ShortestRouteScreen({super.key, this.initialDestination});
+  final bool autoDetectOrigin;
+  final String? initialBusId; // For notification navigation
+
+  const ShortestRouteScreen({
+    super.key,
+    this.initialDestination,
+    this.autoDetectOrigin = false,
+    this.initialBusId,
+  });
+
   @override
   State<ShortestRouteScreen> createState() => _ShortestRouteScreenState();
 }
@@ -62,7 +71,8 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   bool _showBusList = true;
   List<BusOption> _availableBuses = [];
   BusOption? _selectedBus;
-  final LatLng _currentLocation = const LatLng(9.5425371, 76.8201976);
+  LatLng _currentLocation = const LatLng(9.5425371, 76.8201976); // Default Koovappally, will update
+  bool _isLocationLoaded = false;
 
   // Autocomplete state
   List<String> _fromSuggestions = [];
@@ -76,10 +86,26 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   void initState() {
     super.initState();
     _toController = TextEditingController(text: widget.initialDestination ?? '');
-    _checkLocationPermission();
     _notificationService.initialize();
     _notificationService.requestPermissions();
     _busService.initialize();
+
+    _checkLocationPermission();
+
+    if (widget.autoDetectOrigin) {
+      _fromController.text = "Finding location...";
+      // _autoDetectLocation() called in _checkLocationPermission or stream
+    } else {
+      _fromController.text = "Koovappally";
+    }
+
+    // Auto-select bus if ID provided
+    if (widget.initialBusId != null) {
+        // Wait for bus list to be available
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+            _handleNotificationBus(widget.initialBusId!);
+        });
+    }
 
     _busSubscription = _busService.busStream.listen((buses) {
       if (mounted) {
@@ -90,14 +116,15 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
           if (_selectedBus != null) {
             final live = buses.firstWhere((b) => b.busId == _selectedBus!.id, orElse: () => _selectedBus!.liveBusData!);
             _busLocation = live.position;
-            final eta = _busService.etaMinutes(live);
+            // Calculate ETA from user location or From location?
+            // Usually ETA is to the user.
+            final eta = _busService.etaMinutes(live, relativeTo: _currentLocation);
             _pickupEtaText = eta <= 0 ? "Arriving" : "$eta min";
           }
         });
       }
     });
 
-    _fromController.text = "Koovappally";
     _fromController.addListener(_onFromChanged);
     _toController.addListener(_onToChanged);
   }
@@ -111,6 +138,23 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
     _fromFocus.dispose();
     _toFocus.dispose();
     super.dispose();
+  }
+
+  void _handleNotificationBus(String busId) {
+    // Initial wait to ensure buses are populated?
+    // The stream listener above will handle updates.
+    // But we need to switch view mode immediately if possible.
+    final bus = _busService.buses.where((b) => b.busId == busId).firstOrNull;
+    if (bus != null) {
+        final opt = BusOption(
+            id: bus.busId, name: bus.busName, type: "Live",
+            time: "Now", departureTime: DateTime.now(), duration: "",
+            price: 20.0, seatsLeft: 0, origin: bus.from, destination: bus.to,
+            arrivalTimeAtOrigin: "", arrivalTimeAtDestination: "",
+            liveBusData: bus, minutesToUser: 0, arrivalAtUserStr: ""
+        );
+        _selectBus(opt);
+    }
   }
 
   void _onFromChanged() {
@@ -142,10 +186,51 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   }
 
   void _updateBusList(List<LiveBus> buses) {
-    final incoming = buses.where((b) => _busService.isIncoming(b) && b.status == 'RUNNING').toList();
-    incoming.sort((a, b) => _busService.etaMinutes(a).compareTo(_busService.etaMinutes(b)));
+    // Resolve "From" location to coordinates
+    final fromText = _fromController.text.trim();
+    // Case-insensitive lookup
+    LatLng? fromCoords;
+    for (final entry in BusLocationService.keyPlaces.entries) {
+        if (entry.key.toLowerCase() == fromText.toLowerCase()) {
+            fromCoords = entry.value;
+            break;
+        }
+    }
+    
+    // Fallback if user means "Current Location"
+    if (fromCoords == null && (fromText.toLowerCase() == "current location" || fromText.isEmpty)) {
+        fromCoords = _currentLocation;
+    }
+
+    final incoming = buses.where((b) {
+      if (b.status != 'RUNNING') return false;
+      
+      // Filter by direction/route if "To" is specified
+      // (Simple containment check as before)
+      final toText = _toController.text.trim().toLowerCase();
+      // If we are solving "Erumely -> Kottayam", we want buses bound for Kottayam.
+      // E.g. Bus To: "Kottayam"
+      bool matchesRoute = true;
+      if (toText.isNotEmpty) {
+           matchesRoute = b.to.toLowerCase() == toText || 
+                          b.routeName.toLowerCase().contains(toText);
+      }
+      
+      if (!matchesRoute) return false;
+
+      // Check if incoming relative to the "From" location
+      return _busService.isIncoming(b, relativeTo: fromCoords); // fromCoords can be null
+    }).toList();
+
+    incoming.sort((a, b) {
+        // Sort by ETA relative to Start Point
+        final etaA = _busService.etaMinutes(a, relativeTo: fromCoords);
+        final etaB = _busService.etaMinutes(b, relativeTo: fromCoords);
+        return etaA.compareTo(etaB);
+    });
+
     _availableBuses = incoming.map((bus) {
-      final eta = _busService.etaMinutes(bus);
+      final eta = _busService.etaMinutes(bus, relativeTo: fromCoords);
       return BusOption(
         id: bus.busId, name: bus.busName, type: "Live",
         time: StringUtils.formatTime(DateTime.now().add(Duration(minutes: eta))),
@@ -159,40 +244,66 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   }
 
   Future<void> _checkLocationPermission() async {
-    LocationPermission permission = await Geolocator.checkPermission();
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
-      await Geolocator.requestPermission();
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return;
     }
+
+    if (permission == LocationPermission.deniedForever) return;
+
+    // Start stream
+    _positionStreamSubscription = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 10),
+    ).listen((Position position) {
+      if (mounted) {
+        setState(() {
+          _currentLocation = LatLng(position.latitude, position.longitude);
+          _isLocationLoaded = true;
+        });
+        
+        // If "from" was waiting for location
+        if (_fromController.text == "Finding location...") {
+             _autoDetectLocation(); // Updates text name
+        }
+      }
+    });
   }
 
   Future<void> _autoDetectLocation() async {
-    try {
-      final pos = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, timeLimit: Duration(seconds: 10)),
+    if (!_isLocationLoaded) {
+        // Force get current if stream hasn't fired yet
+        try {
+            final pos = await Geolocator.getCurrentPosition();
+            setState(() {
+                _currentLocation = LatLng(pos.latitude, pos.longitude);
+                _isLocationLoaded = true;
+            });
+        } catch (_) {}
+    }
+
+    // Find nearest known place
+    const Distance dist = Distance();
+    double minD = double.infinity;
+    String nearest = 'Koovappally';
+    
+    // Check against all known places for better accuracy
+    BusLocationService.keyPlaces.forEach((name, loc) {
+        final d = dist.as(LengthUnit.Meter, loc, _currentLocation);
+        if (d < minD) { minD = d; nearest = name; }
+    });
+
+    setState(() { _fromController.text = nearest; });
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Location detected: $nearest'), duration: const Duration(seconds: 2)),
       );
-      // Find nearest known place
-      const Distance dist = Distance();
-      final userPos = LatLng(pos.latitude, pos.longitude);
-      final route = BusLocationService.waypoints;
-      final stopNames = ['Erumely','Erumely North','Koovappally','Kanjirappally','Ponkunnam','Vazhoor','14th Mile','Mannathipara','Chennampally','Pampady','Kottayam'];
-      double minD = double.infinity;
-      String nearest = 'Koovappally';
-      for (int i = 0; i < route.length; i++) {
-        final d = dist.as(LengthUnit.Meter, route[i], userPos);
-        if (d < minD) { minD = d; nearest = stopNames[i]; }
-      }
-      setState(() { _fromController.text = nearest; });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Location detected: $nearest'), duration: const Duration(seconds: 2)),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not detect location. Using default.')),
-        );
-      }
     }
   }
 
@@ -227,7 +338,10 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
         totalDistanceMeters: 1000, totalDurationSeconds: 600,
       );
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _fitBounds(bus.liveBusData!.route);
+        // Fit bus and USER location
+
+         // Or just fit route
+         _fitBounds(bus.liveBusData!.route);
       });
     }
   }

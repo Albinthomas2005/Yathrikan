@@ -4,14 +4,14 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'dart:math' as math;
-import 'dart:io';
-import 'package:provider/provider.dart';
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/constants.dart';
-import '../utils/profile_provider.dart';
 import '../models/route_model.dart';
 import '../services/bus_location_service.dart';
 import 'full_map_screen.dart';
+import 'shortest_route_screen.dart';
+import '../utils/app_localizations.dart';
 
 class RouteScreen extends StatefulWidget {
   const RouteScreen({super.key});
@@ -32,46 +32,43 @@ class _RouteScreenState extends State<RouteScreen> {
     super.initState();
     _busService.initialize();
     _loadFavorites();
-    _recentRoutes = _getRecentRoutes();
+    _loadRecentRoutes();
   }
 
-  List<RecentRoute> _getRecentRoutes() {
-    return [
-      RecentRoute(
-        route: RouteModel(
-          id: '1',
-          name: 'Kottayam → Pala',
-          fromLocation: 'Kottayam',
-          toLocation: 'Pala',
-          frequency: 'Every 10m',
-          activeBuses: 5,
-        ),
-        timestamp: DateTime.now().subtract(const Duration(minutes: 20)),
-      ),
-      RecentRoute(
-        route: RouteModel(
-          id: '2',
-          name: 'Changanassery → Thiruvalla',
-          fromLocation: 'Changanassery',
-          toLocation: 'Thiruvalla',
-          frequency: 'Every 20m',
-          activeBuses: 3,
-        ),
-        timestamp: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      RecentRoute(
-        route: RouteModel(
-          id: '3',
-          name: 'Ernakulam → Aluva',
-          fromLocation: 'Ernakulam',
-          toLocation: 'Aluva',
-          frequency: 'Every 15m',
-          activeBuses: 8,
-        ),
-        timestamp: DateTime.now()
-            .subtract(const Duration(days: 1, hours: 10, minutes: 30)),
-      ),
-    ];
+  Future<void> _loadRecentRoutes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final recentList = prefs.getStringList('recent_routes') ?? [];
+    
+    setState(() {
+      _recentRoutes = recentList.map((item) {
+        return RecentRoute.fromJson(jsonDecode(item));
+      }).toList();
+    });
+  }
+
+  Future<void> _addToRecents(RouteModel route) async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    setState(() {
+      // Remove if already exists to move to top
+      _recentRoutes.removeWhere((r) => r.route.id == route.id);
+      
+      // Add to top
+      _recentRoutes.insert(0, RecentRoute(
+        route: route,
+        timestamp: DateTime.now(),
+      ));
+      
+      // Keep only top 3
+      if (_recentRoutes.length > 3) {
+        _recentRoutes = _recentRoutes.sublist(0, 3);
+      }
+    });
+
+    final List<String> encodedList = _recentRoutes
+        .map((r) => jsonEncode(r.toJson()))
+        .toList();
+    await prefs.setStringList('recent_routes', encodedList);
   }
 
   Future<void> _loadFavorites() async {
@@ -214,121 +211,69 @@ class _RouteScreenState extends State<RouteScreen> {
   }
 
   List<RouteModel> _getAllRoutes() {
-    return [
-      RouteModel(
-        id: '1',
-        name: 'Main St Loop',
-        fromLocation: 'City Park',
-        toLocation: 'Downtown',
-        frequency: 'Every 15m',
-        nextIn: '5 mins',
-        activeBuses: 8,
-      ),
-      RouteModel(
-        id: '2',
-        name: 'City Connector',
-        fromLocation: 'North Station',
-        toLocation: 'South Terminal',
-        frequency: 'Every 30m',
-        nextIn: '12 mins',
-        activeBuses: 3,
-      ),
-      RouteModel(
-        id: '3',
-        name: 'Westend Express',
-        fromLocation: 'City Park',
-        toLocation: 'West Mall',
-        frequency: 'Every 60m',
-        nextIn: 'Delayed',
-        activeBuses: 0,
-        isActive: false,
-      ),
-      RouteModel(
-        id: '4',
-        name: 'Airport Shuttle',
-        fromLocation: 'City Center',
-        toLocation: 'Airport',
-        frequency: 'Every 20m',
-        nextIn: '8 mins',
-        activeBuses: 6,
-      ),
-    ];
+    return _busService.getAllRoutes();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final loc = AppLocalizations.of(context);
+
+    // Filter routes if needed, for now just show all
+    // In a real app, integrate search filter here
+    final displayRoutes = _getAllRoutes();
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            // Header
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Routes',
-                      style: AppTextStyles.heading1.copyWith(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: theme.textTheme.displayLarge?.color ??
-                            theme.textTheme.titleLarge?.color,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, '/edit-profile');
-                      },
-                      child: Consumer<ProfileProvider>(
-                        builder: (context, profileProvider, child) {
-                          final hasProfilePicture =
-                              profileProvider.profilePicturePath != null;
-                          return Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryYellow,
-                              shape: BoxShape.circle,
-                              image: hasProfilePicture
-                                  ? DecorationImage(
-                                      image: FileImage(
-                                        File(profileProvider
-                                            .profilePicturePath!),
-                                      ),
-                                      fit: BoxFit.cover,
-                                    )
-                                  : null,
-                            ),
-                            child: !hasProfilePicture
-                                ? const Icon(Icons.person, color: Colors.white)
-                                : null,
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+      body: CustomScrollView(
+        slivers: [
+          // App Bar
+          SliverAppBar(
+            expandedHeight: 120.0,
+            floating: false,
+            pinned: true,
+            backgroundColor: theme.scaffoldBackgroundColor,
+            elevation: 0,
+            flexibleSpace: FlexibleSpaceBar(
+              titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
+              title: Text(
+                loc['routes_title'],
+                style: AppTextStyles.heading2.copyWith(
+                  color: theme.textTheme.titleLarge?.color,
                 ),
-              ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.2, end: 0),
+              ),
             ),
+            actions: [
+              IconButton(
+                icon: Icon(
+                  CupertinoIcons.search,
+                  color: theme.iconTheme.color,
+                ),
+                onPressed: () {
+                  showSearch(
+                    context: context,
+                    delegate: RouteSearchDelegate(_getAllRoutes()),
+                  );
+                },
+              ),
+              const SizedBox(width: 16),
+            ],
+          ),
 
-            // Recent Routes
+          // Recent Routes
+          if (_recentRoutes.isNotEmpty)
             SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Recent Routes',
+                          loc['recent_routes'],
                           style: AppTextStyles.heading2.copyWith(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
@@ -365,267 +310,282 @@ class _RouteScreenState extends State<RouteScreen> {
                   .slideX(begin: -0.1, end: 0),
             ),
 
-            // Favorites
-            SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Favorites',
-                          style: AppTextStyles.heading2.copyWith(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: theme.textTheme.titleLarge?.color,
-                          ),
+          // Favorites
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        loc['favorites'],
+                        style: AppTextStyles.heading2.copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: theme.textTheme.titleLarge?.color,
                         ),
-                        GestureDetector(
-                          onTap: _toggleFavoritesEditMode,
-                          child: Text(
-                            _isEditingFavorites ? 'Done' : 'Edit',
-                            style: const TextStyle(
-                              color: AppColors.primaryYellow,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(
-                    height: 100,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      children: [
-                        _buildAddNewFavorite(isDark),
-                        ..._getFavorites()
-                            .map((fav) => _buildFavoriteCard(fav, isDark)),
-                      ],
-                    ),
-                  ),
-                ],
-              )
-                  .animate()
-                  .fadeIn(delay: 200.ms, duration: 400.ms)
-                  .slideX(begin: -0.1, end: 0),
-            ),
-
-            // Popular Routes
-            SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-                    child: Text(
-                      'Popular Routes',
-                      style: AppTextStyles.heading2.copyWith(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: theme.textTheme.titleLarge?.color,
                       ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: 160,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      children: [
-                        _buildPopularRouteCard(
-                          'Kaloor Stadium Link',
-                          'via Bypass Rd • Every 10m',
-                          true,
-                          false,
-                          isDark,
-                        ),
-                        const SizedBox(width: 12),
-                        _buildPopularRouteCard(
-                          'Marine Drive',
-                          'Direct Route',
-                          false,
-                          true,
-                          isDark,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              )
-                  .animate()
-                  .fadeIn(delay: 300.ms, duration: 400.ms)
-                  .slideX(begin: -0.1, end: 0),
-            ),
-
-            // Live Map Preview
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Live Map Preview',
-                      style: AppTextStyles.heading2.copyWith(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: theme.textTheme.titleLarge?.color,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildLiveMapPreview(isDark),
-                  ],
-                ),
-              )
-                  .animate()
-                  .fadeIn(delay: 400.ms, duration: 400.ms)
-                  .slideY(begin: 0.1, end: 0),
-            ),
-
-            // All Available Routes
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'All Available Routes',
-                      style: AppTextStyles.heading2.copyWith(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: theme.textTheme.titleLarge?.color,
-                      ),
-                    ),
-                    const Row(
-                      children: [
-                        Icon(
-                          CupertinoIcons.sort_down,
-                          size: 16,
-                          color: AppColors.greyText,
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          'SORT',
-                          style: TextStyle(
-                            color: AppColors.greyText,
-                            fontSize: 12,
+                      GestureDetector(
+                        onTap: _toggleFavoritesEditMode,
+                        child: Text(
+                          _isEditingFavorites ? 'Done' : 'Edit',
+                          style: const TextStyle(
+                            color: AppColors.primaryYellow,
+                            fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
-              )
-                  .animate()
-                  .fadeIn(delay: 500.ms, duration: 400.ms)
-                  .slideX(begin: -0.1, end: 0),
-            ),
+                SizedBox(
+                  height: 100,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    children: [
+                      _buildAddNewFavorite(isDark, loc),
+                      ..._getFavorites()
+                          .map((fav) => _buildFavoriteCard(fav, isDark)),
+                    ],
+                  ),
+                ),
+              ],
+            )
+                .animate()
+                .fadeIn(delay: 200.ms, duration: 400.ms)
+                .slideX(begin: -0.1, end: 0),
+          ),
 
-            // Routes List
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final routes = _getAllRoutes();
-                  return _buildRouteListItem(routes[index], isDark)
-                      .animate()
-                      .fadeIn(
-                        delay: (600 + index * 50).ms,
-                        duration: 400.ms,
-                      )
-                      .slideX(begin: -0.1, end: 0);
-                },
-                childCount: _getAllRoutes().length,
+          // Popular Routes
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                  child: Text(
+                    loc['popular_routes'],
+                    style: AppTextStyles.heading2.copyWith(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: theme.textTheme.titleLarge?.color,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 160,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    children: _busService.getPopularRoutes().map((route) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: GestureDetector(
+                          onTap: () {
+                            _addToRecents(route);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ShortestRouteScreen(
+                                  initialDestination: route.toLocation,
+                                  autoDetectOrigin: true,
+                                ),
+                              ),
+                            );
+                          },
+                          child: _buildPopularRouteCard(
+                            route.name,
+                            '${route.fromLocation} → ${route.toLocation} • ${route.frequency}',
+                            route.isTrending,
+                            route.isFastest,
+                            isDark,
+                            loc,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            )
+                .animate()
+                .fadeIn(delay: 300.ms, duration: 400.ms)
+                .slideX(begin: -0.1, end: 0),
+          ),
+
+          // Live Map Preview
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    loc['live_map_preview'],
+                    style: AppTextStyles.heading2.copyWith(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: theme.textTheme.titleLarge?.color,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildLiveMapPreview(isDark),
+                ],
+              ),
+            )
+                .animate()
+                .fadeIn(delay: 400.ms, duration: 400.ms)
+                .slideY(begin: 0.1, end: 0),
+          ),
+
+          // All Available Routes
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    loc['all_routes_title'],
+                    style: AppTextStyles.heading2.copyWith(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: theme.textTheme.titleLarge?.color,
+                    ),
+                  ),
+                  const Row(
+                    children: [
+                      Icon(
+                        CupertinoIcons.sort_down,
+                        size: 16,
+                        color: AppColors.greyText,
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        'SORT',
+                        style: TextStyle(
+                          color: AppColors.greyText,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
+          ),
 
-            // Bottom Padding
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 100),
+          // Route List
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final route = displayRoutes[index];
+                return _buildRouteListItem(route, isDark);
+              },
+              childCount: displayRoutes.length,
             ),
+          ),
+          
+          // Bottom Padding
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 100),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentRouteItem(RecentRoute recent, bool isDark, int index) {
+    return GestureDetector(
+      onTap: () {
+        _addToRecents(recent.route);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ShortestRouteScreen(
+              initialDestination: recent.route.toLocation,
+              autoDetectOrigin: true,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.grey[850] : Colors.grey[100],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey[700] : Colors.grey[300],
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                CupertinoIcons.bus,
+                size: 20,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    recent.route.name,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Last viewed ${recent.timeAgo}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            _isEditingRecent
+                ? GestureDetector(
+                    onTap: () => _deleteRecentRoute(index),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      child: const Icon(
+                        CupertinoIcons.delete,
+                        size: 20,
+                        color: Colors.red,
+                      ),
+                    ),
+                  )
+                : Icon(
+                    CupertinoIcons.chevron_right,
+                    size: 18,
+                    color: Colors.grey[600],
+                  ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildRecentRouteItem(RecentRoute recent, bool isDark, int index) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey[850] : Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: isDark ? Colors.grey[700] : Colors.grey[300],
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              CupertinoIcons.bus,
-              size: 20,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  recent.route.name,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Last viewed ${recent.timeAgo}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          _isEditingRecent
-              ? GestureDetector(
-                  onTap: () => _deleteRecentRoute(index),
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    child: const Icon(
-                      CupertinoIcons.delete,
-                      size: 20,
-                      color: Colors.red,
-                    ),
-                  ),
-                )
-              : Icon(
-                  CupertinoIcons.chevron_right,
-                  size: 18,
-                  color: Colors.grey[600],
-                ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAddNewFavorite(bool isDark) {
+  Widget _buildAddNewFavorite(bool isDark, AppLocalizations loc) {
     return GestureDetector(
       onTap: _showAddFavoriteDialog,
       child: Container(
@@ -653,7 +613,7 @@ class _RouteScreenState extends State<RouteScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Add New',
+              loc['add_new'],
               style: TextStyle(
                 fontSize: 11,
                 color: isDark ? Colors.white70 : Colors.black87,
@@ -748,6 +708,7 @@ class _RouteScreenState extends State<RouteScreen> {
     bool isTrending,
     bool isFastest,
     bool isDark,
+    AppLocalizations loc,
   ) {
     return Container(
       width: 200,
@@ -778,7 +739,7 @@ class _RouteScreenState extends State<RouteScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  isTrending ? 'Trending' : 'Fastest',
+                  isTrending ? loc['trending'] : loc['fastest'],
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
@@ -1033,16 +994,29 @@ class _RouteScreenState extends State<RouteScreen> {
   }
 
   Widget _buildRouteListItem(RouteModel route, bool isDark) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey[850] : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
+    return GestureDetector(
+      onTap: () {
+        _addToRecents(route);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ShortestRouteScreen(
+              initialDestination: route.toLocation,
+              autoDetectOrigin: true,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.grey[850] : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
+          ),
         ),
-      ),
       child: Row(
         children: [
           Expanded(
@@ -1118,6 +1092,79 @@ class _RouteScreenState extends State<RouteScreen> {
           ),
         ],
       ),
+      ),
     );
   }
 }
+
+class RouteSearchDelegate extends SearchDelegate<RouteModel?> {
+  final List<RouteModel> routes;
+
+  RouteSearchDelegate(this.routes);
+
+  @override
+  List<Widget>? buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: const Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget? buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, null);
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    return _buildList(context);
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    return _buildList(context);
+  }
+
+  Widget _buildList(BuildContext context) {
+    final results = query.isEmpty
+        ? routes
+        : routes.where((route) {
+            return route.name.toLowerCase().contains(query.toLowerCase()) ||
+                   route.fromLocation.toLowerCase().contains(query.toLowerCase()) ||
+                   route.toLocation.toLowerCase().contains(query.toLowerCase());
+          }).toList();
+
+    return ListView.builder(
+      itemCount: results.length,
+      itemBuilder: (context, index) {
+        final route = results[index];
+        return ListTile(
+          title: Text(route.name),
+          subtitle: Text('${route.fromLocation} -> ${route.toLocation}'),
+          onTap: () {
+            close(context, route);
+             Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ShortestRouteScreen(
+                  initialDestination: route.toLocation,
+                  autoDetectOrigin: true,
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+

@@ -67,6 +67,20 @@ class RecentRoute {
     required this.timestamp,
   });
 
+  Map<String, dynamic> toJson() {
+    return {
+      'route': route.toJson(),
+      'timestamp': timestamp.toIso8601String(),
+    };
+  }
+
+  factory RecentRoute.fromJson(Map<String, dynamic> json) {
+    return RecentRoute(
+      route: RouteModel.fromJson(json['route']),
+      timestamp: DateTime.parse(json['timestamp']),
+    );
+  }
+
   String get timeAgo {
     final now = DateTime.now();
     final difference = now.difference(timestamp);

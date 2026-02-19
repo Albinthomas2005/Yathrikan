@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:math';
 import 'dart:async';
+import '../utils/app_localizations.dart';
 
 class SafetyScreen extends StatefulWidget {
   const SafetyScreen({super.key});
@@ -148,6 +149,9 @@ class _SafetyScreenState extends State<SafetyScreen> {
   };
 
   Future<void> _fetchRoadAndRouteInfo() async {
+    // Note: We need context to localize, but async methods might run before we can access it properly or in background.
+    // For simplicity, we keep internal english keys and translate in build. 
+    
     try {
       Position position = await Geolocator.getCurrentPosition(
           locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium));
@@ -213,7 +217,7 @@ class _SafetyScreenState extends State<SafetyScreen> {
           _roadCondition = roadCond;
           _visibilityCondition = visCond;
           _nextLocation = nextStop;
-          _timeToNext = "$minutes mins away";
+          _timeToNext = "$minutes mins"; // We append 'away' in build
         });
       }
 
@@ -230,27 +234,23 @@ class _SafetyScreenState extends State<SafetyScreen> {
     }
   }
 
-  String _getSpeedStatus() {
+  String _getSpeedStatus(AppLocalizations loc) {
     if (_currentSpeed < _speedLimit * 0.8) {
-      return "NORMAL";
+      return loc['status_normal'];
     } else if (_currentSpeed < _speedLimit) {
-      return "WARNING";
+      return loc['status_warning'];
     } else {
-      return "DANGER";
+      return loc['status_danger'];
     }
   }
 
-  Color _getStatusColor() {
-    final status = _getSpeedStatus();
-    switch (status) {
-      case "NORMAL":
-        return Colors.yellow;
-      case "WARNING":
-        return Colors.orange;
-      case "DANGER":
-        return Colors.red;
-      default:
-        return Colors.yellow;
+  Color _getStatusColor(AppLocalizations loc) {
+    if (_currentSpeed < _speedLimit * 0.8) {
+      return Colors.yellow;
+    } else if (_currentSpeed < _speedLimit) {
+      return Colors.orange;
+    } else {
+      return Colors.red;
     }
   }
 
@@ -272,6 +272,18 @@ class _SafetyScreenState extends State<SafetyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    final nextText = _timeToNext == "-- mins" ? loc['calculating'] : "$_timeToNext ${loc['mins_away']}";
+    
+    // Translate road conditions crudely if known
+    String displayRoad = _roadCondition;
+    if (_roadCondition == "Dry") displayRoad = loc['dry'];
+
+    String displayVis = _visibilityCondition;
+    if (_visibilityCondition == "Good visibility") displayVis = loc['good_visibility'];
+    if (_visibilityCondition == "Moderate visibility") displayVis = loc['moderate_visibility'];
+
+
     return Scaffold(
       backgroundColor: const Color(0xFF1E201E), // Dark background text
       appBar: AppBar(
@@ -289,7 +301,7 @@ class _SafetyScreenState extends State<SafetyScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          "Safety",
+          loc['safety'],
           style: GoogleFonts.inter(
             color: Colors.white,
             fontSize: 20,
@@ -325,27 +337,27 @@ class _SafetyScreenState extends State<SafetyScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: _getStatusColor().withValues(alpha: 0.2),
+                        color: _getStatusColor(loc).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                            color: _getStatusColor().withValues(alpha: 0.5)),
+                            color: _getStatusColor(loc).withValues(alpha: 0.5)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                              _getSpeedStatus() == "NORMAL"
+                              _getSpeedStatus(loc) == loc['status_normal']
                                   ? Icons.check_circle
-                                  : _getSpeedStatus() == "WARNING"
+                                  : _getSpeedStatus(loc) == loc['status_warning']
                                       ? Icons.warning_amber_rounded
                                       : Icons.error,
-                              color: _getStatusColor(),
+                              color: _getStatusColor(loc),
                               size: 16),
                           const SizedBox(width: 6),
                           Text(
-                            _getSpeedStatus(),
+                            _getSpeedStatus(loc),
                             style: TextStyle(
-                              color: _getStatusColor(),
+                              color: _getStatusColor(loc),
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
                             ),
@@ -362,14 +374,14 @@ class _SafetyScreenState extends State<SafetyScreen> {
                     child: CustomPaint(
                       painter: SpeedometerPainter(
                         percentage: (_currentSpeed / 100).clamp(0.0, 1.0),
-                        statusColor: _getStatusColor(),
+                        statusColor: _getStatusColor(loc),
                       ),
                       child: Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              "CURRENT SPEED",
+                              loc['current_speed'].toUpperCase(),
                               style: TextStyle(
                                 color: Colors.grey.shade500,
                                 fontSize: 10,
@@ -408,7 +420,7 @@ class _SafetyScreenState extends State<SafetyScreen> {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    "Speed Limit",
+                    loc['speed_limit'],
                     style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
                   ),
                   const SizedBox(height: 4),
@@ -431,18 +443,18 @@ class _SafetyScreenState extends State<SafetyScreen> {
                 Expanded(
                   child: _buildInfoCard(
                     icon: Icons.wb_sunny_outlined,
-                    label: "ROAD",
-                    value: _roadCondition,
-                    subValue: _visibilityCondition,
+                    label: loc['road_condition'],
+                    value: displayRoad,
+                    subValue: displayVis,
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: _buildInfoCard(
                     icon: Icons.directions_bus_outlined,
-                    label: "NEXT",
+                    label: loc['next_stop'],
                     value: _nextLocation,
-                    subValue: _timeToNext,
+                    subValue: nextText,
                   ),
                 ),
               ],
@@ -453,7 +465,7 @@ class _SafetyScreenState extends State<SafetyScreen> {
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                "Quick Actions",
+                loc['quick_actions'],
                 style: GoogleFonts.inter(
                   color: Colors.white,
                   fontSize: 18,
@@ -466,8 +478,8 @@ class _SafetyScreenState extends State<SafetyScreen> {
             _buildActionTile(
               icon: Icons.warning_amber_rounded,
               iconColor: Colors.redAccent,
-              title: "Report Issue",
-              subtitle: "Reckless driving, hazards",
+              title: loc['report_issue_title'],
+              subtitle: loc['report_issue_subtitle'],
               onTap: () {
                 // Navigate to Report
                 Navigator.pushNamed(context, '/complaint');
@@ -477,9 +489,9 @@ class _SafetyScreenState extends State<SafetyScreen> {
             _buildActionTile(
               icon: CupertinoIcons.phone_fill,
               iconColor: Colors.blueAccent,
-              title: "Emergency Contacts",
-              subtitle: "Police, Ambulance, Fire, Helplines",
-              onTap: () => _showEmergencyOptions(context),
+              title: loc['emergency_contacts_title'],
+              subtitle: loc['emergency_contacts_subtitle'],
+              onTap: () => _showEmergencyOptions(context, loc),
             ),
           ],
         ),
@@ -487,7 +499,7 @@ class _SafetyScreenState extends State<SafetyScreen> {
     );
   }
 
-  void _showEmergencyOptions(BuildContext context) {
+  void _showEmergencyOptions(BuildContext context, AppLocalizations loc) {
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF1E201E),
@@ -502,7 +514,7 @@ class _SafetyScreenState extends State<SafetyScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Emergency Services",
+                loc['emergency_services'], // Localized
                 style: GoogleFonts.inter(
                   color: Colors.white,
                   fontSize: 20,
@@ -513,39 +525,39 @@ class _SafetyScreenState extends State<SafetyScreen> {
               _buildEmergencyOption(
                 icon: Icons.local_police,
                 color: Colors.blue,
-                title: "Police Control Room",
+                title: loc['police_control'],
                 number: "100",
               ),
               _buildEmergencyOption(
                 icon: Icons.local_fire_department,
                 color: Colors.orange,
-                title: "Fire Force",
+                title: loc['fire_force'],
                 number: "101",
               ),
               _buildEmergencyOption(
                 icon: Icons.medical_services,
                 color: Colors.red,
-                title: "Ambulance",
+                title: loc['ambulance'],
                 number: "102",
               ),
               const Divider(color: Colors.white24, height: 24),
               _buildEmergencyOption(
                 icon: Icons.woman,
                 color: Colors.pinkAccent,
-                title: "Women Helpline",
+                title: loc['women_helpline'],
                 number: "1091",
               ),
                _buildEmergencyOption(
                 icon: Icons.child_care,
                 color: Colors.lightBlueAccent,
-                title: "Child Helpline",
+                title: loc['child_helpline'],
                 number: "1098",
               ),
               const Divider(color: Colors.white24, height: 24),
                _buildEmergencyOption(
                 icon: Icons.sos,
                 color: Colors.redAccent,
-                title: "General Emergency (112)",
+                title: loc['general_emergency'],
                 number: "112",
                 isPrimary: true,
               ),

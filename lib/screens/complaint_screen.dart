@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import '../utils/constants.dart';
+import '../utils/app_localizations.dart';
 
 class ComplaintScreen extends StatefulWidget {
   const ComplaintScreen({super.key});
@@ -139,6 +140,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFF1E201E), // Dark background
       appBar: AppBar(
@@ -149,7 +151,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          "File a Complaint",
+          loc['file_complaint'],
           style: AppTextStyles.heading2.copyWith(color: Colors.white),
         ),
         centerTitle: true,
@@ -160,7 +162,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "What went wrong?",
+              loc['what_went_wrong'],
               style: GoogleFonts.inter(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -169,14 +171,14 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              "We're sorry you had a bad experience. Please share the details so we can improve.",
+              loc['complaint_desc'],
               style: TextStyle(color: Colors.grey.shade400, fontSize: 15),
             ),
             const SizedBox(height: 30),
 
             // Bus Number Search
             Text(
-              "Bus Number",
+              loc['bus_number_label'],
               style: TextStyle(color: Colors.grey.shade300, fontSize: 16),
             ),
             const SizedBox(height: 10),
@@ -209,7 +211,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: const Color(0xFF111418),
-                        hintText: "Enter Bus Number (e.g. KL-07...)",
+                        hintText: loc['search_hint'],
                         hintStyle: TextStyle(color: Colors.grey.shade600),
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15),
@@ -281,7 +283,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
 
             // Category Dropdown
             Text(
-              "Issue Category",
+              loc['issue_category'],
               style: TextStyle(color: Colors.grey.shade300, fontSize: 16),
             ),
             const SizedBox(height: 10),
@@ -295,7 +297,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: _selectedCategory,
-                  hint: Text("Select a category",
+                  hint: Text(loc['select_category'],
                       style: TextStyle(color: Colors.grey.shade500)),
                   dropdownColor: const Color(0xFF111418),
                   isExpanded: true,
@@ -321,7 +323,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
 
             // Description
             Text(
-              "Description",
+              loc['complaint_details_label'],
               style: TextStyle(color: Colors.grey.shade300, fontSize: 16),
             ),
             const SizedBox(height: 10),
@@ -338,7 +340,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   border: InputBorder.none,
-                  hintText: "Tell us more details about what happened...",
+                  hintText: loc['complaint_details_hint'],
                   hintStyle: TextStyle(color: Colors.grey.shade600),
                 ),
               ),
@@ -350,11 +352,11 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
             Row(
               children: [
                 Text(
-                  "Add Evidence",
+                  loc['add_evidence'],
                   style: TextStyle(color: Colors.grey.shade300, fontSize: 16),
                 ),
                 const SizedBox(width: 8),
-                Text("(Optional)",
+                Text(loc['optional'],
                     style:
                         TextStyle(color: Colors.grey.shade600, fontSize: 14)),
               ],
@@ -386,7 +388,7 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                               color: Colors.grey.shade500, size: 28),
                           const SizedBox(height: 8),
                           Text(
-                            "ADD MEDIA",
+                            loc['add_media'],
                             style: TextStyle(
                               color: Colors.grey.shade500,
                               fontSize: 10,
@@ -496,16 +498,16 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                   ),
                   elevation: 0,
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Submit Complaint',
+                      loc['submit_complaint'],
                       style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(width: 8),
-                    Icon(Icons.send_rounded, size: 20),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.send_rounded, size: 20),
                   ],
                 ),
               ),

@@ -31,6 +31,11 @@ class AppLocalizations {
 
       // Route Screen
       'routes': 'Routes',
+      'routes_title': 'Routes',
+      'recent_routes': 'Recent Routes',
+      'favorites': 'Favorites',
+      'all_routes_title': 'All Available Routes',
+      'add_new': 'Add New',
       'route_planning': 'Route Planning',
       'find_best_routes': 'Find the best routes for your journey.',
       'coming_soon_desc':
@@ -139,6 +144,69 @@ class AppLocalizations {
       'sun': 'Sun',
       'ksrtc': 'KSRTC',
       'private': 'Private',
+
+      // Safety Screen
+      'status_normal': 'NORMAL',
+      'status_warning': 'WARNING',
+      'status_danger': 'DANGER',
+      'road_condition': 'ROAD',
+      'visibility': 'VISIBILITY',
+      'next_stop': 'NEXT',
+      'mins_away': 'mins away',
+      'searching': 'Searching...',
+      'calculating': 'Calculating...',
+      'emergency_services': 'Emergency Services',
+      'police_control': 'Police Control Room',
+      'fire_force': 'Fire Force',
+      'ambulance': 'Ambulance',
+      'women_helpline': 'Women Helpline',
+      'child_helpline': 'Child Helpline',
+      'general_emergency': 'General Emergency (112)',
+      'report_issue_title': 'Report Issue',
+      'report_issue_subtitle': 'Reckless driving, hazards',
+      'emergency_contacts_title': 'Emergency Contacts',
+      'emergency_contacts_subtitle': 'Police, Ambulance, Fire, Helplines',
+
+      // Complaint Screen
+      'file_complaint': 'File a Complaint',
+      'what_went_wrong': 'What went wrong?',
+      'complaint_desc': 'We\'re sorry you had a bad experience. Please share the details so we can improve.',
+      'bus_number_label': 'Bus Number',
+      'issue_category': 'Issue Category',
+      'select_category': 'Select a category',
+      'complaint_details_label': 'Description',
+      'complaint_details_hint': 'Tell us more details about what happened...',
+      'add_evidence': 'Add Evidence',
+      'optional': '(Optional)',
+      'add_media': 'ADD MEDIA',
+      'submit_complaint': 'Submit Complaint',
+
+      // Routes Screen
+      'popular_routes': 'Popular Routes',
+      'trending': 'Trending',
+      'fastest': 'Fastest',
+      'every_min': 'Every',
+      'live_map_preview': 'Live Map Preview',
+
+      // Notifications
+      'clear_all': 'Clear All',
+      'no_notifications': 'No new notifications',
+      'bus_arriving_soon': 'Bus Arriving Soon',
+      'bus_arriving_message': 'The bus is approaching your stop.',
+      'ticket_confirmed': 'Ticket Confirmed',
+      'ticket_confirmed_message': 'Your ticket has been successfully booked.',
+      'welcome_title': 'Welcome to Yathrikan',
+      'welcome_message': 'Thank you for installing the app.',
+      'just_now': 'Just now',
+      'hours_ago': 'hours ago',
+      'day_ago': '1 day ago',
+
+      // Common
+      'loading': 'Loading...',
+      'unknown': 'Unknown',
+      'good_visibility': 'Good visibility',
+      'moderate_visibility': 'Moderate visibility',
+      'dry': 'Dry',
     },
     'ml': {
       'app_title': 'യാത്രികൻ',
@@ -160,6 +228,11 @@ class AppLocalizations {
 
       // Route Screen
       'routes': 'റൂട്ടുകൾ',
+      'routes_title': 'റൂട്ടുകൾ',
+      'recent_routes': 'അടുത്തിടെ നോക്കിയവ',
+      'favorites': 'പ്രിയപ്പെട്ടവ',
+      'all_routes_title': 'ലഭ്യമായ എല്ലാ റൂട്ടുകളും',
+      'add_new': 'പുതിയത് ചേർക്കുക',
       'route_planning': 'റൂട്ട് പ്ലാനിംഗ്',
       'find_best_routes':
           'നിങ്ങളുടെ യാത്രയ്ക്കുള്ള മികച്ച റൂട്ടുകൾ കണ്ടെത്തുക.',
@@ -267,6 +340,69 @@ class AppLocalizations {
       'sun': 'ഞായർ',
       'ksrtc': 'കെഎസ്ആർടിസി',
       'private': 'സ്വകാര്യം',
+
+      // Safety Screen
+      'status_normal': 'സാധാരണ',
+      'status_warning': 'മുന്നറിയിപ്പ്',
+      'status_danger': 'അപകടം',
+      'road_condition': 'റോഡ്',
+      'visibility': 'കാഴ്ച',
+      'next_stop': 'അടുത്തത്',
+      'mins_away': 'മിനിറ്റിനുള്ളിൽ',
+      'searching': 'തിരയുന്നു...',
+      'calculating': 'കണക്കാക്കുന്നു...',
+      'emergency_services': 'അടിയന്തര സേവനങ്ങൾ',
+      'police_control': 'പ്പോലീസ് കൺട്രോൾ റൂം',
+      'fire_force': 'ഫയർ ഫോഴ്സ്',
+      'ambulance': 'ആംബുലൻസ്',
+      'women_helpline': 'വനിതാ ഹെൽപ്പ് ലൈൻ',
+      'child_helpline': 'ചൈൽഡ് ഹെൽപ്പ് ലൈൻ',
+      'general_emergency': 'പൊതു അടിയന്തര സഹായം (112)',
+      'report_issue_title': 'പ്രശ്നം റിപ്പോർട്ട് ചെയ്യുക',
+      'report_issue_subtitle': 'അശ്രദ്ധമായ ഡ്രൈവിംഗ്, അപകടങ്ങൾ',
+      'emergency_contacts_title': 'അടിയന്തര കോൺടാക്റ്റുകൾ',
+      'emergency_contacts_subtitle': 'പ്പോലീസ്, ആംബുലൻസ്, ഫയർ, ഹെൽപ്പ് ലൈനുകൾ',
+
+      // Complaint Screen
+      'file_complaint': 'പരാതി നൽകുക',
+      'what_went_wrong': 'എന്താണ് സംഭവിച്ചത്?',
+      'complaint_desc': 'നിങ്ങൾക്കുണ്ടായ മോശം അനുഭവത്തിൽ ഞങ്ങൾ ഖേദിക്കുന്നു. മെച്ചപ്പെടുത്താൻ ഞങ്ങളെ സഹായിക്കൂ.',
+      'bus_number_label': 'ബസ് നമ്പർ',
+      'issue_category': 'പരാതി വിഭാഗം',
+      'select_category': 'ഒരു വിഭാഗം തിരഞ്ഞെടുക്കുക',
+      'complaint_details_label': 'വിവരണം',
+      'complaint_details_hint': 'എന്താണ് സംഭവിച്ചതെന്ന് കൂടുതൽ വിവരങ്ങൾ നൽകുക...',
+      'add_evidence': 'തെളിവ് ചേർക്കുക',
+      'optional': '(ഓപ്ഷണൽ)',
+      'add_media': 'മീഡിയ ചേർക്കുക',
+      'submit_complaint': 'പരാതി സമർപ്പിക്കുക',
+
+      // Routes Screen
+      'popular_routes': 'ജനപ്രിയ റൂട്ടുകൾ',
+      'trending': 'ട്രെൻഡിംഗ്',
+      'fastest': 'വേഗമേറിയത്',
+      'every_min': 'ഓരോ',
+      'live_map_preview': 'തത്സമയ മാപ്പ്',
+
+      // Notifications
+      'clear_all': 'എല്ലാം മായ്ക്കുക',
+      'no_notifications': 'പുതിയ അറിയിപ്പുകളില്ല',
+      'bus_arriving_soon': 'ബസ് ഉടൻ എത്തും',
+      'bus_arriving_message': 'ബസ് നിങ്ങളുടെ സ്റ്റോപ്പിനടുത്തെത്തി.',
+      'ticket_confirmed': 'ടിക്കറ്റ് സ്ഥിരീകരിച്ചു',
+      'ticket_confirmed_message': 'നിങ്ങളുടെ ടിക്കറ്റ് വിജയകരമായി ബുക്ക് ചെയ്തു.',
+      'welcome_title': 'യാത്രികനിലേക്ക് സ്വാഗതം',
+      'welcome_message': 'ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്തതിന് നന്ദി.',
+      'just_now': 'ഇപ്പോൾ',
+      'hours_ago': 'മണിക്കൂർ മുമ്പ്',
+      'day_ago': '1 ദിവസം മുമ്പ്',
+
+      // Common
+      'loading': 'ലോഡ് ചെയ്യുന്നു...',
+      'unknown': 'അജ്ഞാതം',
+      'good_visibility': 'നല്ല കാഴ്ച',
+      'moderate_visibility': 'മിതമായ കാഴ്ച',
+      'dry': 'വരണ്ട',
     },
   };
 

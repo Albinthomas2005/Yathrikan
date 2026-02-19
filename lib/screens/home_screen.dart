@@ -11,7 +11,10 @@ import 'profile_screen.dart';
 import 'route_screen.dart';
 import '../utils/app_localizations.dart';
 import '../services/bus_location_service.dart';
+import '../services/notification_service.dart';
+import 'package:url_launcher/url_launcher.dart'; // For SOS call
 import '../models/live_bus_model.dart';
+import 'shortest_route_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -88,21 +91,23 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 70), // Position above bottom nav
-        child: FloatingActionButton.small(
-          onPressed: () {
-            Navigator.pushNamed(context, '/chatbot');
-          },
-          backgroundColor: AppColors.primaryYellow,
-          elevation: 4,
-          child: const Icon(
-            Icons.smart_toy, // Chatbot icon
-            color: Colors.black,
-            size: 24,
-          ),
-        ),
-      ),
+      floatingActionButton: _selectedIndex == 0
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 70), // Position above bottom nav
+              child: FloatingActionButton.small(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/chatbot');
+                },
+                backgroundColor: AppColors.primaryYellow,
+                elevation: 4,
+                child: const Icon(
+                  Icons.smart_toy, // Chatbot icon
+                  color: Colors.black,
+                  size: 24,
+                ),
+              ),
+            )
+          : null,
     );
   }
 }
@@ -123,18 +128,36 @@ class _HomeViewState extends State<_HomeView> {
   StreamSubscription<Position>? _positionStream;
   StreamSubscription<List<LiveBus>>? _busLocationStream;
   final BusLocationService _busLocationService = BusLocationService();
+  final NotificationService _notificationService = NotificationService();
+  StreamSubscription<String?>? _notificationSubscription;
 
   @override
   void initState() {
     super.initState();
     _startLiveLocationUpdates();
     _initializeLiveBusTracking();
+    
+    // Listen for notification clicks
+    _notificationSubscription = _notificationService.onNotificationClick.listen((payload) {
+      if (payload != null && mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ShortestRouteScreen(
+              initialBusId: payload,
+              autoDetectOrigin: true, // or retain context?
+            ),
+          ),
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
     _positionStream?.cancel();
     _busLocationStream?.cancel();
+    _notificationSubscription?.cancel();
     super.dispose();
   }
 
@@ -168,10 +191,12 @@ class _HomeViewState extends State<_HomeView> {
     try {
       final position = await Geolocator.getCurrentPosition();
       if (mounted) {
+        final latLng = LatLng(position.latitude, position.longitude);
         setState(() {
-          _currentLocation = LatLng(position.latitude, position.longitude);
+          _currentLocation = latLng;
           _isLoadingLocation = false;
         });
+        _busLocationService.updateUserLocation(latLng);
         _mapController.move(_currentLocation, 16.0);
       }
     } catch (e) {
@@ -188,9 +213,12 @@ class _HomeViewState extends State<_HomeView> {
         Geolocator.getPositionStream(locationSettings: locationSettings).listen(
       (Position? position) {
         if (position != null && mounted) {
+          final latLng = LatLng(position.latitude, position.longitude);
           setState(() {
-            _currentLocation = LatLng(position.latitude, position.longitude);
+            _currentLocation = latLng;
           });
+          // Update bus service with new user location for accurate notifications
+          _busLocationService.updateUserLocation(latLng);
         }
       },
       onError: (e) => debugPrint("Location Stream Error: $e"),
@@ -360,6 +388,22 @@ class _HomeViewState extends State<_HomeView> {
     );
   }
 
+  Future<void> _callEmergency() async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: '112', // General Emergency Number
+    );
+     if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Could not launch dialer")),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
@@ -407,57 +451,86 @@ class _HomeViewState extends State<_HomeView> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: Colors.black87,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: Colors.black87,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/logo_circle.png',
+                      fit: BoxFit.cover,
+                      width: 64,
+                      height: 64,
                     ),
-                  ],
-                ),
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/images/logo_circle.png',
-                    fit: BoxFit.cover,
-                    width: 64,
-                    height: 64,
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'YATHRIKAN',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                      letterSpacing: 1.2,
-                    ),
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'YATHRIKAN',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                          letterSpacing: 1.2,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        loc['live_buses'],
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    loc['live_buses'],
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
+                ),
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: _callEmergency,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.redAccent,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
-            ],
+              child: const Icon(
+                Icons.sos,
+                size: 22,
+                color: Colors.white,
+              ),
+            ),
           ),
+          const SizedBox(width: 12),
           GestureDetector(
             onTap: () {
               // Show notifications modal
@@ -482,22 +555,88 @@ class _HomeViewState extends State<_HomeView> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      Text(
-                        "Notifications",
-                        style: TextStyle(
-                          fontSize: 18, 
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).textTheme.bodyLarge?.color,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            loc['notifications_title'],
+                            style: TextStyle(
+                              fontSize: 18, 
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              NotificationService().clearHistory();
+                            },
+                            child: Text(loc['clear_all']),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Flexible(
+                        child: StreamBuilder<List<NotificationItem>>(
+                          stream: NotificationService().historyStream,
+                          initialData: NotificationService().history,
+                          builder: (context, snapshot) {
+                            final history = snapshot.data ?? [];
+                            
+                            if (history.isEmpty) {
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const SizedBox(height: 20),
+                                  Icon(Icons.notifications_off_outlined, size: 48, color: Colors.grey[400]),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    loc['no_notifications'],
+                                    style: TextStyle(color: Colors.grey[600]),
+                                  ),
+                                  const SizedBox(height: 40),
+                                ],
+                              );
+                            }
+
+                            return ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: history.length,
+                              itemBuilder: (context, index) {
+                                final item = history[index];
+                                return Card(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  color: Theme.of(context).cardColor,
+                                  elevation: 2,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  child: ListTile(
+                                    leading: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primaryYellow.withValues(alpha: 0.2),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.directions_bus, color: AppColors.primaryYellow, size: 20),
+                                    ),
+                                    title: Text(loc[item.title], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                    subtitle: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const SizedBox(height: 4),
+                                        Text(loc[item.body], style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          "${item.timestamp.hour}:${item.timestamp.minute.toString().padLeft(2, '0')}",
+                                          style: TextStyle(fontSize: 10, color: Colors.grey[400]),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
                         ),
                       ),
-                      const SizedBox(height: 40),
-                      Icon(Icons.notifications_off_outlined, size: 48, color: Colors.grey[400]),
-                      const SizedBox(height: 16),
-                      Text(
-                        "No new notifications",
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                      const SizedBox(height: 40),
                     ],
                   ),
                 ),

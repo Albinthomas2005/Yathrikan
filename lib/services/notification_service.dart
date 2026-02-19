@@ -1,5 +1,18 @@
+import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
+
+class NotificationItem {
+  final String title;
+  final String body;
+  final DateTime timestamp;
+
+  NotificationItem({
+    required this.title,
+    required this.body,
+    required this.timestamp,
+  });
+}
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -10,6 +23,22 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   bool _isInitialized = false;
+  
+  final StreamController<String?> _onNotificationClick = StreamController<String?>.broadcast();
+  Stream<String?> get onNotificationClick => _onNotificationClick.stream;
+  
+  // Re-adding history logic
+  final List<NotificationItem> _history = [];
+  final StreamController<List<NotificationItem>> _historyStreamController = 
+      StreamController<List<NotificationItem>>.broadcast();
+
+  Stream<List<NotificationItem>> get historyStream => _historyStreamController.stream;
+  List<NotificationItem> get history => List.unmodifiable(_history);
+
+  Future<void> clearHistory() async {
+    _history.clear();
+    _historyStreamController.add(List.from(_history));
+  }
 
   Future<void> initialize() async {
     if (_isInitialized) return;
@@ -37,6 +66,7 @@ class NotificationService {
       onDidReceiveNotificationResponse:
           (NotificationResponse notificationResponse) {
         debugPrint('Notification clicked: ${notificationResponse.payload}');
+        _onNotificationClick.add(notificationResponse.payload);
       },
     );
 
@@ -64,6 +94,14 @@ class NotificationService {
       iOS: DarwinNotificationDetails(),
     );
 
+    // Add to history
+    _history.insert(0, NotificationItem(
+      title: title,
+      body: body,
+      timestamp: DateTime.now(),
+    ));
+    _historyStreamController.add(List.from(_history));
+
     await flutterLocalNotificationsPlugin.show(
       id,
       title,
@@ -71,6 +109,12 @@ class NotificationService {
       notificationDetails,
       payload: payload,
     );
+  }
+
+
+
+  void dispose() {
+    _historyStreamController.close();
   }
 
   Future<void> requestPermissions() async {
