@@ -45,9 +45,7 @@ class AdminFinanceScreen extends StatelessWidget {
                         surface: Color(0xFF1E293B),
                         onSurface: Colors.white,
                       ),
-                      dialogTheme: const DialogThemeData(
-                        backgroundColor: Color(0xFF1E293B),
-                      ),
+                      dialogBackgroundColor: const Color(0xFF1E293B),
                     ),
                     child: child!,
                   );

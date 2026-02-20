@@ -29,8 +29,8 @@ class LiveBus {
     double? headingDeg,
     DateTime? lastUpdated,
   }) : 
-    route = route ?? [],
-    speedMps = speedMps ?? (speedKmph != null ? speedKmph / 3.6 : 10.0); // Default speed if missing
+    this.route = route ?? [],
+    this.speedMps = speedMps ?? (speedKmph != null ? speedKmph / 3.6 : 10.0); // Default speed if missing
 
   LatLng get position {
     if (route.isEmpty) return const LatLng(9.5361, 76.8254); // Default Koovappally if no route

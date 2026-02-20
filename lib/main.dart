@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
 
 import 'utils/constants.dart';
-import 'screens/landing_screen.dart';
+
 import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/home_screen.dart';
@@ -76,7 +76,7 @@ class MyApp extends StatelessWidget {
           darkTheme: _buildDarkTheme(context),
           home: const AuthWrapper(),
           routes: {
-            '/landing': (context) => const LandingScreen(),
+
             '/login': (context) => const LoginScreen(),
             '/signup': (context) => const SignupScreen(),
             '/forgot_password': (context) => const ForgotPasswordScreen(),
@@ -174,7 +174,7 @@ class AuthWrapper extends StatelessWidget {
         }
 
         // Otherwise, show landing screen
-        return const LandingScreen();
+        return const LoginScreen();
       },
     );
   }

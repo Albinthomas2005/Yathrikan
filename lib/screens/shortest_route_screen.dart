@@ -339,7 +339,7 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
       );
       WidgetsBinding.instance.addPostFrameCallback((_) {
         // Fit bus and USER location
-
+        final boundsLog = [bus.liveBusData!.route.first, bus.liveBusData!.route.last, _currentLocation];
          // Or just fit route
          _fitBounds(bus.liveBusData!.route);
       });
