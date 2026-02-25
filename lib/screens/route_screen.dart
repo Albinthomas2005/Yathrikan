@@ -283,7 +283,7 @@ class _RouteScreenState extends State<RouteScreen> {
                         GestureDetector(
                           onTap: _toggleEditMode,
                           child: Text(
-                            _isEditingRecent ? 'Done' : 'Edit',
+                            _isEditingRecent ? loc.translate('done') : loc.translate('edit'),
                             style: const TextStyle(
                               color: AppColors.primaryYellow,
                               fontSize: 14,
@@ -331,7 +331,7 @@ class _RouteScreenState extends State<RouteScreen> {
                       GestureDetector(
                         onTap: _toggleFavoritesEditMode,
                         child: Text(
-                          _isEditingFavorites ? 'Done' : 'Edit',
+                          _isEditingFavorites ? loc.translate('done') : loc.translate('edit'),
                           style: const TextStyle(
                             color: AppColors.primaryYellow,
                             fontSize: 14,
@@ -392,8 +392,8 @@ class _RouteScreenState extends State<RouteScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ShortestRouteScreen(
+                                  initialOrigin: route.fromLocation,
                                   initialDestination: route.toLocation,
-                                  autoDetectOrigin: true,
                                 ),
                               ),
                             );
@@ -510,8 +510,8 @@ class _RouteScreenState extends State<RouteScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => ShortestRouteScreen(
+              initialOrigin: recent.route.fromLocation,
               initialDestination: recent.route.toLocation,
-              autoDetectOrigin: true,
             ),
           ),
         );
@@ -544,7 +544,7 @@ class _RouteScreenState extends State<RouteScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    recent.route.name,
+                    recent.route.name.split(' - ').map((part) => AppLocalizations.of(context).translate(part.trim())).join(' - '),
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -553,7 +553,7 @@ class _RouteScreenState extends State<RouteScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Last viewed ${recent.timeAgo}',
+                    '${AppLocalizations.of(context).translate("last_viewed")} ${recent.timeAgoStr(context)}',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[600],
@@ -935,7 +935,7 @@ class _RouteScreenState extends State<RouteScreen> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            '$activeBuses Buses Active Nearby',
+                            '$activeBuses ${AppLocalizations.of(context).translate("buses_active_nearby")}',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -963,17 +963,17 @@ class _RouteScreenState extends State<RouteScreen> {
                           color: AppColors.primaryYellow,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Row(
+                        child: Row(
                           children: [
-                            Icon(
+                            const Icon(
                               CupertinoIcons.map_fill,
                               color: Colors.black,
                               size: 14,
                             ),
-                            SizedBox(width: 6),
+                            const SizedBox(width: 6),
                             Text(
-                              'Open Map',
-                              style: TextStyle(
+                              AppLocalizations.of(context).translate("open_map"),
+                              style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black,
@@ -1001,8 +1001,8 @@ class _RouteScreenState extends State<RouteScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => ShortestRouteScreen(
+              initialOrigin: route.fromLocation,
               initialDestination: route.toLocation,
-              autoDetectOrigin: true,
             ),
           ),
         );
@@ -1024,7 +1024,7 @@ class _RouteScreenState extends State<RouteScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  route.name,
+                  route.name.split(' - ').map((p) => AppLocalizations.of(context).translate(p.trim())).join(' - '),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -1033,7 +1033,9 @@ class _RouteScreenState extends State<RouteScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  route.viaRoute ?? route.fromLocation,
+                  route.viaRoute != null 
+                    ? AppLocalizations.of(context).translate(route.viaRoute!) 
+                    : AppLocalizations.of(context).translate(route.fromLocation),
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],
@@ -1054,7 +1056,7 @@ class _RouteScreenState extends State<RouteScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        '${route.activeBuses} Active',
+                        '${route.activeBuses} ${AppLocalizations.of(context).translate("active")}',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
@@ -1071,7 +1073,7 @@ class _RouteScreenState extends State<RouteScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                route.frequency,
+                route.frequency.replaceAll('Every', AppLocalizations.of(context).translate('every_min')).replaceAll('m', AppLocalizations.of(context).translate('min_short')),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -1156,8 +1158,8 @@ class RouteSearchDelegate extends SearchDelegate<RouteModel?> {
               context,
               MaterialPageRoute(
                 builder: (context) => ShortestRouteScreen(
+                  initialOrigin: route.fromLocation,
                   initialDestination: route.toLocation,
-                  autoDetectOrigin: true,
                 ),
               ),
             );

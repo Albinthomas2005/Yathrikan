@@ -420,7 +420,7 @@ class _SafetyScreenState extends State<SafetyScreen> {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    loc['speed_limit'] ?? 'Speed Limit',
+                    loc['speed_limit'],
                     style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
                   ),
                   const SizedBox(height: 4),

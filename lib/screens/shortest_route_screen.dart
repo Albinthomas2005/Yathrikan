@@ -40,12 +40,14 @@ class BusOption {
 
 class ShortestRouteScreen extends StatefulWidget {
   final String? initialDestination;
+  final String? initialOrigin;  // ← NEW: pre-fill the From field
   final bool autoDetectOrigin;
   final String? initialBusId; // For notification navigation
 
   const ShortestRouteScreen({
     super.key,
     this.initialDestination,
+    this.initialOrigin,
     this.autoDetectOrigin = false,
     this.initialBusId,
   });
@@ -73,6 +75,7 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   BusOption? _selectedBus;
   LatLng _currentLocation = const LatLng(9.5425371, 76.8201976); // Default Koovappally, will update
   bool _isLocationLoaded = false;
+  bool _isLocating = false; // true while the GPS button is fetching location
 
   // Autocomplete state
   List<String> _fromSuggestions = [];
@@ -85,27 +88,38 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   @override
   void initState() {
     super.initState();
-    _toController = TextEditingController(text: widget.initialDestination ?? '');
     _notificationService.initialize();
     _notificationService.requestPermissions();
     _busService.initialize();
 
-    _checkLocationPermission();
+    // We can't use AppLocalizations.of(context) in initState because context isn't fully linked.
+    // However, we wait until the first frame to safely translate the incoming destinations.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final loc = AppLocalizations.of(context);
+        
+        if (widget.initialDestination != null) {
+            _toController.text = loc.translate(widget.initialDestination!);
+        } else {
+            _toController = TextEditingController(text: '');
+        }
 
-    if (widget.autoDetectOrigin) {
-      _fromController.text = "Finding location...";
-      // _autoDetectLocation() called in _checkLocationPermission or stream
-    } else {
-      _fromController.text = "Koovappally";
-    }
+        if (widget.initialOrigin != null && widget.initialOrigin!.isNotEmpty) {
+            // Card gave us explicit origin — use it directly, no GPS
+            _fromController.text = loc.translate(widget.initialOrigin!);
+        } else {
+            _fromController.text = '';
+        }
 
-    // Auto-select bus if ID provided
-    if (widget.initialBusId != null) {
-        // Wait for bus list to be available
-        WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Auto-select bus if ID provided
+        if (widget.initialBusId != null) {
             _handleNotificationBus(widget.initialBusId!);
-        });
-    }
+        } else if (widget.initialOrigin != null && widget.initialDestination != null) {
+            // If coming from Recent Routes or Popular routes, auto-Trigger the search on load.
+            _handleFindRoute();
+        }
+    });
+
 
     _busSubscription = _busService.busStream.listen((buses) {
       if (mounted) {
@@ -160,6 +174,10 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   void _onFromChanged() {
     final q = _fromController.text;
     if (q.length >= 2 && _fromFocus.hasFocus) {
+      if (BusLocationService.allPlaces.any((p) => p.toLowerCase() == q.toLowerCase())) {
+        setState(() { _showFromSuggestions = false; });
+        return;
+      }
       setState(() {
         _fromSuggestions = BusLocationService.allPlaces
             .where((p) => p.toLowerCase().contains(q.toLowerCase()))
@@ -174,6 +192,10 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   void _onToChanged() {
     final q = _toController.text;
     if (q.length >= 2 && _toFocus.hasFocus) {
+      if (BusLocationService.allPlaces.any((p) => p.toLowerCase() == q.toLowerCase())) {
+        setState(() { _showToSuggestions = false; });
+        return;
+      }
       setState(() {
         _toSuggestions = BusLocationService.allPlaces
             .where((p) => p.toLowerCase().contains(q.toLowerCase()))
@@ -188,6 +210,24 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   void _updateBusList(List<LiveBus> buses) {
     // Resolve "From" location to coordinates
     final fromText = _fromController.text.trim();
+    final toText = _toController.text.trim();
+
+    // The user ONLY wants buses to show up if the search endpoints are exclusively:
+    // Koovappally, Kanjirappally, Ponkunnam, Kottayam, Erumely
+    const allowedPlaces = ['koovappally', 'kanjirappally', 'ponkunnam', 'kottayam', 'erumely', 'erumely north'];
+    
+    // We check if either the 'from' or 'to' text (if not empty) matches our allowed places
+    final bool isFromValid = fromText.isEmpty || fromText.toLowerCase() == 'current location' || allowedPlaces.any((p) => fromText.toLowerCase().contains(p));
+    final bool isToValid = toText.isEmpty || allowedPlaces.any((p) => toText.toLowerCase().contains(p));
+
+    if (!isFromValid || !isToValid) {
+        setState(() {
+            _availableBuses = [];
+        });
+        _busService.setTrackedBuses([]); // clear tracking 
+        return;
+    }
+
     // Case-insensitive lookup
     LatLng? fromCoords;
     for (final entry in BusLocationService.keyPlaces.entries) {
@@ -209,11 +249,32 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
       // (Simple containment check as before)
       final toText = _toController.text.trim().toLowerCase();
       // If we are solving "Erumely -> Kottayam", we want buses bound for Kottayam.
-      // E.g. Bus To: "Kottayam"
+      // E.g. Bus To: "Kottayam" or any other 5 allowed places
       bool matchesRoute = true;
       if (toText.isNotEmpty) {
+           // Direct destination match OR route direction match
            matchesRoute = b.to.toLowerCase() == toText || 
                           b.routeName.toLowerCase().contains(toText);
+           
+           // If they are searching for a waypoint like Koovappally, figure out route direction
+           if (!matchesRoute) {
+               final fromLower = fromText.toLowerCase();
+               final toLower = toText.toLowerCase();
+               if ((fromLower.contains('erumely') && toLower.contains('koovappally')) ||
+                   (fromLower.contains('koovappally') && toLower.contains('kottayam')) ||
+                   (fromLower.contains('kanjirappally') && toLower.contains('kottayam')) ||
+                   (fromLower.contains('ponkunnam') && toLower.contains('kottayam'))) {
+                    matchesRoute = b.routeName.contains('Erumely - Kottayam');
+               } else if ((fromLower.contains('kottayam') && toLower.contains('koovappally')) ||
+                          (fromLower.contains('koovappally') && toLower.contains('erumely')) ||
+                          (fromLower.contains('kottayam') && toLower.contains('kanjirappally')) ||
+                          (fromLower.contains('kottayam') && toLower.contains('ponkunnam'))) {
+                    matchesRoute = b.routeName.contains('Kottayam - Erumely');
+               } else {
+                   // Generic forward search if it's generally heading that direction across the 5 stops
+                   matchesRoute = b.route.isNotEmpty; // fallback to incoming check
+               }
+           }
       }
       
       if (!matchesRoute) return false;
@@ -229,51 +290,79 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
         return etaA.compareTo(etaB);
     });
 
+    // Notify the background service to restrict push notifications to only the top 3 buses matching this query!
+    final top3BusIds = incoming.take(3).map((b) => b.busId).toList();
+    _busService.setTrackedBuses(top3BusIds);
+
+    final loc = AppLocalizations.of(context);
+    
     _availableBuses = incoming.map((bus) {
       final eta = _busService.etaMinutes(bus, relativeTo: fromCoords);
       return BusOption(
-        id: bus.busId, name: bus.busName, type: "Live",
+        id: bus.busId, name: loc.translate(bus.busName), type: loc.translate("Live"),
         time: StringUtils.formatTime(DateTime.now().add(Duration(minutes: eta))),
         departureTime: DateTime.now().add(Duration(minutes: eta)),
-        duration: "Var", price: 20.0, seatsLeft: 40,
-        origin: bus.from, destination: bus.to,
+        duration: loc.translate("Var"), price: 20.0, seatsLeft: 40,
+        origin: loc.translate(bus.from), destination: loc.translate(bus.to),
         arrivalTimeAtOrigin: "", arrivalTimeAtDestination: "",
-        liveBusData: bus, minutesToUser: eta, arrivalAtUserStr: "$eta min",
+        liveBusData: bus, minutesToUser: eta, arrivalAtUserStr: "$eta ${loc.translate('min')}",
       );
     }).toList();
   }
 
-  Future<void> _checkLocationPermission() async {
-    bool serviceEnabled;
-    LocationPermission permission;
+  /// Called ONLY when the user presses the GPS button — requests permission and
+  /// fetches the current position, then reverse-geocodes to the nearest known place.
+  Future<void> _detectLocationOnDemand() async {
+    if (_isLocating) return;
+    setState(() => _isLocating = true);
 
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _showSnack('Location services are disabled.');
+        return;
+      }
 
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
-    }
-
-    if (permission == LocationPermission.deniedForever) return;
-
-    // Start stream
-    _positionStreamSubscription = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 10),
-    ).listen((Position position) {
-      if (mounted) {
-        setState(() {
-          _currentLocation = LatLng(position.latitude, position.longitude);
-          _isLocationLoaded = true;
-        });
-        
-        // If "from" was waiting for location
-        if (_fromController.text == "Finding location...") {
-             _autoDetectLocation(); // Updates text name
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          _showSnack('Location permission denied.');
+          return;
         }
       }
-    });
+      if (permission == LocationPermission.deniedForever) {
+        _showSnack('Location permission permanently denied. Enable it in Settings.');
+        return;
+      }
+
+      // Get a single fix — with timeout
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _currentLocation = LatLng(pos.latitude, pos.longitude);
+        _isLocationLoaded = true;
+      });
+
+      await _autoDetectLocation(); // reverse-geocode & update From field
+    } catch (e) {
+      _showSnack('Could not get location: ${e.toString()}');
+    } finally {
+      if (mounted) setState(() => _isLocating = false);
+    }
+  }
+
+  void _showSnack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), duration: const Duration(seconds: 3)),
+    );
   }
 
   Future<void> _autoDetectLocation() async {
@@ -338,9 +427,6 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
         totalDistanceMeters: 1000, totalDurationSeconds: 600,
       );
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // Fit bus and USER location
-        final boundsLog = [bus.liveBusData!.route.first, bus.liveBusData!.route.last, _currentLocation];
-         // Or just fit route
          _fitBounds(bus.liveBusData!.route);
       });
     }
@@ -418,7 +504,7 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
                         border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                       ),
                       child: Row(children: [
-                        const Icon(Icons.my_location, color: Colors.blueAccent),
+                        const Icon(Icons.trip_origin, color: Colors.blueAccent),
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
@@ -432,9 +518,18 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
                         ),
                         // Auto-location button
                         IconButton(
-                          icon: const Icon(Icons.gps_fixed, color: Colors.blueAccent, size: 22),
+                          icon: _isLocating
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.blueAccent,
+                                  ),
+                                )
+                              : const Icon(Icons.gps_fixed, color: Colors.blueAccent, size: 22),
                           tooltip: 'Detect my location',
-                          onPressed: _autoDetectLocation,
+                          onPressed: _isLocating ? null : _detectLocationOnDemand,
                         ),
                       ]),
                     ),
@@ -491,9 +586,9 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
 
                 // BUS LIST
                 if (_showBusList) ...[
-                  Text("Incoming Buses", style: AppTextStyles.heading2.copyWith(fontSize: 18, color: theme.textTheme.titleLarge?.color)),
+                  Text(loc.translate("incoming_buses"), style: AppTextStyles.heading2.copyWith(fontSize: 18, color: theme.textTheme.titleLarge?.color)),
                   const SizedBox(height: 15),
-                  if (_availableBuses.isEmpty) const Text("No incoming buses found. Tap 'Find Route' to search."),
+                  if (_availableBuses.isEmpty) Text(loc.translate("no_incoming_buses")),
                   ListView.builder(
                     shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
                     itemCount: _availableBuses.length,
@@ -519,7 +614,7 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
                                 const SizedBox(height: 2),
                                 Text(bus.id, style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
                                 const SizedBox(height: 4),
-                                Text("ETA: ${bus.arrivalAtUserStr}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.green)),
+                                Text("${loc.translate('eta')}: ${bus.arrivalAtUserStr}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.green)),
                               ])),
                               Text("₹${bus.price.toInt()}", style: AppTextStyles.bodyBold.copyWith(fontSize: 18, color: AppColors.primaryYellow)),
                             ]),

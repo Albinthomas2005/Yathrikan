@@ -6,11 +6,13 @@ class NotificationItem {
   final String title;
   final String body;
   final DateTime timestamp;
+  final String? payload;
 
   NotificationItem({
     required this.title,
     required this.body,
     required this.timestamp,
+    this.payload,
   });
 }
 
@@ -99,6 +101,7 @@ class NotificationService {
       title: title,
       body: body,
       timestamp: DateTime.now(),
+      payload: payload,
     ));
     _historyStreamController.add(List.from(_history));
 

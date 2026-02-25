@@ -2,37 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../utils/constants.dart';
-import '../utils/app_localizations.dart';
+import '../services/notification_service.dart';
+import 'shortest_route_screen.dart';
 
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context);
     final theme = Theme.of(context);
-
-    // Dynamic list construction to support localization
-    final List<Map<String, dynamic>> notifications = [
-      {
-        'title': loc['bus_arriving_soon'],
-        'message': loc['bus_arriving_message'],
-        'time': loc['just_now'],
-        'icon': CupertinoIcons.bus,
-      },
-      {
-        'title': loc['ticket_confirmed'],
-        'message': loc['ticket_confirmed_message'],
-        'time': loc['hours_ago'],
-        'icon': CupertinoIcons.ticket_fill,
-      },
-      {
-        'title': loc['welcome_title'],
-        'message': loc['welcome_message'],
-        'time': loc['day_ago'],
-        'icon': CupertinoIcons.hand_thumbsup_fill,
-      },
-    ];
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -45,87 +23,137 @@ class NotificationScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          loc['notifications'],
+          'Notifications',
           style: TextStyle(
-              color: theme.textTheme.titleLarge?.color,
-              fontWeight: FontWeight.bold),
+            color: theme.textTheme.titleLarge?.color,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
+        actions: [
+          TextButton(
+            onPressed: () => NotificationService().clearHistory(),
+            child: const Text(
+              'Clear All',
+              style: TextStyle(color: AppColors.primaryYellow),
+            ),
+          ),
+        ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: notifications.length,
-        itemBuilder: (context, index) {
-          final notif = notifications[index];
-          return _buildNotificationItem(context, notif, index);
+      body: StreamBuilder<List<NotificationItem>>(
+        stream: NotificationService().historyStream,
+        initialData: NotificationService().history,
+        builder: (context, snapshot) {
+          final history = snapshot.data ?? [];
+
+          if (history.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.notifications_off_outlined,
+                      size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No notifications yet',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(20),
+            itemCount: history.length,
+            itemBuilder: (context, index) {
+              final item = history[index];
+              return _buildItem(context, item, index);
+            },
+          );
         },
       ),
     );
   }
 
-  Widget _buildNotificationItem(
-      BuildContext context, Map<String, dynamic> notif, int index) {
+  Widget _buildItem(BuildContext context, NotificationItem item, int index) {
     final theme = Theme.of(context);
+    final time =
+        "${item.timestamp.hour}:${item.timestamp.minute.toString().padLeft(2, '0')}";
 
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: const BoxDecoration(
-              color: AppColors.primaryYellow,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(notif['icon'], color: Colors.black, size: 20),
-          ),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            if (item.payload != null) {
+              final parts = item.payload!.split('|');
+              final busId = parts[0];
+              final destination = parts.length > 1 ? parts[1] : null;
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ShortestRouteScreen(
+                    initialBusId: busId,
+                    initialDestination: destination,
+                    autoDetectOrigin: true,
+                  ),
+                ),
+              );
+            }
+          },
+          borderRadius: BorderRadius.circular(15),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  notif['title'],
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: theme.textTheme.bodyLarge?.color,
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: const BoxDecoration(
+                    color: AppColors.primaryYellow,
+                    shape: BoxShape.circle,
                   ),
+                  child: const Icon(Icons.directions_bus, color: Colors.black, size: 20),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  notif['message'],
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: theme.textTheme.bodyMedium?.color
-                        ?.withValues(alpha: 0.7),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  notif['time'],
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: theme.textTheme.bodySmall?.color,
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: theme.textTheme.bodyLarge?.color,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        item.body,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: theme.textTheme.bodyMedium?.color
+                              ?.withValues(alpha: 0.7),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        time,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.textTheme.bodySmall?.color,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     )
         .animate()

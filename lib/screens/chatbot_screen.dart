@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:async';
 import '../utils/constants.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
@@ -31,6 +32,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   bool _speechEnabled = false;
   bool _isTyping = false;
   bool _voiceSent = false; // Prevent double-send from both _stopListening and _onSpeechStatus
+  Timer? _silenceTimer;
 
   // Location Context
   String? _currentCity;
@@ -126,11 +128,26 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     ),
                     onPressed: () {
-                       String? city;
+                       // action format: "navigate_shortest_route:origin:destination" or "navigate_shortest_route::destination"
+                       String? origin;
+                       String? destination;
                        if (action.contains(':')) {
-                          city = action.split(':')[1];
+                         final parts = action.split(':');
+                         // parts[0] = 'navigate_shortest_route'
+                         if (parts.length >= 3) {
+                           origin = parts[1].isNotEmpty ? parts[1] : null;
+                           destination = parts[2].isNotEmpty ? parts[2] : null;
+                         } else {
+                           destination = parts[1].isNotEmpty ? parts[1] : null;
+                         }
                        }
-                       Navigator.push(context, MaterialPageRoute(builder: (context) => ShortestRouteScreen(initialDestination: city)));
+                       Navigator.push(context, MaterialPageRoute(
+                         builder: (context) => ShortestRouteScreen(
+                           initialOrigin: origin,
+                           initialDestination: destination,
+                           autoDetectOrigin: origin == null,
+                         ),
+                       ));
                     },
                   ),
                 ),
@@ -169,17 +186,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     debugPrint('Speech status: $status');
     if (status == 'done' || status == 'notListening') {
       if (mounted && !_voiceSent) {
-        _voiceSent = true;
         setState(() => _isListening = false);
         
-        Future.delayed(const Duration(milliseconds: 800), () {
-          if (mounted) {
-            final text = _messageController.text.trim();
-            if (text.isNotEmpty) {
-              _sendMessage(text);
-            }
-          }
-        });
+        final text = _messageController.text.trim();
+        if (text.isNotEmpty) {
+          _voiceSent = true;
+          _sendMessage(text);
+        }
       }
     }
   }
@@ -204,6 +217,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   @override
   void dispose() {
+    _silenceTimer?.cancel();
     _messageController.dispose();
     _speech.stop();
     _flutterTts.stop();
@@ -265,19 +279,28 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               TextPosition(offset: _messageController.text.length),
             );
           });
+          
+          // Manual silence timeout
+          _silenceTimer?.cancel();
+          _silenceTimer = Timer(const Duration(seconds: 2), () {
+            if (mounted && _isListening) {
+              _stopListening();
+            }
+          });
         }
       },
       listenFor: const Duration(seconds: 30),
-      pauseFor: const Duration(seconds: 3),
+      pauseFor: const Duration(seconds: 2), // pause for 2s implies done
       listenOptions: stt.SpeechListenOptions(
         partialResults: true,
-        cancelOnError: false,
+        cancelOnError: true,
         listenMode: stt.ListenMode.dictation,
       ),
     );
   }
 
   void _stopListening() async {
+    _silenceTimer?.cancel();
     await _speech.stop();
     setState(() => _isListening = false);
     
@@ -319,15 +342,25 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
         // Check if response warrants a navigation button
         String? action;
-        String? city = _findCityInMessage(message);
-        if (botResponse.contains('Here are the buses') ||
+        // Try to extract destination from "X to Y" first, then single-city fallback
+        final od = _parseOriginDestination(message.toLowerCase());
+        final String? city = od != null
+            ? od['destination']
+            : _findCityInMessage(message);
+        if (botResponse.contains('Buses from') ||
+            botResponse.contains('Here are the buses') ||
             botResponse.contains('next bus is') ||
             botResponse.contains('ETA:') ||
             botResponse.contains('currently running') ||
             botResponse.contains('arriving in')) {
-          action = city != null
-              ? 'navigate_shortest_route:$city'
-              : 'navigate_shortest_route';
+          if (od != null) {
+            // Encode both origin and destination: "navigate_shortest_route:origin:destination"
+            action = 'navigate_shortest_route:${od['origin']}:${od['destination']}';
+          } else if (city != null) {
+            action = 'navigate_shortest_route::$city'; // empty origin = auto-detect
+          } else {
+            action = 'navigate_shortest_route';
+          }
         }
 
         if (mounted) {
@@ -428,18 +461,41 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       return "No buses are currently approaching your location.";
     }
 
-    // 5. ROUTE QUERY — detect city anywhere in the message
+    // 5. ROUTE QUERY — first try "X to Y" pattern, then single-city fallback
+    final od = _parseOriginDestination(msg);
+    if (od != null) {
+      final origin = od['origin']!;
+      final destination = od['destination']!;
+      final svc = BusLocationService();
+      final matchingBuses = _getBusesForRoute(svc, origin, destination);
+
+      if (matchingBuses.isEmpty) {
+        return "No buses are currently running from $origin to $destination. Try checking the routes section!";
+      }
+
+      final buf = StringBuffer();
+      buf.writeln('🗺️ Buses from $origin → $destination:');
+      buf.writeln();
+      for (final b in matchingBuses.take(5)) {
+        final eta = svc.etaMinutes(b);
+        buf.writeln('🚌 ${b.busName} (${b.busId})');
+        buf.writeln('   Route: ${b.routeName}');
+        buf.writeln('   ETA: $eta min');
+        buf.writeln();
+      }
+      buf.writeln('Tap "Check Shortest Route" below to see the full route on map!');
+      return buf.toString();
+    }
+
+    // 5b. Single-city fallback
     String? city = _findCityInMessage(msg);
     if (city != null) {
-       String? origin = _findCityInMessage(msg.replaceAll(city.toLowerCase(), ''));
-       String startLocation = origin ?? _currentCity ?? "Koovappally";
-       
        final svc = BusLocationService();
        final incoming = svc.buses.where((b) => svc.isIncoming(b) && b.status == 'RUNNING').toList();
        incoming.sort((a, b) => svc.etaMinutes(a).compareTo(svc.etaMinutes(b)));
        
        if (incoming.isEmpty) {
-         return "No buses are currently approaching $startLocation. They run on the Erumely → Kottayam route via $city.";
+         return "No buses are currently approaching your location heading to $city.";
        }
        
        final top = incoming.take(5).toList();
@@ -452,7 +508,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
          buf.writeln('   ETA: $eta min');
          buf.writeln();
        }
-       buf.writeln('Tap "View Route" to track them on the map!');
+       buf.writeln('Tap "Check Shortest Route" to track them on the map!');
        return buf.toString();
     }
 
@@ -564,6 +620,56 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       }
     }
     return null;
+  }
+
+  /// Parses "X to Y" / "from X to Y" patterns; returns {origin, destination} or null
+  Map<String, String>? _parseOriginDestination(String message) {
+    // Match patterns like: "erumely to kottayam", "from erumely to kottayam", "erumely - kottayam"
+    final patterns = [
+      RegExp(r'(?:from\s+)?(\w[\w\s]*)\s+to\s+([\w\s]+)', caseSensitive: false),
+      RegExp(r'(\w[\w\s]*)\s*[-–→]\s*([\w\s]+)', caseSensitive: false),
+    ];
+
+    for (final pattern in patterns) {
+      final match = pattern.firstMatch(message);
+      if (match != null) {
+        final rawOrigin = match.group(1)!.trim();
+        final rawDest = match.group(2)!.trim();
+        final origin = _findCityInMessage(rawOrigin);
+        final destination = _findCityInMessage(rawDest);
+        if (origin != null && destination != null && origin != destination) {
+          return {'origin': origin, 'destination': destination};
+        }
+      }
+    }
+    return null;
+  }
+
+  /// Returns running buses that match the given origin → destination direction
+  List<LiveBus> _getBusesForRoute(BusLocationService svc, String origin, String destination) {
+    final buses = svc.buses.where((b) {
+      if (b.status != 'RUNNING') return false;
+      final routeLower = b.routeName.toLowerCase();
+      final fromLower = b.from.toLowerCase();
+      final toLower = b.to.toLowerCase();
+      final originLower = origin.toLowerCase();
+      final destLower = destination.toLowerCase();
+
+      // Exact direction match (terminals)
+      final exactMatch = fromLower == originLower && toLower == destLower;
+
+      // Route name contains both places in order
+      final routeMatch = routeLower.contains(originLower) && routeLower.contains(destLower);
+
+      // Fuzzy: either endpoint matches with levenshtein
+      final fuzzyFrom = _calculateLevenshtein(fromLower, originLower) <= 2;
+      final fuzzyTo   = _calculateLevenshtein(toLower, destLower) <= 2;
+
+      return (exactMatch || routeMatch || (fuzzyFrom && fuzzyTo));
+    }).toList();
+
+    buses.sort((a, b) => svc.etaMinutes(a).compareTo(svc.etaMinutes(b)));
+    return buses;
   }
 
   /// Levenshtein distance algorithm for fuzzy matching

@@ -140,12 +140,17 @@ class _HomeViewState extends State<_HomeView> {
     // Listen for notification clicks
     _notificationSubscription = _notificationService.onNotificationClick.listen((payload) {
       if (payload != null && mounted) {
+        // payload format: "busId|destination"  (or just "busId" for legacy)
+        final parts = payload.split('|');
+        final busId = parts[0];
+        final destination = parts.length > 1 ? parts[1] : null;
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ShortestRouteScreen(
-              initialBusId: payload,
-              autoDetectOrigin: true, // or retain context?
+              initialBusId: busId,
+              initialDestination: destination,
+              autoDetectOrigin: true,
             ),
           ),
         );
@@ -388,17 +393,111 @@ class _HomeViewState extends State<_HomeView> {
     );
   }
 
-  Future<void> _callEmergency() async {
-    final Uri launchUri = Uri(
-      scheme: 'tel',
-      path: '112', // General Emergency Number
+  void _showEmergencyOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E201E),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Emergency Services',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildEmergencyOption(ctx, Icons.local_police,     Colors.blue,           'Police Control Room', '100'),
+              _buildEmergencyOption(ctx, Icons.local_fire_department, Colors.orange,    'Fire Force',         '101'),
+              _buildEmergencyOption(ctx, Icons.medical_services, Colors.red,            'Ambulance',          '102'),
+              const Divider(color: Colors.white24, height: 24),
+              _buildEmergencyOption(ctx, Icons.woman,            Colors.pinkAccent,     'Women Helpline',     '1091'),
+              _buildEmergencyOption(ctx, Icons.child_care,       Colors.lightBlueAccent,'Child Helpline',     '1098'),
+              const Divider(color: Colors.white24, height: 24),
+              _buildEmergencyOption(ctx, Icons.sos,              Colors.redAccent,      'General Emergency (112)', '112', isPrimary: true),
+            ],
+          ),
+        ),
+      ),
     );
-     if (await canLaunchUrl(launchUri)) {
+  }
+
+  Widget _buildEmergencyOption(
+    BuildContext ctx,
+    IconData icon,
+    Color color,
+    String title,
+    String number, {
+    bool isPrimary = false,
+  }) {
+    return ListTile(
+      onTap: () {
+        Navigator.pop(ctx);
+        _callNumber(number);
+      },
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.15),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: color, size: 24),
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: isPrimary ? FontWeight.bold : FontWeight.w500,
+          fontSize: 16,
+        ),
+      ),
+      trailing: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          number,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _callNumber(String number) async {
+    final Uri launchUri = Uri(scheme: 'tel', path: number);
+    if (await canLaunchUrl(launchUri)) {
       await launchUrl(launchUri, mode: LaunchMode.externalApplication);
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Could not launch dialer")),
+          const SnackBar(content: Text('Could not launch dialer')),
         );
       }
     }
@@ -482,10 +581,10 @@ class _HomeViewState extends State<_HomeView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'YATHRIKAN',
+                      Text(
+                        AppLocalizations.of(context).translate('app_title').toUpperCase(),
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 23,
                           fontWeight: FontWeight.bold,
                           color: Colors.black,
                           letterSpacing: 1.2,
@@ -509,7 +608,7 @@ class _HomeViewState extends State<_HomeView> {
             ),
           ),
           GestureDetector(
-            onTap: _callEmergency,
+            onTap: _showEmergencyOptions,
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -559,7 +658,7 @@ class _HomeViewState extends State<_HomeView> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            loc['notifications_title'],
+                            'Notifications',
                             style: TextStyle(
                               fontSize: 18, 
                               fontWeight: FontWeight.bold,
@@ -570,7 +669,7 @@ class _HomeViewState extends State<_HomeView> {
                             onPressed: () {
                               NotificationService().clearHistory();
                             },
-                            child: Text(loc['clear_all']),
+                            child: const Text('Clear All'),
                           ),
                         ],
                       ),

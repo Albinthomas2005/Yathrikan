@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../utils/constants.dart';
 import '../utils/settings_provider.dart';
 import '../utils/app_localizations.dart';
-
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
@@ -63,14 +62,6 @@ class SettingsScreen extends StatelessWidget {
                   loc['language'],
                   settings.locale.languageCode == 'ml' ? 'മലയാളം' : 'English',
                   () => _showLanguageDialog(context, settings),
-                ),
-                _buildActionItem(
-                  context,
-                  'Accessibility & Voice',
-                  '',
-                  () {
-                    Navigator.pushNamed(context, '/accessibility-voice');
-                  },
                 ),
                 _buildActionItem(
                     context, loc['privacy_policy'], "", () {}),

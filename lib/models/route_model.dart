@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import '../utils/app_localizations.dart';
+
 class RouteModel {
   final String id;
   final String name;
@@ -93,6 +96,22 @@ class RecentRoute {
       return 'Yesterday';
     } else {
       return '${difference.inDays} days ago';
+    }
+  }
+
+  String timeAgoStr(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+
+    if (difference.inMinutes < 60) {
+      return '${difference.inMinutes} ${loc.translate("mins_ago")}';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours} ${loc.translate("hours_ago")}';
+    } else if (difference.inDays == 1) {
+      return loc.translate("yesterday");
+    } else {
+      return '${difference.inDays} ${loc.translate("days_ago")}';
     }
   }
 }

@@ -12,7 +12,6 @@ import 'screens/home_screen.dart';
 import 'screens/admin_screen.dart';
 import 'screens/forgot_password_screen.dart';
 import 'screens/shortest_route_screen.dart';
-
 import 'screens/ticket_validation_screen.dart';
 import 'screens/safety_screen.dart';
 import 'screens/complaint_screen.dart';
@@ -26,12 +25,14 @@ import 'screens/admin_routes_screen.dart';
 import 'screens/admin_support_screen.dart';
 import 'screens/admin_finance_screen.dart';
 import 'screens/chatbot_screen.dart';
-
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'utils/settings_provider.dart';
 import 'utils/profile_provider.dart';
 import 'utils/app_localizations.dart';
+
+/// Global navigator key shared with HeyBusService for in-service navigation.
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,6 +59,7 @@ class MyApp extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return MaterialApp(
+          navigatorKey: appNavigatorKey,
           debugShowCheckedModeBanner: false,
           title: 'Yathrikan',
           locale: settings.locale,
@@ -82,7 +84,13 @@ class MyApp extends StatelessWidget {
             '/forgot_password': (context) => const ForgotPasswordScreen(),
             '/home': (context) => const HomeScreen(),
             '/admin': (context) => const AdminScreen(),
-            '/shortest_route': (context) => const ShortestRouteScreen(),
+            '/shortest_route': (context) {
+              final args = ModalRoute.of(context)?.settings.arguments as Map<String, String?>?;
+              return ShortestRouteScreen(
+                initialOrigin: args?['initialOrigin'],
+                initialDestination: args?['initialDestination'],
+              );
+            },
             '/ticket_validation': (context) => const TicketValidationScreen(),
             '/safety': (context) => const SafetyScreen(),
             '/complaint': (context) => const ComplaintScreen(),

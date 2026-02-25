@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:latlong2/latlong.dart'; // For random location
-import 'dart:math';
 import '../utils/constants.dart';
 import '../services/bus_location_service.dart';
 import '../models/live_bus_model.dart';
@@ -34,7 +32,7 @@ class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
     return buses.where((bus) {
       final query = _searchQuery.toLowerCase();
       return bus.busId.toLowerCase().contains(query) ||
-             (bus.busName != null && bus.busName!.toLowerCase().contains(query)) ||
+             bus.busName.toLowerCase().contains(query) ||
              bus.routeName.toLowerCase().contains(query);
     }).toList();
   }
@@ -69,7 +67,7 @@ class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: _selectedOrigin,
+                      initialValue: _selectedOrigin,
                       dropdownColor: const Color(0xFF1E293B),
                       style: const TextStyle(color: Colors.white),
                       decoration: const InputDecoration(
@@ -89,7 +87,7 @@ class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: _selectedDestination,
+                      initialValue: _selectedDestination,
                       dropdownColor: const Color(0xFF1E293B),
                       style: const TextStyle(color: Colors.white),
                       decoration: const InputDecoration(
@@ -370,7 +368,7 @@ class _BusCard extends StatelessWidget {
                   ),
                   Switch(
                     value: isRunning,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                     inactiveThumbColor: Colors.orange,
                     inactiveTrackColor: Colors.orange.withValues(alpha: 0.3),
                     onChanged: onStatusToggle,

@@ -13,8 +13,8 @@ class _AdminSupportScreenState extends State<AdminSupportScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  // Mock data
-  final List<Map<String, dynamic>> _pendingTickets = [
+  // Mock data state
+  List<Map<String, dynamic>> _pendingTickets = [
     {
       'id': '#BW-10294',
       'title': 'Route Delay',
@@ -41,6 +41,9 @@ class _AdminSupportScreenState extends State<AdminSupportScreen>
       'userName': 'Anonymous',
     },
   ];
+
+  List<Map<String, dynamic>> _inProgressTickets = [];
+  List<Map<String, dynamic>> _resolvedTickets = [];
 
   @override
   void initState() {
@@ -92,22 +95,28 @@ class _AdminSupportScreenState extends State<AdminSupportScreen>
             onPressed: () => Navigator.pop(context),
             child: Text('Close', style: GoogleFonts.inter(color: Colors.white54)),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Ticket status updated'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryYellow,
-              foregroundColor: Colors.black,
+          if (!_resolvedTickets.any((t) => t['id'] == ticket['id']))
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _pendingTickets.removeWhere((t) => t['id'] == ticket['id']);
+                  _inProgressTickets.removeWhere((t) => t['id'] == ticket['id']);
+                  _resolvedTickets.add(ticket);
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Ticket status updated to Resolved'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryYellow,
+                foregroundColor: Colors.black,
+              ),
+              child: Text('Resolve', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
             ),
-            child: Text('Resolve', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-          ),
         ],
       ),
     );
@@ -222,10 +231,10 @@ class _AdminSupportScreenState extends State<AdminSupportScreen>
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
-              tabs: const [
-                Tab(text: 'Pending (12)'),
-                Tab(text: 'In Progress (5)'),
-                Tab(text: 'Resolved (148)'),
+              tabs: [
+                Tab(text: 'Pending (${_pendingTickets.length})'),
+                Tab(text: 'In Progress (${_inProgressTickets.length})'),
+                Tab(text: 'Resolved (${_resolvedTickets.length})'),
               ],
             ),
           ),
@@ -236,30 +245,44 @@ class _AdminSupportScreenState extends State<AdminSupportScreen>
               controller: _tabController,
               children: [
                 // Pending Tab
-                ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _pendingTickets.length,
-                  itemBuilder: (context, index) {
-                    return _TicketCard(
-                      ticket: _pendingTickets[index],
-                      onTap: () => _showTicketDetails(_pendingTickets[index]),
-                    );
-                  },
-                ),
+                _pendingTickets.isEmpty
+                    ? Center(child: Text('No pending tickets', style: GoogleFonts.inter(color: Colors.white54)))
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _pendingTickets.length,
+                        itemBuilder: (context, index) {
+                          return _TicketCard(
+                            ticket: _pendingTickets[index],
+                            onTap: () => _showTicketDetails(_pendingTickets[index]),
+                          );
+                        },
+                      ),
                 // In Progress Tab
-                Center(
-                  child: Text(
-                    'No tickets in progress',
-                    style: GoogleFonts.inter(color: Colors.white54),
-                  ),
-                ),
+                _inProgressTickets.isEmpty
+                    ? Center(child: Text('No tickets in progress', style: GoogleFonts.inter(color: Colors.white54)))
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _inProgressTickets.length,
+                        itemBuilder: (context, index) {
+                          return _TicketCard(
+                            ticket: _inProgressTickets[index],
+                            onTap: () => _showTicketDetails(_inProgressTickets[index]),
+                          );
+                        },
+                      ),
                 // Resolved Tab
-                Center(
-                  child: Text(
-                    '148 resolved tickets',
-                    style: GoogleFonts.inter(color: Colors.white54),
-                  ),
-                ),
+                _resolvedTickets.isEmpty
+                    ? Center(child: Text('0 resolved tickets', style: GoogleFonts.inter(color: Colors.white54)))
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _resolvedTickets.length,
+                        itemBuilder: (context, index) {
+                          return _TicketCard(
+                            ticket: _resolvedTickets[index],
+                            onTap: () => _showTicketDetails(_resolvedTickets[index]),
+                          );
+                        },
+                      ),
               ],
             ),
           ),

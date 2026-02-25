@@ -7,6 +7,8 @@ import 'package:latlong2/latlong.dart';
 import '../models/live_bus_model.dart';
 import '../models/route_model.dart';
 import 'notification_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/app_localizations.dart';
 
 class BusLocationService {
   static final BusLocationService _instance = BusLocationService._internal();
@@ -19,6 +21,15 @@ class BusLocationService {
   Timer? _updateTimer;
   final NotificationService _notificationService = NotificationService();
   final Map<String, DateTime> _lastNotificationTime = {}; // Track last notification time per bus ID
+  final Map<String, DateTime> _lastWarningTime = {}; // Track "1 min away" warning per bus ID
+  
+  // Tracked buses to limit notification spam
+  List<String>? _trackedBusIds;
+
+  void setTrackedBuses(List<String> busIds) {
+    _trackedBusIds = busIds;
+    debugPrint("Now tracking exactly ${busIds.length} buses: $busIds");
+  }
   int _userRouteIndex = 0; // Cached user index on regular route
   int _userRouteIndexReturn = 0; // Cached user index on return route
 
@@ -237,20 +248,78 @@ class BusLocationService {
         // Also check wrapping (bus was near end, user near start)
         final nearUser = (bus.index - userIdx).abs() <= tolerance;
 
-        if (crossedUser || nearUser) {
+        // Ensure we only notify for tracked buses if tracking is active
+        final isTracked = _trackedBusIds == null || _trackedBusIds!.contains(bus.busId);
+
+        if (isTracked && (crossedUser || nearUser)) {
           final now = DateTime.now();
           final lastTime = _lastNotificationTime[bus.busId];
           
           // Cooldown: Only notify if never notified or last notification was > 20 mins ago
           if (lastTime == null || now.difference(lastTime).inMinutes >= 20) {
             _lastNotificationTime[bus.busId] = now;
-            _notificationService.showNotification(
-              id: bus.busId.hashCode,
-              title: '🚌 ${bus.busName} is here!',
-              body: '${bus.busId} has arrived at $_currentUserPlace. Board now!',
-              payload: bus.busId,
-            );
+            
+            SharedPreferences.getInstance().then((prefs) {
+                final lang = prefs.getString('languageCode') ?? 'en';
+                final loc = AppLocalizations(Locale(lang));
+                
+                final transName = loc.translate(bus.busName);
+                final transFrom = loc.translate(bus.from);
+                final transTo = loc.translate(bus.to);
+                final transPlace = loc.translate(_currentUserPlace);
+                
+                String title = loc.translate('push_bus_here_title').replaceAll('{0}', transName);
+                String body = loc.translate('push_bus_here_body')
+                    .replaceAll('{0}', transFrom)
+                    .replaceAll('{1}', transTo)
+                    .replaceAll('{2}', bus.busId)
+                    .replaceAll('{3}', transPlace);
+
+                _notificationService.showNotification(
+                  id: bus.busId.hashCode,
+                  title: title,
+                  body: body,
+                  payload: '${bus.busId}|${bus.to}',
+                );
+            });
             debugPrint('🔔 Notification: ${bus.busId} arrived at $_currentUserPlace');
+          }
+        }
+
+        // ── 1-minute early warning ──────────────────────────────────────────
+        // At ~12m per index point and bus speed ~8-14 m/s:
+        //   1 min = 60s. Steps ahead ≈ speed(m/s) * 60 / 12 ≈ 40-70 points.
+        //   We use a fixed window of 30-80 points (~360m-960m) as "≈1 min away".
+        final stepsToUser = (userIdx - bus.index) % bus.route.length;
+        if (isTracked && stepsToUser >= 30 && stepsToUser <= 80) {
+          final now = DateTime.now();
+          final lastWarn = _lastWarningTime[bus.busId];
+          if (lastWarn == null || now.difference(lastWarn).inMinutes >= 20) {
+            _lastWarningTime[bus.busId] = now;
+            
+            SharedPreferences.getInstance().then((prefs) {
+                final lang = prefs.getString('languageCode') ?? 'en';
+                final loc = AppLocalizations(Locale(lang));
+                
+                final transName = loc.translate(bus.busName);
+                final transFrom = loc.translate(bus.from);
+                final transTo = loc.translate(bus.to);
+                final transPlace = loc.translate(_currentUserPlace);
+                
+                String title = loc.translate('push_bus_warning_title').replaceAll('{0}', transName);
+                String body = loc.translate('push_bus_warning_body')
+                    .replaceAll('{0}', transFrom)
+                    .replaceAll('{1}', transTo)
+                    .replaceAll('{2}', transPlace);
+
+                _notificationService.showNotification(
+                  id: bus.busId.hashCode + 1,
+                  title: title,
+                  body: body,
+                  payload: '${bus.busId}|${bus.to}',
+                );
+            });
+            debugPrint('🔔 Early warning: ${bus.busId} ~1 min from $_currentUserPlace');
           }
         }
       }
