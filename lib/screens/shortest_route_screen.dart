@@ -58,7 +58,7 @@ class ShortestRouteScreen extends StatefulWidget {
 
 class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   final TextEditingController _fromController = TextEditingController();
-  late final TextEditingController _toController;
+  final TextEditingController _toController = TextEditingController();
   StreamSubscription<Position>? _positionStreamSubscription;
   StreamSubscription<List<LiveBus>>? _busSubscription;
 
@@ -100,8 +100,6 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
         
         if (widget.initialDestination != null) {
             _toController.text = loc.translate(widget.initialDestination!);
-        } else {
-            _toController = TextEditingController(text: '');
         }
 
         if (widget.initialOrigin != null && widget.initialOrigin!.isNotEmpty) {

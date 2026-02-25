@@ -24,7 +24,7 @@ class BusLocationService {
   final Map<String, DateTime> _lastWarningTime = {}; // Track "1 min away" warning per bus ID
   
   // Tracked buses to limit notification spam
-  List<String>? _trackedBusIds;
+  List<String> _trackedBusIds = [];
 
   void setTrackedBuses(List<String> busIds) {
     _trackedBusIds = busIds;
@@ -249,7 +249,7 @@ class BusLocationService {
         final nearUser = (bus.index - userIdx).abs() <= tolerance;
 
         // Ensure we only notify for tracked buses if tracking is active
-        final isTracked = _trackedBusIds == null || _trackedBusIds!.contains(bus.busId);
+        final isTracked = _trackedBusIds.contains(bus.busId);
 
         if (isTracked && (crossedUser || nearUser)) {
           final now = DateTime.now();
