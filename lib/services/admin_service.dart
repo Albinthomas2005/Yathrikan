@@ -10,6 +10,12 @@ class AdminService {
       final normalizedEmail = email.trim().toLowerCase();
       debugPrint('DEBUG AdminService: Checking email: $normalizedEmail');
 
+      // Always grant admin access to the primary admin email
+      if (normalizedEmail == 'albinthomastkh2005@gmail.com') {
+        debugPrint('DEBUG AdminService: Primary admin email detected. Granting access.');
+        return true;
+      }
+
       // Query the admins collection to check if this email exists
       final adminDoc =
           await _firestore.collection('admins').doc(normalizedEmail).get();

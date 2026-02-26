@@ -25,6 +25,7 @@ import 'screens/admin_routes_screen.dart';
 import 'screens/admin_support_screen.dart';
 import 'screens/admin_finance_screen.dart';
 import 'screens/chatbot_screen.dart';
+import 'services/admin_service.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'utils/settings_provider.dart';
@@ -176,12 +177,32 @@ class AuthWrapper extends StatelessWidget {
           );
         }
 
-        // If user is logged in, go to home
+        // If user is logged in, check admin status
         if (snapshot.hasData) {
-          return const HomeScreen();
+          return FutureBuilder<bool>(
+            future: AdminService().isAdmin(snapshot.data!.email ?? ''),
+            builder: (context, adminSnapshot) {
+              if (adminSnapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  backgroundColor: AppColors.primaryYellow,
+                  body: Center(
+                    child: CircularProgressIndicator(
+                      color: Colors.black,
+                    ),
+                  ),
+                );
+              }
+
+              if (adminSnapshot.data == true) {
+                return const AdminScreen();
+              }
+
+              return const HomeScreen();
+            },
+          );
         }
 
-        // Otherwise, show landing screen
+        // Otherwise, show login screen
         return const LoginScreen();
       },
     );

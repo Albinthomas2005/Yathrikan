@@ -282,15 +282,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           
           // Manual silence timeout
           _silenceTimer?.cancel();
-          _silenceTimer = Timer(const Duration(seconds: 2), () {
+          _silenceTimer = Timer(const Duration(seconds: 4), () {
             if (mounted && _isListening) {
               _stopListening();
             }
           });
         }
       },
-      listenFor: const Duration(seconds: 30),
-      pauseFor: const Duration(seconds: 2), // pause for 2s implies done
       listenOptions: stt.SpeechListenOptions(
         partialResults: true,
         cancelOnError: true,
@@ -301,7 +299,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   void _stopListening() async {
     _silenceTimer?.cancel();
-    await _speech.stop();
+    await _speech.cancel(); // Use cancel instead of stop to fully reset the STT engine
     setState(() => _isListening = false);
     
     if (!_voiceSent) {
