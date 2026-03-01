@@ -14,7 +14,7 @@ class _AdminSupportScreenState extends State<AdminSupportScreen>
   late TabController _tabController;
 
   // Mock data state
-  List<Map<String, dynamic>> _pendingTickets = [
+  final List<Map<String, dynamic>> _pendingTickets = [
     {
       'id': '#BW-10294',
       'title': 'Route Delay',
@@ -42,8 +42,8 @@ class _AdminSupportScreenState extends State<AdminSupportScreen>
     },
   ];
 
-  List<Map<String, dynamic>> _inProgressTickets = [];
-  List<Map<String, dynamic>> _resolvedTickets = [];
+  final List<Map<String, dynamic>> _inProgressTickets = [];
+  final List<Map<String, dynamic>> _resolvedTickets = [];
 
   @override
   void initState() {

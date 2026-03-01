@@ -16,7 +16,7 @@ class FullMapScreen extends StatefulWidget {
   State<FullMapScreen> createState() => _FullMapScreenState();
 }
 
-class _FullMapScreenState extends State<FullMapScreen> {
+class _FullMapScreenState extends State<FullMapScreen> with SingleTickerProviderStateMixin {
   final MapController _mapController = MapController();
   final BusLocationService _busLocationService = BusLocationService();
   StreamSubscription<List<LiveBus>>? _busLocationStream;
@@ -25,11 +25,29 @@ class _FullMapScreenState extends State<FullMapScreen> {
   // Kottayam default location
   LatLng _currentLocation = const LatLng(9.5916, 76.5222);
   bool _isLoadingLocation = true;
-  List<Marker> _busMarkers = [];
+  List<LiveBus> _latestBuses = [];
+
+  Map<String, LatLng> _previousPositions = {};
+  final Map<String, LatLng> _targetPositions = {};
+  Map<String, double> _previousHeadings = {};
+  final Map<String, double> _targetHeadings = {};
+  
+  late AnimationController _animationController;
+  late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
+    
+    _animationController = AnimationController(
+       vsync: this,
+       duration: const Duration(seconds: 10), // Same duration as MBTA fetch interval roughly
+    );
+    _animation = CurvedAnimation(parent: _animationController, curve: Curves.linear);
+    _animationController.addListener(() {
+      if (mounted) setState(() {}); // Trigger map rebuild to animate markers
+    });
+
     _busLocationService.initialize();
     _initializeLiveBusTracking();
     _startLiveLocationUpdates();
@@ -37,6 +55,7 @@ class _FullMapScreenState extends State<FullMapScreen> {
 
   @override
   void dispose() {
+    _animationController.dispose();
     _busLocationStream?.cancel();
     _positionStream?.cancel();
     super.dispose();
@@ -100,11 +119,32 @@ class _FullMapScreenState extends State<FullMapScreen> {
   void _initializeLiveBusTracking() {
     _busLocationStream = _busLocationService.busStream.listen((buses) {
       if (mounted) {
-        setState(() {
-          _busMarkers = buses.map((bus) => _createBusMarker(bus)).toList();
-        });
+        // Prepare for new animation transition
+        _previousPositions = Map.from(_targetPositions);
+        _previousHeadings = Map.from(_targetHeadings);
+        
+        for (var bus in buses) {
+          _targetPositions[bus.busId] = LatLng(bus.lat, bus.lon);
+          _targetHeadings[bus.busId] = bus.headingDeg;
+          
+          if (!_previousPositions.containsKey(bus.busId)) {
+             _previousPositions[bus.busId] = LatLng(bus.lat, bus.lon);
+             _previousHeadings[bus.busId] = bus.headingDeg;
+          }
+        }
+        
+        _latestBuses = buses;
+        _animationController.forward(from: 0.0);
       }
     });
+  }
+
+  double _lerpHeading(double prev, double target, double t) {
+    // Handle wrap around for bearing (0-360)
+    double diff = target - prev;
+    if (diff > 180) diff -= 360;
+    if (diff < -180) diff += 360;
+    return prev + (diff * t);
   }
 
   Marker _createBusMarker(LiveBus bus) {
@@ -117,14 +157,25 @@ class _FullMapScreenState extends State<FullMapScreen> {
       busColor = Colors.orange;
     }
 
+    final t = _animation.value;
+    final prevPos = _previousPositions[bus.busId] ?? bus.position;
+    final targetPos = _targetPositions[bus.busId] ?? bus.position;
+    
+    final currentLat = prevPos.latitude + (targetPos.latitude - prevPos.latitude) * t;
+    final currentLon = prevPos.longitude + (targetPos.longitude - prevPos.longitude) * t;
+    
+    final prevHeading = _previousHeadings[bus.busId] ?? bus.headingDeg;
+    final targetHeading = _targetHeadings[bus.busId] ?? bus.headingDeg;
+    final currentHeading = _lerpHeading(prevHeading, targetHeading, t);
+
     return Marker(
-      point: LatLng(bus.lat, bus.lon),
+      point: LatLng(currentLat, currentLon),
       width: 40,
       height: 40,
       child: GestureDetector(
         onTap: () => _showBusInfo(bus),
         child: Transform.rotate(
-          angle: bus.headingDeg * math.pi / 180,
+          angle: currentHeading * math.pi / 180,
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -304,7 +355,7 @@ class _FullMapScreenState extends State<FullMapScreen> {
                     ),
                   ),
                   // Bus Markers
-                  ..._busMarkers,
+                  ..._latestBuses.map((bus) => _createBusMarker(bus)),
                 ],
               ),
             ],
@@ -381,7 +432,7 @@ class _FullMapScreenState extends State<FullMapScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '${_busMarkers.length} Buses Active',
+                            '${_latestBuses.length} Buses Active',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,

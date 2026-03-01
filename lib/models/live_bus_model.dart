@@ -3,47 +3,50 @@ import 'package:latlong2/latlong.dart';
 class LiveBus {
   final String busId;
   final String busName;
-  final String routeName; // keeping this for UI compatibility
+  final String routeName;
   final String from;
   final String to;
-  List<LatLng> route; // full shortest path polyline (Mutable to allow assignment in addBus)
+  List<LatLng> route;
 
-  int index;               // current position on route
-  double speedMps;         // meters per second
-  String status;           // Mutable status
+  int index;
+  double speedMps;
+  String status;
+  
+  // Real coordinates and bearing
+  double currentLat;
+  double currentLon;
+  double currentBearing;
   
   LiveBus({
     required this.busId,
     required this.busName,
     required this.routeName,
-    this.from = "Erumely", // Optional/Default to avoid break
-    this.to = "Kottayam",   // Optional/Default
+    this.from = "MBTA", 
+    this.to = "Boston",  
     List<LatLng>? route,
     this.index = 0,
     double? speedMps,
-    double? speedKmph,      // Legacy support
+    double? speedKmph,      
     this.status = "RUNNING",
-    // Ignored legacy params to satisfy AdminRoutesScreen calls
     double? lat,
     double? lon,
     double? headingDeg,
     DateTime? lastUpdated,
   }) : 
     route = route ?? [],
-    speedMps = speedMps ?? (speedKmph != null ? speedKmph / 3.6 : 10.0); // Default speed if missing
+    speedMps = speedMps ?? (speedKmph != null ? speedKmph / 3.6 : 10.0),
+    currentLat = lat ?? 42.3601,
+    currentLon = lon ?? -71.0589,
+    currentBearing = headingDeg ?? 0.0;
 
   LatLng get position {
-    if (route.isEmpty) return const LatLng(9.5361, 76.8254); // Default Koovappally if no route
-    final safeIndex = index.clamp(0, route.length - 1);
-    return route[safeIndex];
+    return LatLng(currentLat, currentLon);
   }
 
-  // Getters for compatibility with existing code that expects lat/lon
-  double get lat => position.latitude;
-  double get lon => position.longitude;
+  double get lat => currentLat;
+  double get lon => currentLon;
   
-  // Mock fields
-  double get headingDeg => 0.0;
+  double get headingDeg => currentBearing;
   double get speedKmph => speedMps * 3.6;
   
   int get etaMin => 0; 

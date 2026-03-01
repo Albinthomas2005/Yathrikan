@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import '../models/live_bus_model.dart';
 import '../models/route_model.dart';
 import 'notification_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../utils/app_localizations.dart';
 
 class BusLocationService {
   static final BusLocationService _instance = BusLocationService._internal();
@@ -20,14 +17,8 @@ class BusLocationService {
       StreamController<List<LiveBus>>.broadcast();
   Timer? _updateTimer;
   final NotificationService _notificationService = NotificationService();
-  final Map<String, DateTime> _lastNotificationTime = {}; // Track last notification time per bus ID
-  final Map<String, DateTime> _lastWarningTime = {}; // Track "1 min away" warning per bus ID
-  
-  // Tracked buses to limit notification spam
-  List<String> _trackedBusIds = [];
 
   void setTrackedBuses(List<String> busIds) {
-    _trackedBusIds = busIds;
     debugPrint("Now tracking exactly ${busIds.length} buses: $busIds");
   }
   int _userRouteIndex = 0; // Cached user index on regular route
@@ -128,39 +119,9 @@ class BusLocationService {
 
   String _currentUserPlace = "Amal Jyothi"; // Default
 
-  /// Fetch actual road geometry from OSRM
-  Future<List<LatLng>> _fetchOSRMRoute(List<LatLng> points) async {
-    try {
-      final coords = points.map((w) => '${w.longitude},${w.latitude}').join(';');
-      final url = 'https://router.project-osrm.org/route/v1/driving/$coords?overview=full&geometries=geojson';
-      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['code'] == 'Ok') {
-          final List<dynamic> osrmCoords = data['routes'][0]['geometry']['coordinates'];
-          final List<LatLng> roadPath = [];
-          LatLng? prev;
-          for (final c in osrmCoords) {
-            final pt = LatLng(c[1].toDouble(), c[0].toDouble());
-            if (prev == null ||
-                (pt.latitude - prev.latitude).abs() > 0.00001 ||
-                (pt.longitude - prev.longitude).abs() > 0.00001) {
-              roadPath.add(pt);
-              prev = pt;
-            }
-          }
-          debugPrint('OSRM: Got ${roadPath.length} road-following points');
-          return roadPath;
-        }
-      }
-    } catch (e) {
-      debugPrint('OSRM fetch failed: $e');
-    }
-    // Fallback to linear interpolation
-    return _generateDenseRoute(points, 12.0);
-  }
 
-  /// Initialize service: fetch OSRM route and create 30 buses
+
+  /// Initialize service: start polling MBTA API
   Future<void> initialize() async {
     if (_initialized) return;
     _initialized = true;
@@ -169,164 +130,83 @@ class BusLocationService {
     await _notificationService.initialize();
     await _notificationService.requestPermissions();
 
-    _interpolatedRoute = await _fetchOSRMRoute(waypoints);
-    _interpolatedRouteReturn = await _fetchOSRMRoute(waypointsReturn);
-    
-    debugPrint('Route A has ${_interpolatedRoute.length} points');
-    debugPrint('Route B has ${_interpolatedRouteReturn.length} points');
-
-    // Cache user index on the route
-    _userRouteIndex = _userIndex(_interpolatedRoute);
-    _userRouteIndexReturn = _userIndex(_interpolatedRouteReturn);
-    debugPrint('User location index A: $_userRouteIndex, B: $_userRouteIndexReturn');
-
-    // Create 30 buses: 15 on Erumely->Kottayam, 15 on Kottayam->Erumely
-    
-    // Route A: Erumely -> Kottayam
-    final segmentLengthA = _interpolatedRoute.length ~/ 15;
-    for (int i = 0; i < 15; i++) {
-      final id = (i + 1).toString().padLeft(3, '0');
-      final startIdx = (i * segmentLengthA) % _interpolatedRoute.length;
-      _buses.add(LiveBus(
-        busId: 'KL-ERU-$id',
-        busName: 'Erumely Express $id',
-        routeName: 'Erumely - Kottayam',
-        from: 'Erumely',
-        to: 'Kottayam',
-        route: _interpolatedRoute,
-        index: startIdx,
-        speedMps: 8.0 + Random().nextDouble() * 6.0,
-        status: i < 10 ? 'RUNNING' : 'SCHEDULED', // first 10 running
-      ));
-    }
-
-    // Route B: Kottayam -> Erumely
-    final segmentLengthB = _interpolatedRouteReturn.length ~/ 15;
-    for (int i = 0; i < 15; i++) {
-      final id = (i + 16).toString().padLeft(3, '0');
-      final startIdx = (i * segmentLengthB) % _interpolatedRouteReturn.length;
-      _buses.add(LiveBus(
-        busId: 'KL-KTM-$id',
-        busName: 'Kottayam Express $id',
-        routeName: 'Kottayam - Erumely',
-        from: 'Kottayam',
-        to: 'Erumely',
-        route: _interpolatedRouteReturn,
-        index: startIdx,
-        speedMps: 8.0 + Random().nextDouble() * 6.0,
-        status: i < 10 ? 'RUNNING' : 'SCHEDULED',
-      ));
-    }
-
-    debugPrint('Initialized ${_buses.length} buses');
-    _busStreamController.add(List.from(_buses));
-
-    // Start movement simulation
+    // Start polling the MBTA API
+    await _updateBuses();
     _updateTimer?.cancel();
-    _updateTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+    _updateTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       _updateBuses();
     });
   }
 
-  void _updateBuses() {
-    const tolerance = 8; // index tolerance (~100m at 12m/point)
-    for (final bus in _buses) {
-      if (bus.route.isNotEmpty && bus.status == 'RUNNING') {
-        final prevIdx = bus.index;
-        // Move forward along route
-        final step = (bus.speedMps * 3 / 12.0).round().clamp(1, 5);
-        bus.index = (bus.index + step) % bus.route.length;
+  Future<void> _updateBuses() async {
+    try {
+      // Fetch vehicles from MbtaService
+      // Using MbtaService is better, but since it returns direct List<dynamic> we must parse here
+      const targetUrl = "https://api-v3.mbta.com/vehicles?api_key=ddec6fb4aadf4f4db40509fc75891796";
+      final url = Uri.parse("https://api.codetabs.com/v1/proxy?quest=$targetUrl");
+      final response = await http.get(url).timeout(const Duration(seconds: 10));
 
-        // Check if bus just crossed the user's location
-        // We need to use the cached index relevant to this bus's route
-        final userIdx = _getUserIndexForBus(bus);
+      if(response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List<dynamic> vehiclesData = data['data'] ?? [];
         
-        final crossedUser = prevIdx < userIdx &&
-            bus.index >= userIdx &&
-            (bus.index - userIdx).abs() <= tolerance;
+        // Temporarily clear to replace completely (or update existing based on ID later)
+        if (_buses.isEmpty) {
+           _buses.clear();
+        }
 
-        // Also check wrapping (bus was near end, user near start)
-        final nearUser = (bus.index - userIdx).abs() <= tolerance;
+        final Map<String, LiveBus> existingBuses = { for (var b in _buses) b.busId : b };
+        final List<LiveBus> updatedList = [];
 
-        // Ensure we only notify for tracked buses if tracking is active
-        final isTracked = _trackedBusIds.contains(bus.busId);
+        for (var v in vehiclesData) {
+          final String id = v['id'] ?? 'unknown';
+          final attr = v['attributes'] ?? {};
+          final double lat = attr['latitude'] ?? 0.0;
+          final double lon = attr['longitude'] ?? 0.0;
+          final double bearing = attr['bearing']?.toDouble() ?? 0.0;
+          final double speedMps = attr['speed']?.toDouble() ?? 0.0;
+          final String label = attr['label'] ?? id;
+          final String status = attr['current_status'] ?? 'RUNNING';
 
-        if (isTracked && (crossedUser || nearUser)) {
-          final now = DateTime.now();
-          final lastTime = _lastNotificationTime[bus.busId];
-          
-          // Cooldown: Only notify if never notified or last notification was > 20 mins ago
-          if (lastTime == null || now.difference(lastTime).inMinutes >= 20) {
-            _lastNotificationTime[bus.busId] = now;
-            
-            SharedPreferences.getInstance().then((prefs) {
-                final lang = prefs.getString('languageCode') ?? 'en';
-                final loc = AppLocalizations(Locale(lang));
-                
-                final transName = loc.translate(bus.busName);
-                final transFrom = loc.translate(bus.from);
-                final transTo = loc.translate(bus.to);
-                final transPlace = loc.translate(_currentUserPlace);
-                
-                String title = loc.translate('push_bus_here_title').replaceAll('{0}', transName);
-                String body = loc.translate('push_bus_here_body')
-                    .replaceAll('{0}', transFrom)
-                    .replaceAll('{1}', transTo)
-                    .replaceAll('{2}', bus.busId)
-                    .replaceAll('{3}', transPlace);
-
-                _notificationService.showNotification(
-                  id: bus.busId.hashCode,
-                  title: title,
-                  body: body,
-                  payload: '${bus.busId}|${bus.to}',
-                );
-            });
-            debugPrint('🔔 Notification: ${bus.busId} arrived at $_currentUserPlace');
+          if (existingBuses.containsKey(id)) {
+            // Update existing
+            final bus = existingBuses[id]!;
+            bus.currentLat = lat;
+            bus.currentLon = lon;
+            bus.currentBearing = bearing;
+            bus.speedMps = speedMps;
+            bus.status = status;
+            updatedList.add(bus);
+          } else {
+            // Add new
+            updatedList.add(LiveBus(
+              busId: id,
+              busName: label,
+              routeName: attr['direction_id'] == 1 ? "Inbound" : "Outbound",
+              lat: lat,
+              lon: lon,
+              headingDeg: bearing,
+              speedMps: speedMps,
+              status: status,
+              from: "MBTA",
+              to: "Destination"
+            ));
           }
         }
 
-        // ── 1-minute early warning ──────────────────────────────────────────
-        // At ~12m per index point and bus speed ~8-14 m/s:
-        //   1 min = 60s. Steps ahead ≈ speed(m/s) * 60 / 12 ≈ 40-70 points.
-        //   We use a fixed window of 30-80 points (~360m-960m) as "≈1 min away".
-        final stepsToUser = (userIdx - bus.index) % bus.route.length;
-        if (isTracked && stepsToUser >= 30 && stepsToUser <= 80) {
-          final now = DateTime.now();
-          final lastWarn = _lastWarningTime[bus.busId];
-          if (lastWarn == null || now.difference(lastWarn).inMinutes >= 20) {
-            _lastWarningTime[bus.busId] = now;
-            
-            SharedPreferences.getInstance().then((prefs) {
-                final lang = prefs.getString('languageCode') ?? 'en';
-                final loc = AppLocalizations(Locale(lang));
-                
-                final transName = loc.translate(bus.busName);
-                final transFrom = loc.translate(bus.from);
-                final transTo = loc.translate(bus.to);
-                final transPlace = loc.translate(_currentUserPlace);
-                
-                String title = loc.translate('push_bus_warning_title').replaceAll('{0}', transName);
-                String body = loc.translate('push_bus_warning_body')
-                    .replaceAll('{0}', transFrom)
-                    .replaceAll('{1}', transTo)
-                    .replaceAll('{2}', transPlace);
-
-                _notificationService.showNotification(
-                  id: bus.busId.hashCode + 1,
-                  title: title,
-                  body: body,
-                  payload: '${bus.busId}|${bus.to}',
-                );
-            });
-            debugPrint('🔔 Early warning: ${bus.busId} ~1 min from $_currentUserPlace');
-          }
-        }
+        _buses.clear();
+        _buses.addAll(updatedList);
+        _busStreamController.add(List.from(_buses));
+        
+        // NOTE: We stripped out the complex notification tracking for Erumely/Kottayam specific logic
+        // because we are now showing all MBTA vehicles generally on the map.
       }
+    } catch(e) {
+      debugPrint("Failed to update MBTA vehicles: $e");
     }
-    _busStreamController.add(List.from(_buses));
   }
 
+// The `_updateBuses` definition was relocated to override the old `initialize` block above to group API polling.
   // -------------------------------------------------------------------------
   // Helper / Query Methods
   // -------------------------------------------------------------------------
@@ -561,25 +441,7 @@ class BusLocationService {
     }).toList();
   }
 
-  List<LatLng> _generateDenseRoute(List<LatLng> wp, double stepMeters) {
-    List<LatLng> dense = [];
-    const Distance dist = Distance();
-    for (int i = 0; i < wp.length - 1; i++) {
-      final start = wp[i]; final end = wp[i + 1];
-      final segDist = dist.as(LengthUnit.Meter, start, end);
-      final steps = (segDist / stepMeters).ceil();
-      dense.add(start);
-      for (int j = 1; j < steps; j++) {
-        final t = j / steps;
-        dense.add(LatLng(
-          start.latitude + (end.latitude - start.latitude) * t,
-          start.longitude + (end.longitude - start.longitude) * t,
-        ));
-      }
-    }
-    dense.add(wp.last);
-    return dense;
-  }
+
 
   void _identifyNearestPlace(LatLng userPos) {
     String nearest = "your location";

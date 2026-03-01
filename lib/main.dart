@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
 
 import 'utils/constants.dart';
 
+import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/home_screen.dart';
@@ -25,7 +25,6 @@ import 'screens/admin_routes_screen.dart';
 import 'screens/admin_support_screen.dart';
 import 'screens/admin_finance_screen.dart';
 import 'screens/chatbot_screen.dart';
-import 'services/admin_service.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'utils/settings_provider.dart';
@@ -77,7 +76,7 @@ class MyApp extends StatelessWidget {
           themeMode: settings.themeMode,
           theme: _buildLightTheme(context),
           darkTheme: _buildDarkTheme(context),
-          home: const AuthWrapper(),
+          home: const SplashScreen(),
           routes: {
 
             '/login': (context) => const LoginScreen(),
@@ -157,54 +156,5 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        // Show loading while checking auth state
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            backgroundColor: AppColors.primaryYellow,
-            body: Center(
-              child: CircularProgressIndicator(
-                color: Colors.black,
-              ),
-            ),
-          );
-        }
-
-        // If user is logged in, check admin status
-        if (snapshot.hasData) {
-          return FutureBuilder<bool>(
-            future: AdminService().isAdmin(snapshot.data!.email ?? ''),
-            builder: (context, adminSnapshot) {
-              if (adminSnapshot.connectionState == ConnectionState.waiting) {
-                return const Scaffold(
-                  backgroundColor: AppColors.primaryYellow,
-                  body: Center(
-                    child: CircularProgressIndicator(
-                      color: Colors.black,
-                    ),
-                  ),
-                );
-              }
-
-              if (adminSnapshot.data == true) {
-                return const AdminScreen();
-              }
-
-              return const HomeScreen();
-            },
-          );
-        }
-
-        // Otherwise, show login screen
-        return const LoginScreen();
-      },
-    );
-  }
-}
+// The old AuthWrapper class at the bottom of the file is removed
+// because splash_screen.dart now handles the auth-check logic gracefully.

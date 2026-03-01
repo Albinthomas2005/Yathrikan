@@ -40,7 +40,7 @@ class _AdminFinanceScreenState extends State<AdminFinanceScreen> {
     final random = Random(seed);
 
     // Baseline values
-    final baseRevenue = 5000000.0;
+    const baseRevenue = 5000000.0;
     
     // Revenue logic (growing slightly over time but fluctuating daily)
     _currentMonthRevenue = baseRevenue + random.nextDouble() * 2000000 + (date.month * 100000);
@@ -122,7 +122,7 @@ class _AdminFinanceScreenState extends State<AdminFinanceScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          loc['report_exported'] ?? 'Generating Report...',
+          loc['report_exported'],
           style: GoogleFonts.inter(),
         ),
         backgroundColor: Colors.blue,
@@ -227,7 +227,7 @@ class _AdminFinanceScreenState extends State<AdminFinanceScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              loc['admin_finance_title'] ?? 'Finance',
+              loc['admin_finance_title'],
               style: GoogleFonts.inter(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -264,7 +264,7 @@ class _AdminFinanceScreenState extends State<AdminFinanceScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      loc['total_system_revenue'] ?? 'Total System Revenue',
+                      loc['total_system_revenue'],
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         color: Colors.white70,
@@ -298,7 +298,7 @@ class _AdminFinanceScreenState extends State<AdminFinanceScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          loc['growth'] ?? 'growth',
+                          loc['growth'],
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             color: Colors.white54,
@@ -320,7 +320,7 @@ class _AdminFinanceScreenState extends State<AdminFinanceScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                loc['current_month'] ?? 'Current Month',
+                                loc['current_month'],
                                 style: GoogleFonts.inter(
                                     fontSize: 12, color: Colors.white54),
                               ),
@@ -340,7 +340,7 @@ class _AdminFinanceScreenState extends State<AdminFinanceScreen> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                loc['last_month'] ?? 'Last Month',
+                                loc['last_month'],
                                 style: GoogleFonts.inter(
                                     fontSize: 12, color: Colors.white54),
                               ),
@@ -364,7 +364,7 @@ class _AdminFinanceScreenState extends State<AdminFinanceScreen> {
 
               // Daily Comparison
               Text(
-                loc['daily_comparison'] ?? 'Daily Comparison',
+                loc['daily_comparison'],
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -388,7 +388,7 @@ class _AdminFinanceScreenState extends State<AdminFinanceScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    loc['transaction_history'] ?? 'Transaction History',
+                    loc['transaction_history'],
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -408,7 +408,7 @@ class _AdminFinanceScreenState extends State<AdminFinanceScreen> {
                           padding: const EdgeInsets.all(20),
                           children: [
                             Text(
-                              loc['all_transactions'] ?? 'All Transactions',
+                              loc['all_transactions'],
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
@@ -427,7 +427,7 @@ class _AdminFinanceScreenState extends State<AdminFinanceScreen> {
                       );
                     },
                     child: Text(
-                      loc['see_all'] ?? 'See All',
+                      loc['see_all'],
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -469,7 +469,7 @@ class _AdminFinanceScreenState extends State<AdminFinanceScreen> {
                       const Icon(Icons.download),
                       const SizedBox(width: 8),
                       Text(
-                        loc['export_report'] ?? 'Export Report',
+                        loc['export_report'],
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -509,12 +509,12 @@ class _DailyComparisonChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
     final days = [
-      loc['mon'] ?? 'Mon',
-      loc['tue'] ?? 'Tue',
-      loc['wed'] ?? 'Wed',
-      loc['thu'] ?? 'Thu',
-      loc['fri'] ?? 'Fri',
-      loc['sat'] ?? 'Sat'
+      loc['mon'],
+      loc['tue'],
+      loc['wed'],
+      loc['thu'],
+      loc['fri'],
+      loc['sat']
     ];
     
     return Column(
@@ -535,7 +535,7 @@ class _DailyComparisonChart extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  loc['ksrtc'] ?? 'KSRTC',
+                  loc['ksrtc'],
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     color: Colors.white70,
@@ -556,7 +556,7 @@ class _DailyComparisonChart extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  loc['private'] ?? 'Private',
+                  loc['private'],
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     color: Colors.white70,
@@ -676,7 +676,7 @@ class _TransactionItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${loc['ticket_id'] ?? 'ID'}: $ticketId',
+                  '${loc['ticket_id']}: $ticketId',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -711,7 +711,7 @@ class _TransactionItem extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                loc['success'] ?? 'Success',
+                loc['success'],
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   color: Colors.white54,
