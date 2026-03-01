@@ -562,53 +562,53 @@ class BusLocationService {
     return [
       RouteModel(
         id: '1',
-        name: 'Erumely - Kottayam',
-        fromLocation: 'Erumely',
-        toLocation: 'Kottayam',
-        frequency: 'Every 15m',
+        name: 'എറുമേലി - കോട്ടയം',
+        fromLocation: 'എറുമേലി',
+        toLocation: 'കോട്ടയം',
+        frequency: 'ഓരോ 15മി',
         activeBuses: _buses.where((b) => b.routeName == 'Erumely - Kottayam' && b.status == 'RUNNING').length,
       ),
       RouteModel(
         id: '2',
-        name: 'Kottayam - Erumely',
-        fromLocation: 'Kottayam',
-        toLocation: 'Erumely',
-        frequency: 'Every 15m',
+        name: 'കോട്ടയം - എറുമേലി',
+        fromLocation: 'കോട്ടയം',
+        toLocation: 'എറുമേലി',
+        frequency: 'ഓരോ 15മി',
         activeBuses: _buses.where((b) => b.routeName == 'Kottayam - Erumely' && b.status == 'RUNNING').length,
       ),
       RouteModel(
         id: '3',
-        name: 'Kanjirappally - Ponkunnam',
-        fromLocation: 'Kanjirappally',
-        toLocation: 'Ponkunnam',
-        frequency: 'Every 10m',
-        activeBuses: _buses.where((b) => b.status == 'RUNNING' && 
+        name: 'കാഞ്ഞിരപ്പള്ളി - പൊൻകുന്നം',
+        fromLocation: 'കാഞ്ഞിരപ്പള്ളി',
+        toLocation: 'പൊൻകുന്നം',
+        frequency: 'ഓരോ 10മി',
+        activeBuses: _buses.where((b) => b.status == 'RUNNING' &&
             _isBusOnSegment(b, 'Kanjirappally', 'Ponkunnam')).length,
       ),
        RouteModel(
         id: '4',
-        name: 'Kottayam - Pala',
-        fromLocation: 'Kottayam',
-        toLocation: 'Pala',
-        frequency: 'Every 20m',
-        activeBuses: 0, 
-        isActive: false, 
+        name: 'കോട്ടയം - പാല',
+        fromLocation: 'കോട്ടയം',
+        toLocation: 'പാല',
+        frequency: 'ഓരോ 20മി',
+        activeBuses: 0,
+        isActive: false,
       ),
       RouteModel(
         id: '5',
-        name: 'Pala - Ettumanoor',
-        fromLocation: 'Pala',
-        toLocation: 'Ettumanoor',
-        frequency: 'Every 30m',
+        name: 'പാല - എട്ടുമാനൂർ',
+        fromLocation: 'പാല',
+        toLocation: 'എട്ടുമാനൂർ',
+        frequency: 'ഓരോ 30മി',
         activeBuses: 2,
         isActive: true,
       ),
       RouteModel(
         id: '6',
-        name: 'Changanassery - Kottayam',
-        fromLocation: 'Changanassery',
-        toLocation: 'Kottayam',
-        frequency: 'Every 15m',
+        name: 'ചങ്ങനാശ്ശേരി - കോട്ടയം',
+        fromLocation: 'ചങ്ങനാശ്ശേരി',
+        toLocation: 'കോട്ടയം',
+        frequency: 'ഓരോ 15മി',
         activeBuses: 5,
         isActive: true,
       ),
@@ -628,37 +628,37 @@ class BusLocationService {
     return [
       RouteModel(
         id: '3',
-        name: 'Kanjirappally - Ponkunnam',
-        fromLocation: 'Kanjirappally',
-        toLocation: 'Ponkunnam',
-        frequency: 'Every 10m',
+        name: 'കാഞ്ഞിരപ്പള്ളി - പൊൻകുന്നം',
+        fromLocation: 'കാഞ്ഞിരപ്പള്ളി',
+        toLocation: 'പൊൻകുന്നം',
+        frequency: 'ഓരോ 10മി',
         activeBuses: 8,
         isTrending: true,
       ),
       RouteModel(
         id: '1',
-        name: 'Erumely - Kottayam',
-        fromLocation: 'Erumely',
-        toLocation: 'Kottayam',
-        frequency: 'Every 15m',
+        name: 'എറുമേലി - കോട്ടയം',
+        fromLocation: 'എറുമേലി',
+        toLocation: 'കോട്ടയം',
+        frequency: 'ഓരോ 15മി',
         activeBuses: 12,
         isFastest: true,
       ),
       RouteModel(
         id: '6',
-        name: 'Changanassery - Kottayam',
-        fromLocation: 'Changanassery',
-        toLocation: 'Kottayam',
-        frequency: 'Every 15m',
+        name: 'ചങ്ങനാശ്ശേരി - കോട്ടയം',
+        fromLocation: 'ചങ്ങനാശ്ശേരി',
+        toLocation: 'കോട്ടയം',
+        frequency: 'ഓരോ 15മി',
         activeBuses: 5,
         isActive: true,
       ),
       RouteModel(
         id: '5',
-        name: 'Pala - Ettumanoor',
-        fromLocation: 'Pala',
-        toLocation: 'Ettumanoor',
-        frequency: 'Every 30m',
+        name: 'പാല - എട്ടുമാനൂർ',
+        fromLocation: 'പാല',
+        toLocation: 'എട്ടുമാനൂർ',
+        frequency: 'ഓരോ 30മി',
         activeBuses: 2,
         isActive: true,
       ),
@@ -673,12 +673,12 @@ class BusLocationService {
       bus.route = _interpolatedRoute;
     }
     _buses.add(bus);
-    _busStreamController.add(List.from(_buses));
+    _busStreamController.add([...List.from(_buses), ...List.from(_mbtaBuses)]);
   }
 
   void removeBus(String busId) {
     _buses.removeWhere((b) => b.busId == busId);
-    _busStreamController.add(List.from(_buses));
+    _busStreamController.add([...List.from(_buses), ...List.from(_mbtaBuses)]);
   }
 
   void updateBusStatus(String busId, String status) {
@@ -689,55 +689,108 @@ class BusLocationService {
     } catch (e) { debugPrint("Bus not found: $busId"); }
   }
 
+  // ── Stop order along the main route (Erumely → Kottayam) ────────────────
+  // Index 0 = start, higher index = closer to Kottayam.
+  // Route B is the same list reversed.
+  static const List<String> _routeStopsA = [
+    'erumely', 'koovappally', 'kanjirappally', 'ponkunnam', 'kottayam',
+    'changanassery', 'pala', 'ettumanoor', 'thalayolaparambu', 'kumarakom',
+  ];
+
+  // Translate any user-typed name (English or Malayalam) to the normalised key.
+  static const Map<String, String> _placeNorm = {
+    // English variants
+    'erumely': 'erumely', 'koovappally': 'koovappally',
+    'kanjirappally': 'kanjirappally', 'ponkunnam': 'ponkunnam',
+    'kottayam': 'kottayam', 'changanassery': 'changanassery',
+    'pala': 'pala', 'ettumanoor': 'ettumanoor',
+    'thalayolaparambu': 'thalayolaparambu', 'kumarakom': 'kumarakom',
+    'mundakayam': 'mundakayam',
+    // Malayalam equivalents
+    'എറുമേലി': 'erumely',
+    'കൂവപ്പള്ളി': 'koovappally',
+    'കാഞ്ഞിരപ്പള്ളി': 'kanjirappally',
+    'പൊൻകുന്നം': 'ponkunnam',
+    'കോട്ടയം': 'kottayam',
+    'ചങ്ങനാശ്ശേരി': 'changanassery',
+    'പാല': 'pala',
+    'എട്ടുമാനൂർ': 'ettumanoor',
+  };
+
+  String _norm(String input) =>
+      _placeNorm[input.trim()] ?? _placeNorm[input.trim().toLowerCase()] ?? input.trim().toLowerCase();
+
+  /// Return the keyPlaces LatLng for a normalised stop name.
+  LatLng? _latLngForStop(String normName) {
+    // keyPlaces uses Title-Case English keys
+    for (final entry in keyPlaces.entries) {
+      if (entry.key.toLowerCase() == normName) return entry.value;
+    }
+    return null;
+  }
+
   List<Map<String, dynamic>> findBusesForUser({
     required String startLocation,
     required String endLocation,
     required TimeOfDay userCurrentTime,
   }) {
-    // Normalize inputs
-    final from = startLocation.trim();
-    final to = endLocation.trim();
-    
-    // Filter buses based on route direction
+    final fromNorm = _norm(startLocation);
+    final toNorm   = _norm(endLocation);
+
+    // Determine route direction from stop-order indices
+    final fromIdx = _routeStopsA.indexOf(fromNorm);
+    final toIdx   = _routeStopsA.indexOf(toNorm);
+
+    String? requiredRouteName; // null = show all matching
+    if (fromIdx != -1 && toIdx != -1) {
+      if (fromIdx < toIdx) {
+        requiredRouteName = 'Erumely - Kottayam'; // travelling toward Kottayam
+      } else {
+        requiredRouteName = 'Kottayam - Erumely';  // travelling toward Erumely
+      }
+    } else if (fromNorm.contains('erumely') || toNorm.contains('kottayam')) {
+      requiredRouteName = 'Erumely - Kottayam';
+    } else if (fromNorm.contains('kottayam') || toNorm.contains('erumely')) {
+      requiredRouteName = 'Kottayam - Erumely';
+    }
+
+    // Use the 'from' stop coordinates so isIncoming checks relative to that stop,
+    // not the user's GPS. This ensures only buses that haven't passed 'from' yet appear.
+    final fromLatLng = _latLngForStop(fromNorm);
+
     final matchingBuses = _buses.where((b) {
       if (b.status != 'RUNNING') return false;
-      
-      // Check if bus route matches request
-      // We do a simple contains check or directional check
-      // For now, we assume direct match on 'from' and 'to' in routeName or bus properties
-      
-      bool matchesDirection = false;
-      if (from.toLowerCase().contains("erumely") && to.toLowerCase().contains("kottayam")) {
-        matchesDirection = b.routeName.contains("Erumely - Kottayam");
-      } else if (from.toLowerCase().contains("kottayam") && to.toLowerCase().contains("erumely")) {
-        matchesDirection = b.routeName.contains("Kottayam - Erumely");
-      } else {
-        // If query is generic or partial (e.g. from Koovappally to Kanjirappally)
-        // We'd need more complex logic. For now, default to returning all if vague, 
-        // or strict matching if specific. 
-        // Let's implement a 'contains' logic based on stops if we had them.
-        // For MVP, if start/end aren't the terminals, just return buses going in the general direction?
-        // Or simpler: match 'to' destination.
-        
-        matchesDirection = b.to.toLowerCase() == to.toLowerCase();
+      if (requiredRouteName != null && !b.routeName.contains(requiredRouteName)) {
+        return false;
       }
-      
-      return matchesDirection && isIncoming(b);
+      // Bus must not have passed the 'from' stop yet
+      return isIncoming(b, relativeTo: fromLatLng);
     }).toList();
 
-    matchingBuses.sort((a, b) => etaMinutes(a).compareTo(etaMinutes(b)));
-    
+    matchingBuses.sort((a, b) => etaMinutes(a, relativeTo: fromLatLng)
+        .compareTo(etaMinutes(b, relativeTo: fromLatLng)));
+
+    // Estimate travel time as distance from from-stop to to-stop
+    final toLatLng = _latLngForStop(toNorm);
+    int travelMin = 45;
+    if (fromLatLng != null && toLatLng != null) {
+      final distM = const Distance().as(LengthUnit.Meter, fromLatLng, toLatLng);
+      travelMin = (distM / (30000 / 60)).ceil(); // ~30 km/h average
+    }
+
     return matchingBuses.map((b) {
-      final eta = etaMinutes(b);
+      final arrivalEta = etaMinutes(b, relativeTo: fromLatLng);
       final now = DateTime.now();
-      final reach = now.add(Duration(minutes: eta + 45));
+      final reach = now.add(Duration(minutes: arrivalEta + travelMin));
       return {
-        'busName': b.busName, 'arrivalTime': "$eta min",
-        'reachTime': "${reach.hour}:${reach.minute.toString().padLeft(2, '0')}",
-        'duration': "45 min"
+        'busName': b.busName,
+        'arrivalTime': arrivalEta == 0 ? 'Now' : '$arrivalEta min',
+        'reachTime': '${reach.hour}:${reach.minute.toString().padLeft(2, '0')}',
+        'duration': '$travelMin min',
       };
     }).toList();
   }
+
 
   List<LatLng> _generateDenseRoute(List<LatLng> wp, double stepMeters) {
     List<LatLng> dense = [];
