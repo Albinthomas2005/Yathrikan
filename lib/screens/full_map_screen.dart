@@ -16,7 +16,7 @@ class FullMapScreen extends StatefulWidget {
   State<FullMapScreen> createState() => _FullMapScreenState();
 }
 
-class _FullMapScreenState extends State<FullMapScreen> with SingleTickerProviderStateMixin {
+class _FullMapScreenState extends State<FullMapScreen> {
   final MapController _mapController = MapController();
   final BusLocationService _busLocationService = BusLocationService();
   StreamSubscription<List<LiveBus>>? _busLocationStream;
@@ -25,29 +25,11 @@ class _FullMapScreenState extends State<FullMapScreen> with SingleTickerProvider
   // Kottayam default location
   LatLng _currentLocation = const LatLng(9.5916, 76.5222);
   bool _isLoadingLocation = true;
-  List<LiveBus> _latestBuses = [];
-
-  Map<String, LatLng> _previousPositions = {};
-  final Map<String, LatLng> _targetPositions = {};
-  Map<String, double> _previousHeadings = {};
-  final Map<String, double> _targetHeadings = {};
-  
-  late AnimationController _animationController;
-  late Animation<double> _animation;
+  List<Marker> _busMarkers = [];
 
   @override
   void initState() {
     super.initState();
-    
-    _animationController = AnimationController(
-       vsync: this,
-       duration: const Duration(seconds: 10), // Same duration as MBTA fetch interval roughly
-    );
-    _animation = CurvedAnimation(parent: _animationController, curve: Curves.linear);
-    _animationController.addListener(() {
-      if (mounted) setState(() {}); // Trigger map rebuild to animate markers
-    });
-
     _busLocationService.initialize();
     _initializeLiveBusTracking();
     _startLiveLocationUpdates();
@@ -55,7 +37,6 @@ class _FullMapScreenState extends State<FullMapScreen> with SingleTickerProvider
 
   @override
   void dispose() {
-    _animationController.dispose();
     _busLocationStream?.cancel();
     _positionStream?.cancel();
     super.dispose();
@@ -119,32 +100,11 @@ class _FullMapScreenState extends State<FullMapScreen> with SingleTickerProvider
   void _initializeLiveBusTracking() {
     _busLocationStream = _busLocationService.busStream.listen((buses) {
       if (mounted) {
-        // Prepare for new animation transition
-        _previousPositions = Map.from(_targetPositions);
-        _previousHeadings = Map.from(_targetHeadings);
-        
-        for (var bus in buses) {
-          _targetPositions[bus.busId] = LatLng(bus.lat, bus.lon);
-          _targetHeadings[bus.busId] = bus.headingDeg;
-          
-          if (!_previousPositions.containsKey(bus.busId)) {
-             _previousPositions[bus.busId] = LatLng(bus.lat, bus.lon);
-             _previousHeadings[bus.busId] = bus.headingDeg;
-          }
-        }
-        
-        _latestBuses = buses;
-        _animationController.forward(from: 0.0);
+        setState(() {
+          _busMarkers = buses.map((bus) => _createBusMarker(bus)).toList();
+        });
       }
     });
-  }
-
-  double _lerpHeading(double prev, double target, double t) {
-    // Handle wrap around for bearing (0-360)
-    double diff = target - prev;
-    if (diff > 180) diff -= 360;
-    if (diff < -180) diff += 360;
-    return prev + (diff * t);
   }
 
   Marker _createBusMarker(LiveBus bus) {
@@ -157,25 +117,14 @@ class _FullMapScreenState extends State<FullMapScreen> with SingleTickerProvider
       busColor = Colors.orange;
     }
 
-    final t = _animation.value;
-    final prevPos = _previousPositions[bus.busId] ?? bus.position;
-    final targetPos = _targetPositions[bus.busId] ?? bus.position;
-    
-    final currentLat = prevPos.latitude + (targetPos.latitude - prevPos.latitude) * t;
-    final currentLon = prevPos.longitude + (targetPos.longitude - prevPos.longitude) * t;
-    
-    final prevHeading = _previousHeadings[bus.busId] ?? bus.headingDeg;
-    final targetHeading = _targetHeadings[bus.busId] ?? bus.headingDeg;
-    final currentHeading = _lerpHeading(prevHeading, targetHeading, t);
-
     return Marker(
-      point: LatLng(currentLat, currentLon),
+      point: LatLng(bus.lat, bus.lon),
       width: 40,
       height: 40,
       child: GestureDetector(
         onTap: () => _showBusInfo(bus),
         child: Transform.rotate(
-          angle: currentHeading * math.pi / 180,
+          angle: bus.headingDeg * math.pi / 180,
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -200,78 +149,202 @@ class _FullMapScreenState extends State<FullMapScreen> with SingleTickerProvider
   }
 
   void _showBusInfo(LiveBus bus) {
+    final bool isMbta = bus.busId.startsWith('MBTA-');
+    final bool isRunning = bus.status == 'RUNNING';
+    final statusColor = isRunning ? Colors.green : Colors.orange;
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: Theme.of(context).cardColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+        final cardColor = isDark ? const Color(0xFF1E1E2E) : Colors.white;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 20),
+            ],
+          ),
+          padding: EdgeInsets.fromLTRB(
+            20, 12, 20, MediaQuery.of(context).padding.bottom + 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Handle bar
+              Center(
+                child: Container(
+                  width: 40, height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryYellow.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.directions_bus,
-                    color: AppColors.primaryYellow,
-                    size: 24,
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        bus.busId,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+              ),
+              const SizedBox(height: 16),
+
+              // Header row
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryYellow.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.directions_bus_rounded,
+                      color: AppColors.primaryYellow,
+                      size: 26,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          bus.busName,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      Text(
-                        bus.routeName,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
+                        if (bus.routeName.isNotEmpty)
+                          Text(
+                            bus.routeName,
+                            style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                          ),
+                      ],
+                    ),
+                  ),
+                  // Status badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 7, height: 7,
+                          decoration: BoxDecoration(
+                            color: statusColor,
+                            shape: BoxShape.circle,
+                          ),
                         ),
+                        const SizedBox(width: 5),
+                        Text(
+                          bus.status,
+                          style: TextStyle(
+                            color: statusColor,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // ── Route: From → To ──────────────────────────────────────────
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.primaryYellow.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // Origin
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('From', style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                          const SizedBox(height: 4),
+                          Text(
+                            bus.from,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                            maxLines: 2,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    // Arrow
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Column(
+                        children: [
+                          Icon(Icons.arrow_forward_rounded,
+                              color: AppColors.primaryYellow, size: 22),
+                        ],
+                      ),
+                    ),
+                    // Destination
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text('Going to', style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                          const SizedBox(height: 4),
+                          Text(
+                            bus.to,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: AppColors.primaryYellow,
+                            ),
+                            textAlign: TextAlign.end,
+                            maxLines: 2,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildInfoTile(
-                    'Speed',
-                    '${bus.speedKmph.toStringAsFixed(0)} km/h',
-                    Icons.speed,
+              ),
+
+              const SizedBox(height: 16),
+
+              // Speed + Source tiles
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildInfoTile(
+                      'Speed',
+                      '${bus.speedKmph.toStringAsFixed(0)} km/h',
+                      Icons.speed,
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: _buildInfoTile(
-                    'Status',
-                    bus.status,
-                    Icons.check_circle,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildInfoTile(
+                      isMbta ? 'Source' : 'Type',
+                      isMbta ? 'MBTA Live' : 'Kerala Bus',
+                      isMbta ? Icons.wifi : Icons.map_outlined,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -355,7 +428,7 @@ class _FullMapScreenState extends State<FullMapScreen> with SingleTickerProvider
                     ),
                   ),
                   // Bus Markers
-                  ..._latestBuses.map((bus) => _createBusMarker(bus)),
+                  ..._busMarkers,
                 ],
               ),
             ],
@@ -432,7 +505,7 @@ class _FullMapScreenState extends State<FullMapScreen> with SingleTickerProvider
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '${_latestBuses.length} Buses Active',
+                            '${_busMarkers.length} Buses Active',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,

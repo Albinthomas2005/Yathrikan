@@ -583,7 +583,7 @@ class _HomeViewState extends State<_HomeView> {
                     children: [
                       Text(
                         AppLocalizations.of(context).translate('app_title').toUpperCase(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 23,
                           fontWeight: FontWeight.bold,
                           color: Colors.black,
