@@ -5,6 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import '../utils/constants.dart';
 import '../utils/app_localizations.dart';
+import '../services/support_ticket_service.dart';
 
 class ComplaintScreen extends StatefulWidget {
   const ComplaintScreen({super.key});
@@ -479,6 +480,19 @@ class _ComplaintScreenState extends State<ComplaintScreen> {
                   }
 
                   // Submit logic
+                  final ticketTitle = _selectedCategory ?? 'General Complaint';
+                  final ticketDesc = _descController.text.isNotEmpty 
+                      ? _descController.text 
+                      : 'No detailed description provided.';
+                      
+                  SupportTicketService().addTicket(
+                    title: ticketTitle,
+                    description: ticketDesc,
+                    category: _selectedCategory!,
+                    busId: _selectedBusDetails?['name'] ?? _busController.text,
+                    evidenceFiles: _evidenceFiles.isNotEmpty ? List.from(_evidenceFiles) : null,
+                  );
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text("Complaint Submitted!"),

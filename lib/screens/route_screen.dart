@@ -109,6 +109,7 @@ class _RouteScreenState extends State<RouteScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
+        final loc = AppLocalizations.of(context);
         return Container(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -116,7 +117,7 @@ class _RouteScreenState extends State<RouteScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Add Favorite Route',
+                loc['add_favorite_route'],
                 style: AppTextStyles.heading2.copyWith(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -166,10 +167,10 @@ class _RouteScreenState extends State<RouteScreen> {
     });
     _saveFavorites();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Added to favorites!'),
+      SnackBar(
+        content: Text(AppLocalizations.of(context)['added_to_favorites']),
         backgroundColor: Colors.green,
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -198,10 +199,10 @@ class _RouteScreenState extends State<RouteScreen> {
     });
     _saveFavorites();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Removed from favorites!'),
+      SnackBar(
+        content: Text(AppLocalizations.of(context)['removed_from_favorites']),
         backgroundColor: Colors.red,
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -399,8 +400,8 @@ class _RouteScreenState extends State<RouteScreen> {
                             );
                           },
                           child: _buildPopularRouteCard(
-                            route.name,
-                            '${route.fromLocation} → ${route.toLocation} • ${route.frequency}',
+                            route.name.split(' - ').map((p) => loc.translate(p.trim())).join(' - '),
+                            '${loc.translate(route.fromLocation)} → ${loc.translate(route.toLocation)} • ${route.frequency.replaceAll('Every', loc.translate('every_min')).replaceAll('m', loc.translate('min_short'))}',
                             route.isTrending,
                             route.isFastest,
                             isDark,
@@ -458,17 +459,17 @@ class _RouteScreenState extends State<RouteScreen> {
                       color: theme.textTheme.titleLarge?.color,
                     ),
                   ),
-                  const Row(
+                  Row(
                     children: [
-                      Icon(
+                      const Icon(
                         CupertinoIcons.sort_down,
                         size: 16,
                         color: AppColors.greyText,
                       ),
-                      SizedBox(width: 4),
+                      const SizedBox(width: 4),
                       Text(
-                        'SORT',
-                        style: TextStyle(
+                        loc['sort'],
+                        style: const TextStyle(
                           color: AppColors.greyText,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -897,7 +898,7 @@ class _RouteScreenState extends State<RouteScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Loading map...',
+                          AppLocalizations.of(context)['loading_map'],
                           style: TextStyle(
                             color: isDark ? Colors.white70 : Colors.black87,
                             fontSize: 14,

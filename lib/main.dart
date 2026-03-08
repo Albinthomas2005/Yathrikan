@@ -25,6 +25,7 @@ import 'screens/admin_routes_screen.dart';
 import 'screens/admin_support_screen.dart';
 import 'screens/admin_finance_screen.dart';
 import 'screens/chatbot_screen.dart';
+import 'screens/splash_screen.dart';
 import 'services/admin_service.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -77,7 +78,7 @@ class MyApp extends StatelessWidget {
           themeMode: settings.themeMode,
           theme: _buildLightTheme(context),
           darkTheme: _buildDarkTheme(context),
-          home: const AuthWrapper(),
+          home: const SplashScreen(),
           routes: {
 
             '/login': (context) => const LoginScreen(),

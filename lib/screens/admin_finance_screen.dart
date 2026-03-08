@@ -40,7 +40,7 @@ class _AdminFinanceScreenState extends State<AdminFinanceScreen> {
     final random = Random(seed);
 
     // Baseline values
-    final baseRevenue = 5000000.0;
+    const baseRevenue = 5000000.0;
     
     // Revenue logic (growing slightly over time but fluctuating daily)
     _currentMonthRevenue = baseRevenue + random.nextDouble() * 2000000 + (date.month * 100000);

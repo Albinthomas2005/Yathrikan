@@ -31,7 +31,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   bool _isListening = false;
   bool _speechEnabled = false;
   bool _isTyping = false;
-  bool _voiceSent = false; // Prevent double-send from both _stopListening and _onSpeechStatus
+  bool _voiceSent =
+      false; // Prevent double-send from both _stopListening and _onSpeechStatus
   Timer? _silenceTimer;
 
   // Location Context
@@ -89,12 +90,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
               child: Container(
                 margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 constraints: BoxConstraints(
                   maxWidth: MediaQuery.of(context).size.width * 0.75,
                 ),
                 decoration: BoxDecoration(
-                  color: isUser ? AppColors.primaryYellow : const Color(0xFF1E293B),
+                  color: isUser
+                      ? AppColors.primaryYellow
+                      : const Color(0xFF1E293B),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
@@ -106,9 +110,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 ),
               ),
             ),
-            
+
             // Action Button
-            if (action != null && action.startsWith('navigate_shortest_route') && !isUser) 
+            if (action != null &&
+                action.startsWith('navigate_shortest_route') &&
+                !isUser)
               Padding(
                 padding: const EdgeInsets.only(left: 4, bottom: 20),
                 child: Align(
@@ -125,29 +131,32 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
                     ),
                     onPressed: () {
-                       // action format: "navigate_shortest_route:origin:destination" or "navigate_shortest_route::destination"
-                       String? origin;
-                       String? destination;
-                       if (action.contains(':')) {
-                         final parts = action.split(':');
-                         // parts[0] = 'navigate_shortest_route'
-                         if (parts.length >= 3) {
-                           origin = parts[1].isNotEmpty ? parts[1] : null;
-                           destination = parts[2].isNotEmpty ? parts[2] : null;
-                         } else {
-                           destination = parts[1].isNotEmpty ? parts[1] : null;
-                         }
-                       }
-                       Navigator.push(context, MaterialPageRoute(
-                         builder: (context) => ShortestRouteScreen(
-                           initialOrigin: origin,
-                           initialDestination: destination,
-                           autoDetectOrigin: origin == null,
-                         ),
-                       ));
+                      // action format: "navigate_shortest_route:origin:destination" or "navigate_shortest_route::destination"
+                      String? origin;
+                      String? destination;
+                      if (action.contains(':')) {
+                        final parts = action.split(':');
+                        // parts[0] = 'navigate_shortest_route'
+                        if (parts.length >= 3) {
+                          origin = parts[1].isNotEmpty ? parts[1] : null;
+                          destination = parts[2].isNotEmpty ? parts[2] : null;
+                        } else {
+                          destination = parts[1].isNotEmpty ? parts[1] : null;
+                        }
+                      }
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ShortestRouteScreen(
+                              initialOrigin: origin,
+                              initialDestination: destination,
+                              autoDetectOrigin: origin == null,
+                            ),
+                          ));
                     },
                   ),
                 ),
@@ -174,7 +183,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         );
       },
       onEnd: () {
-        // Simple loop animation trigger could be added here if needed, 
+        // Simple loop animation trigger could be added here if needed,
         // but for now static pulsing is simulated or just simple dots.
         // For a true typing animation, we'd need a StatefulWidget or repetitive controller.
         // Keeping it simple static dots for this iteration to avoid state complexity complexity.
@@ -187,7 +196,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     if (status == 'done' || status == 'notListening') {
       if (mounted && !_voiceSent) {
         setState(() => _isListening = false);
-        
+
         final text = _messageController.text.trim();
         if (text.isNotEmpty) {
           _voiceSent = true;
@@ -224,8 +233,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     super.dispose();
   }
 
-
-
   void _startListening() async {
     // 1. Check Permission
     var status = await Permission.microphone.status;
@@ -239,7 +246,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     if (!status.isGranted) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Microphone permission is required for voice commands')),
+          const SnackBar(
+              content:
+                  Text('Microphone permission is required for voice commands')),
         );
       }
       return;
@@ -257,7 +266,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       if (!available) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Speech recognition not available on this device')),
+            const SnackBar(
+                content:
+                    Text('Speech recognition not available on this device')),
           );
         }
         return;
@@ -272,23 +283,34 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
     await _speech.listen(
       onResult: (result) {
-        if (mounted) {
+        if (mounted && !_voiceSent) {
           setState(() {
             _messageController.text = result.recognizedWords;
             _messageController.selection = TextSelection.fromPosition(
               TextPosition(offset: _messageController.text.length),
             );
           });
-          
-          // Manual silence timeout
-          _silenceTimer?.cancel();
-          _silenceTimer = Timer(const Duration(seconds: 4), () {
-            if (mounted && _isListening) {
-              _stopListening();
+
+          if (result.finalResult) {
+            _silenceTimer?.cancel();
+            if (!_voiceSent) {
+              _voiceSent = true;
+              setState(() => _isListening = false);
+              final text = _messageController.text.trim();
+              if (text.isNotEmpty) _sendMessage(text);
             }
-          });
+          } else {
+            // Manual silence timeout
+            _silenceTimer?.cancel();
+            _silenceTimer = Timer(const Duration(seconds: 3), () {
+              if (mounted && _isListening) {
+                _stopListening();
+              }
+            });
+          }
         }
       },
+      pauseFor: const Duration(seconds: 3),
       listenOptions: stt.SpeechListenOptions(
         partialResults: true,
         cancelOnError: true,
@@ -299,21 +321,20 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   void _stopListening() async {
     _silenceTimer?.cancel();
-    await _speech.cancel(); // Use cancel instead of stop to fully reset the STT engine
     setState(() => _isListening = false);
-    
+    await _speech.stop(); // Use stop instead of cancel to finalize STT
+
+    // Safety fallback: if status doesn't change to done quickly, force send.
     if (!_voiceSent) {
-      _voiceSent = true;
-      Future.delayed(const Duration(milliseconds: 800), () {
-        if (mounted) {
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted && !_voiceSent) {
+          _voiceSent = true;
           final text = _messageController.text.trim();
           if (text.isNotEmpty) _sendMessage(text);
         }
       });
     }
   }
-
-
 
   void _sendMessage(String message) {
     if (message.trim().isEmpty) return;
@@ -334,17 +355,17 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       try {
         // Run smart response generation with a safety timeout
         final botResponse = await _generateSmartResponse(message).timeout(
-          const Duration(seconds: 4), 
-          onTimeout: () => "I took too long to think! Please try finding a route in the main menu.",
+          const Duration(seconds: 4),
+          onTimeout: () =>
+              "I took too long to think! Please try finding a route in the main menu.",
         );
 
         // Check if response warrants a navigation button
         String? action;
         // Try to extract destination from "X to Y" first, then single-city fallback
         final od = _parseOriginDestination(message.toLowerCase());
-        final String? city = od != null
-            ? od['destination']
-            : _findCityInMessage(message);
+        final String? city =
+            od != null ? od['destination'] : _findCityInMessage(message);
         if (botResponse.contains('Buses from') ||
             botResponse.contains('Here are the buses') ||
             botResponse.contains('next bus is') ||
@@ -353,9 +374,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             botResponse.contains('arriving in')) {
           if (od != null) {
             // Encode both origin and destination: "navigate_shortest_route:origin:destination"
-            action = 'navigate_shortest_route:${od['origin']}:${od['destination']}';
+            action =
+                'navigate_shortest_route:${od['origin']}:${od['destination']}';
           } else if (city != null) {
-            action = 'navigate_shortest_route::$city'; // empty origin = auto-detect
+            action =
+                'navigate_shortest_route::$city'; // empty origin = auto-detect
           } else {
             action = 'navigate_shortest_route';
           }
@@ -399,7 +422,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   /// The "Brain" of the chatbot
   Future<String> _generateSmartResponse(String input) async {
-    final msg = input.toLowerCase().trim();
+    final msg = input.toLowerCase().trim().replaceAll(RegExp(r'[^\w\s]'), '');
 
     // 0. RESET
     if (_matches(msg, ['clear', 'reset', 'restart'])) {
@@ -410,22 +433,24 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     }
 
     // 1. GREETINGS
-    if (_matches(msg, ['hello', 'hi', 'hey', 'morning', 'evening', 'yo']) && msg.length < 15) {
-       final greetings = [
-         "Hello there! Where are you planning to go today?",
-         "Hi! I'm ready to find the best bus for you. Just name the city!",
-         "Hey! Need to catch a bus? Tell me your destination.",
-         "Greetings! I can track any bus in Kerala for you."
-       ];
-       return greetings[Random().nextInt(greetings.length)];
+    if (_matches(msg, ['hello', 'hi', 'hey', 'morning', 'evening', 'yo']) &&
+        msg.length < 15) {
+      final greetings = [
+        "Hello there! Where are you planning to go today?",
+        "Hi! I'm ready to find the best bus for you. Just name the city!",
+        "Hey! Need to catch a bus? Tell me your destination.",
+        "Greetings! I can track any bus in Kerala for you."
+      ];
+      return greetings[Random().nextInt(greetings.length)];
     }
-    
+
     if (_matches(msg, ['thank', 'thanks', 'thx'])) {
       return "You're very welcome! Safe travels! 🚌";
     }
 
     // 2. BUS SPECIFIC QUERY (By Bus ID)
-    final busIdRegex = RegExp(r'(kl[-\s]?eru|eru)[-\s]?(\d+)', caseSensitive: false);
+    final busIdRegex =
+        RegExp(r'(kl[-\s]?eru|eru)[-\s]?(\d+)', caseSensitive: false);
     final busIdMatch = busIdRegex.firstMatch(msg);
     if (busIdMatch != null) {
       final num = busIdMatch.group(2)!.padLeft(3, '0');
@@ -447,9 +472,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     }
 
     // 4. NEAREST / NEXT BUS
-    if (_matches(msg, ['nearest', 'next bus', 'coming soon', 'next one', 'soonest'])) {
+    if (_matches(
+        msg, ['nearest', 'next bus', 'coming soon', 'next one', 'soonest'])) {
       final svc = BusLocationService();
-      final incoming = svc.buses.where((b) => svc.isIncoming(b) && b.status == 'RUNNING').toList();
+      final incoming = svc.buses
+          .where((b) => svc.isIncoming(b) && b.status == 'RUNNING')
+          .toList();
       incoming.sort((a, b) => svc.etaMinutes(a).compareTo(svc.etaMinutes(b)));
       if (incoming.isNotEmpty) {
         final b = incoming.first;
@@ -481,45 +509,63 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         buf.writeln('   ETA: $eta min');
         buf.writeln();
       }
-      buf.writeln('Tap "Check Shortest Route" below to see the full route on map!');
+      buf.writeln(
+          'Tap "Check Shortest Route" below to see the full route on map!');
       return buf.toString();
     }
 
     // 5b. Single-city fallback
     String? city = _findCityInMessage(msg);
     if (city != null) {
-       final svc = BusLocationService();
-       final incoming = svc.buses.where((b) => svc.isIncoming(b) && b.status == 'RUNNING').toList();
-       incoming.sort((a, b) => svc.etaMinutes(a).compareTo(svc.etaMinutes(b)));
-       
-       if (incoming.isEmpty) {
-         return "No buses are currently approaching your location heading to $city.";
-       }
-       
-       final top = incoming.take(5).toList();
-       final buf = StringBuffer();
-       buf.writeln('Here are the buses heading through $city:');
-       buf.writeln();
-       for (final b in top) {
-         final eta = svc.etaMinutes(b);
-         buf.writeln('🚌 ${b.busName} (${b.busId})');
-         buf.writeln('   ETA: $eta min');
-         buf.writeln();
-       }
-       buf.writeln('Tap "Check Shortest Route" to track them on the map!');
-       return buf.toString();
+      final svc = BusLocationService();
+      final incoming = svc.buses
+          .where((b) => svc.isIncoming(b) && b.status == 'RUNNING')
+          .toList();
+      incoming.sort((a, b) => svc.etaMinutes(a).compareTo(svc.etaMinutes(b)));
+
+      if (incoming.isEmpty) {
+        return "No buses are currently approaching your location heading to $city.";
+      }
+
+      final top = incoming.take(5).toList();
+      final buf = StringBuffer();
+      buf.writeln('Here are the buses heading through $city:');
+      buf.writeln();
+      for (final b in top) {
+        final eta = svc.etaMinutes(b);
+        buf.writeln('🚌 ${b.busName} (${b.busId})');
+        buf.writeln('   ETA: $eta min');
+        buf.writeln();
+      }
+      buf.writeln('Tap "Check Shortest Route" to track them on the map!');
+      return buf.toString();
     }
 
     // 6. SHOW ALL BUSES (no city detected, but bus-related keywords)
-    if (_matches(msg, ['bus', 'buses', 'show', 'list', 'all', 'running', 'available', 'route', 'schedule', 'going', 'travel', 'trip'])) {
+    if (_matches(msg, [
+      'bus',
+      'buses',
+      'show',
+      'list',
+      'all',
+      'running',
+      'available',
+      'route',
+      'schedule',
+      'going',
+      'travel',
+      'trip'
+    ])) {
       final svc = BusLocationService();
-      final incoming = svc.buses.where((b) => svc.isIncoming(b) && b.status == 'RUNNING').toList();
+      final incoming = svc.buses
+          .where((b) => svc.isIncoming(b) && b.status == 'RUNNING')
+          .toList();
       incoming.sort((a, b) => svc.etaMinutes(a).compareTo(svc.etaMinutes(b)));
-      
+
       if (incoming.isEmpty) {
         return "No buses are currently approaching your location on the Erumely → Kottayam route.";
       }
-      
+
       final top = incoming.take(5).toList();
       final buf = StringBuffer();
       buf.writeln('Here are the buses currently approaching:');
@@ -538,7 +584,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     if (_matches(msg, ['ticket', 'book', 'fare', 'price'])) {
       return "You can book tickets in the 'Shortest Route' section. I'm just here to track them!";
     }
-    
+
     // 8. DELAY
     if (_matches(msg, ['delay', 'late', 'slow'])) {
       return "Delays happen! If you tell me your bus number (e.g., KL-ERU-005), I can tell you exactly where it is.";
@@ -546,10 +592,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
     // 9. FALLBACK
     return "I can help you find buses! Try:\n\n"
-           "• Type a city name: \"Kottayam\"\n"
-           "• Ask for a bus: \"Bus to Pala\"\n"
-           "• Track by ID: \"KL-ERU-005\"\n"
-           "• Ask: \"Next bus\" or \"Show buses\"";
+        "• Type a city name: \"Kottayam\"\n"
+        "• Ask for a bus: \"Bus to Pala\"\n"
+        "• Track by ID: \"KL-ERU-005\"\n"
+        "• Ask: \"Next bus\" or \"Show buses\"";
   }
 
   // --- LOGIC HELPERS ---
@@ -562,22 +608,23 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) return;
       }
-      
+
       if (permission == LocationPermission.deniedForever) return;
 
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium)
-      );
+          locationSettings:
+              const LocationSettings(accuracy: LocationAccuracy.medium));
 
-      final placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+      final placemarks =
+          await placemarkFromCoordinates(position.latitude, position.longitude);
       if (placemarks.isNotEmpty) {
         final place = placemarks.first;
         // Prioritize locality (City)
         if (mounted) {
-           setState(() {
-             _currentCity = place.locality; 
-           });
-           debugPrint("Chatbot Location: $_currentCity");
+          setState(() {
+            _currentCity = place.locality;
+          });
+          debugPrint("Chatbot Location: $_currentCity");
         }
       }
     } catch (e) {
@@ -586,18 +633,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   String _formatBusStatus(LiveBus bus) {
-    final status = bus.speedKmph > 0 ? "Moving at ${bus.speedKmph} km/h" : "Stopped";
+    final status =
+        bus.speedKmph > 0 ? "Moving at ${bus.speedKmph} km/h" : "Stopped";
     return "Found it! 🚌\n\n"
-           "**${bus.busId}** (${bus.routeName})\n"
-           "📍 Status: $status\n"
-           "⏳ ETA: ${bus.etaMin} mins\n"
-           "🕒 Last Updated: Just now\n"; 
-           // In a real app we'd decode lat/lng to a place name here
+        "**${bus.busId}** (${bus.routeName})\n"
+        "📍 Status: $status\n"
+        "⏳ ETA: ${bus.etaMin} mins\n"
+        "🕒 Last Updated: Just now\n";
+    // In a real app we'd decode lat/lng to a place name here
   }
-
-
-
-
 
   /// List of supported cities for fuzzy matching
   final List<String> _supportedCities = BusLocationService.allPlaces;
@@ -607,12 +651,14 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     final words = message.split(' ');
     for (var word in words) {
       String cleanWord = word.replaceAll(RegExp(r'[^\w\s]+'), '');
-      if (cleanWord.length < 3) continue; 
+      if (cleanWord.length < 3) continue;
 
       for (var city in _supportedCities) {
         // Direct match or close enough
-        if (cleanWord.toLowerCase() == city.toLowerCase() || 
-            _calculateLevenshtein(cleanWord.toLowerCase(), city.toLowerCase()) <= 2) {
+        if (cleanWord.toLowerCase() == city.toLowerCase() ||
+            _calculateLevenshtein(
+                    cleanWord.toLowerCase(), city.toLowerCase()) <=
+                2) {
           return city;
         }
       }
@@ -644,7 +690,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   /// Returns running buses that match the given origin → destination direction
-  List<LiveBus> _getBusesForRoute(BusLocationService svc, String origin, String destination) {
+  List<LiveBus> _getBusesForRoute(
+      BusLocationService svc, String origin, String destination) {
     final buses = svc.buses.where((b) {
       if (b.status != 'RUNNING') return false;
       final routeLower = b.routeName.toLowerCase();
@@ -657,11 +704,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       final exactMatch = fromLower == originLower && toLower == destLower;
 
       // Route name contains both places in order
-      final routeMatch = routeLower.contains(originLower) && routeLower.contains(destLower);
+      final routeMatch =
+          routeLower.contains(originLower) && routeLower.contains(destLower);
 
       // Fuzzy: either endpoint matches with levenshtein
       final fuzzyFrom = _calculateLevenshtein(fromLower, originLower) <= 2;
-      final fuzzyTo   = _calculateLevenshtein(toLower, destLower) <= 2;
+      final fuzzyTo = _calculateLevenshtein(toLower, destLower) <= 2;
 
       return (exactMatch || routeMatch || (fuzzyFrom && fuzzyTo));
     }).toList();
@@ -687,7 +735,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       v1[0] = i + 1;
       for (int j = 0; j < t.length; j++) {
         int cost = (s[i] == t[j]) ? 0 : 1;
-        v1[j + 1] = [v1[j] + 1, v0[j + 1] + 1, v0[j] + cost].reduce((a, b) => a < b ? a : b);
+        v1[j + 1] = [v1[j] + 1, v0[j + 1] + 1, v0[j] + cost]
+            .reduce((a, b) => a < b ? a : b);
       }
       for (int j = 0; j < t.length + 1; j++) {
         v0[j] = v1[j];
@@ -702,8 +751,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     }
     return false;
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -898,6 +945,62 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 32),
+
+          // Quick Suggestions
+          _buildQuickSuggestions(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickSuggestions() {
+    return Column(
+      children: [
+        Text(
+          'Try asking:',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.white70,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          alignment: WrapAlignment.center,
+          children: [
+            _buildSuggestionChip('Next Bus', Icons.timer),
+            _buildSuggestionChip('Show Buses', Icons.directions_bus),
+            _buildSuggestionChip('Bus to Kottayam', Icons.location_city),
+            _buildSuggestionChip('Bus to Pala', Icons.location_on),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSuggestionChip(String text, IconData icon) {
+    return ActionChip(
+      onPressed: () => _sendMessage(text),
+      backgroundColor: const Color(0xFF1E293B),
+      side: BorderSide(color: AppColors.primaryYellow.withAlpha(50)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: AppColors.primaryYellow),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
             ),
           ),
         ],

@@ -239,7 +239,18 @@ class AppLocalizations {
       'active': 'Active',
       'open_map': 'Open Map',
       'buses_active_nearby': 'Buses Active Nearby',
-      
+
+      // Bus info popup
+      'speed': 'Speed',
+      'status': 'Status',
+
+      // Route screen
+      'add_favorite_route': 'Add Favorite Route',
+      'added_to_favorites': 'Added to favorites!',
+      'removed_from_favorites': 'Removed from favorites!',
+      'sort': 'SORT',
+      'loading_map': 'Loading map...',
+
       // We do not need to populate 100+ English places because translate() defaults to the key if not found.
     },
     'ml': {
@@ -469,6 +480,17 @@ class AppLocalizations {
       'active': 'സജീവമാണ്',
       'open_map': 'മാപ്പ് കാണുക',
       'buses_active_nearby': 'ബസുകൾ സമീപത്തുണ്ട്',
+
+      // Bus info popup
+      'speed': 'വേഗത',
+      'status': 'നില',
+
+      // Route screen
+      'add_favorite_route': 'പ്രിയപ്പെട്ട റൂട്ട് ചേർക്കുക',
+      'added_to_favorites': 'പ്രിയപ്പെട്ടവയിൽ ചേർത്തു!',
+      'removed_from_favorites': 'പ്രിയപ്പെട്ടവയിൽ നിന്ന് നീക്കി!',
+      'sort': 'അടുക്കുക',
+      'loading_map': 'മാപ്പ് ലോഡ് ചെയ്യുന്നു...',
 
       // Places
       'Kottayam': 'കോട്ടയം',

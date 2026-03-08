@@ -290,6 +290,7 @@ class _HomeViewState extends State<_HomeView> {
   }
 
   void _showBusInfo(LiveBus bus) {
+    final loc = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).cardColor,
@@ -345,14 +346,14 @@ class _HomeViewState extends State<_HomeView> {
               children: [
                 Expanded(
                   child: _buildInfoTile(
-                    'Speed',
+                    loc['speed'],
                     '${bus.speedKmph.toStringAsFixed(0)} km/h',
                     Icons.speed,
                   ),
                 ),
                 Expanded(
                   child: _buildInfoTile(
-                    'Status',
+                    loc['status'],
                     bus.status,
                     Icons.check_circle,
                   ),
@@ -394,6 +395,7 @@ class _HomeViewState extends State<_HomeView> {
   }
 
   void _showEmergencyOptions() {
+    final loc = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF1E201E),
@@ -419,23 +421,23 @@ class _HomeViewState extends State<_HomeView> {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Emergency Services',
-                style: TextStyle(
+              Text(
+                loc['emergency_services'],
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 16),
-              _buildEmergencyOption(ctx, Icons.local_police,     Colors.blue,           'Police Control Room', '100'),
-              _buildEmergencyOption(ctx, Icons.local_fire_department, Colors.orange,    'Fire Force',         '101'),
-              _buildEmergencyOption(ctx, Icons.medical_services, Colors.red,            'Ambulance',          '102'),
+              _buildEmergencyOption(ctx, Icons.local_police,     Colors.blue,           loc['police_control'], '100'),
+              _buildEmergencyOption(ctx, Icons.local_fire_department, Colors.orange,    loc['fire_force'],     '101'),
+              _buildEmergencyOption(ctx, Icons.medical_services, Colors.red,            loc['ambulance'],      '102'),
               const Divider(color: Colors.white24, height: 24),
-              _buildEmergencyOption(ctx, Icons.woman,            Colors.pinkAccent,     'Women Helpline',     '1091'),
-              _buildEmergencyOption(ctx, Icons.child_care,       Colors.lightBlueAccent,'Child Helpline',     '1098'),
+              _buildEmergencyOption(ctx, Icons.woman,            Colors.pinkAccent,     loc['women_helpline'], '1091'),
+              _buildEmergencyOption(ctx, Icons.child_care,       Colors.lightBlueAccent, loc['child_helpline'], '1098'),
               const Divider(color: Colors.white24, height: 24),
-              _buildEmergencyOption(ctx, Icons.sos,              Colors.redAccent,      'General Emergency (112)', '112', isPrimary: true),
+              _buildEmergencyOption(ctx, Icons.sos,              Colors.redAccent,      loc['general_emergency'], '112', isPrimary: true),
             ],
           ),
         ),
@@ -583,7 +585,7 @@ class _HomeViewState extends State<_HomeView> {
                     children: [
                       Text(
                         AppLocalizations.of(context).translate('app_title').toUpperCase(),
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 23,
                           fontWeight: FontWeight.bold,
                           color: Colors.black,
@@ -658,7 +660,7 @@ class _HomeViewState extends State<_HomeView> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Notifications',
+                            loc['notifications'],
                             style: TextStyle(
                               fontSize: 18, 
                               fontWeight: FontWeight.bold,
@@ -669,7 +671,7 @@ class _HomeViewState extends State<_HomeView> {
                             onPressed: () {
                               NotificationService().clearHistory();
                             },
-                            child: const Text('Clear All'),
+                            child: Text(loc['clear_all']),
                           ),
                         ],
                       ),

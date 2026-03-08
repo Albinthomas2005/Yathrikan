@@ -286,8 +286,8 @@ class _FullMapScreenState extends State<FullMapScreen> {
                       ),
                     ),
                     // Arrow
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 10),
                       child: Column(
                         children: [
                           Icon(Icons.arrow_forward_rounded,
@@ -304,7 +304,7 @@ class _FullMapScreenState extends State<FullMapScreen> {
                           const SizedBox(height: 4),
                           Text(
                             bus.to,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
                               color: AppColors.primaryYellow,

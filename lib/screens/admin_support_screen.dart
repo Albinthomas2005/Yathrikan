@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/constants.dart';
+import '../services/support_ticket_service.dart';
 
 class AdminSupportScreen extends StatefulWidget {
   const AdminSupportScreen({super.key});
@@ -12,38 +13,7 @@ class AdminSupportScreen extends StatefulWidget {
 class _AdminSupportScreenState extends State<AdminSupportScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-
-  // Mock data state
-  List<Map<String, dynamic>> _pendingTickets = [
-    {
-      'id': '#BW-10294',
-      'title': 'Route Delay',
-      'description':
-          'Bus 402 on the Downtown route is consistently 20 minutes late every morning. I\'ve been late ...',
-      'priority': 'HIGH',
-      'userName': null,
-      'upvotes': 1,
-    },
-    {
-      'id': '#BW-10311',
-      'title': 'Driver Conduct',
-      'description':
-          'The driver was extremely rude when I asked for a stop. He drove past the designated station...',
-      'priority': 'MEDIUM',
-      'userName': 'Sarah M.',
-    },
-    {
-      'id': '#BW-10325',
-      'title': 'App Error',
-      'description':
-          'Unable to recharge my wallet using Apple Pay. It keeps saying \'Transaction Failed\' but the...',
-      'priority': 'LOW',
-      'userName': 'Anonymous',
-    },
-  ];
-
-  List<Map<String, dynamic>> _inProgressTickets = [];
-  List<Map<String, dynamic>> _resolvedTickets = [];
+  final SupportTicketService _ticketService = SupportTicketService();
 
   @override
   void initState() {
@@ -95,14 +65,10 @@ class _AdminSupportScreenState extends State<AdminSupportScreen>
             onPressed: () => Navigator.pop(context),
             child: Text('Close', style: GoogleFonts.inter(color: Colors.white54)),
           ),
-          if (!_resolvedTickets.any((t) => t['id'] == ticket['id']))
+          if (!_ticketService.resolvedTickets.any((t) => t['id'] == ticket['id']))
             ElevatedButton(
               onPressed: () {
-                setState(() {
-                  _pendingTickets.removeWhere((t) => t['id'] == ticket['id']);
-                  _inProgressTickets.removeWhere((t) => t['id'] == ticket['id']);
-                  _resolvedTickets.add(ticket);
-                });
+                _ticketService.resolveTicket(ticket['id']);
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -221,21 +187,36 @@ class _AdminSupportScreenState extends State<AdminSupportScreen>
           // Tab Bar
           Container(
             color: const Color(0xFF0F172A),
-            child: TabBar(
-              controller: _tabController,
-              indicatorColor: AppColors.primaryYellow,
-              indicatorWeight: 3,
-              labelColor: AppColors.primaryYellow,
-              unselectedLabelColor: Colors.white54,
-              labelStyle: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+            child: AnimatedBuilder(
+              animation: _tabController,
+              builder: (context, _) => TabBar(
+                controller: _tabController,
+                indicatorColor: AppColors.primaryYellow,
+                indicatorWeight: 3,
+                labelColor: AppColors.primaryYellow,
+                unselectedLabelColor: Colors.white54,
+                labelStyle: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                tabs: [
+                  StreamBuilder<List<Map<String, dynamic>>>(
+                    stream: _ticketService.pendingStream,
+                    initialData: _ticketService.pendingTickets,
+                    builder: (context, snapshot) => Tab(text: 'Pending (${snapshot.data?.length ?? 0})'),
+                  ),
+                  StreamBuilder<List<Map<String, dynamic>>>(
+                    stream: _ticketService.inProgressStream,
+                    initialData: _ticketService.inProgressTickets,
+                    builder: (context, snapshot) => Tab(text: 'In Progress (${snapshot.data?.length ?? 0})'),
+                  ),
+                  StreamBuilder<List<Map<String, dynamic>>>(
+                    stream: _ticketService.resolvedStream,
+                    initialData: _ticketService.resolvedTickets,
+                    builder: (context, snapshot) => Tab(text: 'Resolved (${snapshot.data?.length ?? 0})'),
+                  ),
+                ],
               ),
-              tabs: [
-                Tab(text: 'Pending (${_pendingTickets.length})'),
-                Tab(text: 'In Progress (${_inProgressTickets.length})'),
-                Tab(text: 'Resolved (${_resolvedTickets.length})'),
-              ],
             ),
           ),
 
@@ -245,44 +226,62 @@ class _AdminSupportScreenState extends State<AdminSupportScreen>
               controller: _tabController,
               children: [
                 // Pending Tab
-                _pendingTickets.isEmpty
-                    ? Center(child: Text('No pending tickets', style: GoogleFonts.inter(color: Colors.white54)))
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _pendingTickets.length,
-                        itemBuilder: (context, index) {
-                          return _TicketCard(
-                            ticket: _pendingTickets[index],
-                            onTap: () => _showTicketDetails(_pendingTickets[index]),
-                          );
-                        },
-                      ),
+                StreamBuilder<List<Map<String, dynamic>>>(
+                  stream: _ticketService.pendingStream,
+                  initialData: _ticketService.pendingTickets,
+                  builder: (context, snapshot) {
+                    final tickets = snapshot.data ?? [];
+                    if (tickets.isEmpty) return Center(child: Text('No pending tickets', style: GoogleFonts.inter(color: Colors.white54)));
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: tickets.length,
+                      itemBuilder: (context, index) {
+                        return _TicketCard(
+                          ticket: tickets[index],
+                          onTap: () => _showTicketDetails(tickets[index]),
+                        );
+                      },
+                    );
+                  },
+                ),
                 // In Progress Tab
-                _inProgressTickets.isEmpty
-                    ? Center(child: Text('No tickets in progress', style: GoogleFonts.inter(color: Colors.white54)))
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _inProgressTickets.length,
-                        itemBuilder: (context, index) {
-                          return _TicketCard(
-                            ticket: _inProgressTickets[index],
-                            onTap: () => _showTicketDetails(_inProgressTickets[index]),
-                          );
-                        },
-                      ),
+                StreamBuilder<List<Map<String, dynamic>>>(
+                  stream: _ticketService.inProgressStream,
+                  initialData: _ticketService.inProgressTickets,
+                  builder: (context, snapshot) {
+                    final tickets = snapshot.data ?? [];
+                    if (tickets.isEmpty) return Center(child: Text('No tickets in progress', style: GoogleFonts.inter(color: Colors.white54)));
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: tickets.length,
+                      itemBuilder: (context, index) {
+                        return _TicketCard(
+                          ticket: tickets[index],
+                          onTap: () => _showTicketDetails(tickets[index]),
+                        );
+                      },
+                    );
+                  },
+                ),
                 // Resolved Tab
-                _resolvedTickets.isEmpty
-                    ? Center(child: Text('0 resolved tickets', style: GoogleFonts.inter(color: Colors.white54)))
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _resolvedTickets.length,
-                        itemBuilder: (context, index) {
-                          return _TicketCard(
-                            ticket: _resolvedTickets[index],
-                            onTap: () => _showTicketDetails(_resolvedTickets[index]),
-                          );
-                        },
-                      ),
+                StreamBuilder<List<Map<String, dynamic>>>(
+                  stream: _ticketService.resolvedStream,
+                  initialData: _ticketService.resolvedTickets,
+                  builder: (context, snapshot) {
+                    final tickets = snapshot.data ?? [];
+                    if (tickets.isEmpty) return Center(child: Text('0 resolved tickets', style: GoogleFonts.inter(color: Colors.white54)));
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: tickets.length,
+                      itemBuilder: (context, index) {
+                        return _TicketCard(
+                          ticket: tickets[index],
+                          onTap: () => _showTicketDetails(tickets[index]),
+                        );
+                      },
+                    );
+                  },
+                ),
               ],
             ),
           ),
