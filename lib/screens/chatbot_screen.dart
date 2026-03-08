@@ -292,29 +292,21 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           });
 
           if (result.finalResult) {
-            _silenceTimer?.cancel();
             if (!_voiceSent) {
               _voiceSent = true;
               setState(() => _isListening = false);
               final text = _messageController.text.trim();
               if (text.isNotEmpty) _sendMessage(text);
             }
-          } else {
-            // Manual silence timeout
-            _silenceTimer?.cancel();
-            _silenceTimer = Timer(const Duration(seconds: 3), () {
-              if (mounted && _isListening) {
-                _stopListening();
-              }
-            });
           }
         }
       },
-      pauseFor: const Duration(seconds: 3),
+      listenFor: const Duration(seconds: 15),
+      pauseFor: const Duration(seconds: 5),
+      localeId: 'en_IN', // Helps recognize local town names like Pala, Kottayam
       listenOptions: stt.SpeechListenOptions(
         partialResults: true,
         cancelOnError: true,
-        listenMode: stt.ListenMode.dictation,
       ),
     );
   }
@@ -322,15 +314,18 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   void _stopListening() async {
     _silenceTimer?.cancel();
     setState(() => _isListening = false);
-    await _speech.stop(); // Use stop instead of cancel to finalize STT
+    await _speech.stop();
 
-    // Safety fallback: if status doesn't change to done quickly, force send.
+    // The onSpeechStatus('done') listener or onResult(finalResult) will handle sending.
+    // We add a tiny delay just in case those callbacks fail to fire.
     if (!_voiceSent) {
-      Future.delayed(const Duration(milliseconds: 1000), () {
+      Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted && !_voiceSent) {
-          _voiceSent = true;
           final text = _messageController.text.trim();
-          if (text.isNotEmpty) _sendMessage(text);
+          if (text.isNotEmpty) {
+            _voiceSent = true;
+            _sendMessage(text);
+          }
         }
       });
     }

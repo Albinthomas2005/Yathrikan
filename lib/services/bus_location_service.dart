@@ -10,6 +10,37 @@ import 'notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/app_localizations.dart';
 
+/// Represents a found route — either direct (one bus) or transfer (two buses).
+class FoundRoute {
+  final String type;          // 'direct' | 'transfer'
+  final String bus1Name;
+  final String? bus2Name;     // null when direct
+  final String? transferStop; // normalised, null when direct  
+  final List<String> leg1Stops;
+  final List<String> leg2Stops; // empty when direct
+
+  const FoundRoute({
+    required this.type,
+    required this.bus1Name,
+    this.bus2Name,
+    this.transferStop,
+    required this.leg1Stops,
+    this.leg2Stops = const [],
+  });
+
+  /// Human-readable title for the transfer stop (Title Case).
+  String get transferStopDisplay {
+    if (transferStop == null) return '';
+    return transferStop!.split(' ').map((w) =>
+        w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1)}').join(' ');
+  }
+
+  /// Human-readable stop name from a normalised key.
+  static String displayName(String norm) =>
+      norm.split(' ').map((w) =>
+          w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1)}').join(' ');
+}
+
 class BusLocationService {
   static final BusLocationService _instance = BusLocationService._internal();
   factory BusLocationService() => _instance;
@@ -221,7 +252,7 @@ class BusLocationService {
 
   late List<LatLng> _interpolatedRoute;
   late List<LatLng> _interpolatedRouteReturn;
-  LatLng _userLocation = const LatLng(9.528711, 76.822581); // Default: Amal Jyothi (will update)
+  LatLng _userLocation = const LatLng(9.586, 76.826); // Default: Amal Jyothi (will update)
   LatLng get userLocation => _userLocation;
   
   bool _initialized = false;
@@ -242,7 +273,7 @@ class BusLocationService {
     'Koovappally': LatLng(9.5425371, 76.8201976),
     'Ponkunnam': LatLng(9.5656117, 76.7546495),
     'Vazhoor': LatLng(9.6040, 76.6730),
-    'Amal Jyothi': LatLng(9.528711, 76.822581),
+    'Amal Jyothi': LatLng(9.586, 76.826),
     'Manimala': LatLng(9.4583, 76.7333),
     'Koruthodu': LatLng(9.4333, 76.9000),
     'Pampady': LatLng(9.6600, 76.6000),
@@ -705,7 +736,7 @@ class BusLocationService {
     'kottayam': 'kottayam', 'changanassery': 'changanassery',
     'pala': 'pala', 'ettumanoor': 'ettumanoor',
     'thalayolaparambu': 'thalayolaparambu', 'kumarakom': 'kumarakom',
-    'mundakayam': 'mundakayam',
+    'mundakayam': 'mundakayam', 'amal jyothi': 'koovappally', 'amaljyothi': 'koovappally',
     // Malayalam equivalents
     'എറുമേലി': 'erumely',
     'കൂവപ്പള്ളി': 'koovappally',
@@ -715,19 +746,120 @@ class BusLocationService {
     'ചങ്ങനാശ്ശേരി': 'changanassery',
     'പാല': 'pala',
     'എട്ടുമാനൂർ': 'ettumanoor',
+    'അമൽ ജ്യോതി': 'koovappally',
   };
 
   String _norm(String input) =>
       _placeNorm[input.trim()] ?? _placeNorm[input.trim().toLowerCase()] ?? input.trim().toLowerCase();
 
-  /// Return the keyPlaces LatLng for a normalised stop name.
+  // -----------------------------------------------------------------------
+  // Bus Route Database & Transfer Algorithm
+  // -----------------------------------------------------------------------
+
+  /// All known bus routes as ordered stop lists (normalised lower-case).
+  static const List<Map<String, dynamic>> busRouteDatabase = [
+    {
+      'bus': 'Erumely Express',
+      'route': ['erumely', 'erumely north', 'koovappally', 'kanjirappally', 'ponkunnam', 'vazhoor', 'kottayam'],
+    },
+    {
+      'bus': 'Kottayam Express',
+      'route': ['kottayam', 'vazhoor', 'ponkunnam', 'kanjirappally', 'koovappally', 'erumely north', 'erumely'],
+    },
+    {
+      'bus': 'Kanjirappally - Pala Bus',
+      'route': ['kanjirappally', 'bharananganam', 'pala'],
+    },
+    {
+      'bus': 'Ponkunnam - Pala Bus',
+      'route': ['ponkunnam', 'lalam', 'pala'],
+    },
+    {
+      'bus': 'Erattupetta - Pala Bus',
+      'route': ['erattupetta', 'bharananganam', 'pala'],
+    },
+    {
+      'bus': 'Kanjirappally - Erattupetta Bus',
+      'route': ['kanjirappally', 'erattupetta'],
+    },
+    {
+      'bus': 'Pala - Kottayam Bus',
+      'route': ['pala', 'bharananganam', 'kuravilangad', 'ettumanoor', 'kottayam'],
+    },
+    {
+      'bus': 'Kottayam - Pala Bus',
+      'route': ['kottayam', 'ettumanoor', 'kuravilangad', 'bharananganam', 'pala'],
+    },
+  ];
+
+  /// Finds direct and 1-transfer bus routes between [start] and [end].
+  /// Returns a list of [FoundRoute] (empty if nothing found).
+  List<FoundRoute> findRoutes(String start, String end) {
+    final fromNorm = _norm(start);
+    final toNorm   = _norm(end);
+    if (fromNorm == toNorm) return [];
+
+    final List<FoundRoute> results = [];
+
+    // ── Step 1: Direct routes ──────────────────────────────────────────────
+    for (final r in busRouteDatabase) {
+      final stops = List<String>.from(r['route'] as List);
+      final fi = stops.indexOf(fromNorm);
+      final ti = stops.indexOf(toNorm);
+      if (fi != -1 && ti != -1 && fi < ti) {
+        results.add(FoundRoute(
+          type: 'direct',
+          bus1Name: r['bus'] as String,
+          leg1Stops: stops.sublist(fi, ti + 1),
+        ));
+      }
+    }
+    if (results.isNotEmpty) return results;
+
+    // ── Step 2: 1-transfer routes ──────────────────────────────────────────
+    final Set<String> seen = {};
+    for (final r1 in busRouteDatabase) {
+      final s1 = List<String>.from(r1['route'] as List);
+      final fi = s1.indexOf(fromNorm);
+      if (fi == -1) continue;
+
+      for (int si = fi + 1; si < s1.length; si++) {
+        final transferStop = s1[si];
+        for (final r2 in busRouteDatabase) {
+          if (r2 == r1) continue;
+          final s2 = List<String>.from(r2['route'] as List);
+          final ti2 = s2.indexOf(toNorm);
+          final ts2 = s2.indexOf(transferStop);
+          if (ts2 != -1 && ti2 != -1 && ts2 < ti2) {
+            final key = '${r1['bus']}|${r2['bus']}|$transferStop';
+            if (!seen.contains(key)) {
+              seen.add(key);
+              results.add(FoundRoute(
+                type: 'transfer',
+                bus1Name: r1['bus'] as String,
+                bus2Name: r2['bus'] as String,
+                transferStop: transferStop,
+                leg1Stops: s1.sublist(fi, si + 1),
+                leg2Stops: s2.sublist(ts2, ti2 + 1),
+              ));
+            }
+          }
+        }
+      }
+    }
+    return results;
+  }
+
+  /// Return the keyPlaces LatLng for a normalised stop name (private).
   LatLng? _latLngForStop(String normName) {
-    // keyPlaces uses Title-Case English keys
     for (final entry in keyPlaces.entries) {
       if (entry.key.toLowerCase() == normName) return entry.value;
     }
     return null;
   }
+
+  /// Public version — used by the UI to resolve stop names to map coordinates.
+  LatLng? getLatLngForStop(String normName) => _latLngForStop(normName);
 
   List<Map<String, dynamic>> findBusesForUser({
     required String startLocation,

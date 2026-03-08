@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:http/http.dart' as http;
 import '../utils/constants.dart';
 import 'dart:async';
+import 'dart:convert';
 import '../models/route_path_model.dart';
 import '../services/notification_service.dart';
 import '../utils/app_localizations.dart';
@@ -73,7 +75,7 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   bool _showBusList = true;
   List<BusOption> _availableBuses = [];
   BusOption? _selectedBus;
-  LatLng _currentLocation = const LatLng(9.5425371, 76.8201976); // Default Koovappally, will update
+  LatLng _currentLocation = const LatLng(9.586, 76.826); // Default Amal Jyothi, will update
   bool _isLocationLoaded = false;
   bool _isLocating = false; // true while the GPS button is fetching location
 
@@ -84,6 +86,36 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   bool _showToSuggestions = false;
   final FocusNode _fromFocus = FocusNode();
   final FocusNode _toFocus = FocusNode();
+
+  // Transfer route state
+  List<FoundRoute> _foundRoutes = [];
+  FoundRoute? _selectedTransferRoute;
+  List<LatLng> _leg1Path = [];
+  List<LatLng> _leg2Path = [];
+  bool _loadingTransferMap = false;
+
+  // Animated bus icons on the transfer map
+  int _bus1Idx = 0;
+  int _bus2Idx = 0;
+  LatLng? _bus1Pos;
+  LatLng? _bus2Pos;
+  Timer? _busAnimTimer;
+  Timer? _clockUpdateTimer; // Drives the 1-minute UI countdown refresh
+
+  // Sequential animation phase:
+  //  0 = Blue bus travelling leg 1 (red hidden)
+  //  1 = Pause at transfer stop (~3 s)
+  //  2 = Red bus travelling leg 2 (blue stays at transfer)
+  //  3 = Short end pause before loop restart
+  int _animPhase = 0;
+  int _pauseTickCount = 0;
+  static const int _transferPauseTicks = 50;  // ~3 s at 60 ms/tick
+  static const int _endPauseTicks = 20;       // ~1.2 s gap before loop
+
+  // Estimated travel times (minutes) computed from actual path distances
+  int _leg1EtaMin = 0;
+  int _leg2EtaMin = 0;
+  DateTime? _routeSelectionTime;
 
   @override
   void initState() {
@@ -105,10 +137,28 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
         if (widget.initialOrigin != null && widget.initialOrigin!.isNotEmpty) {
             // Card gave us explicit origin — use it directly, no GPS
             _fromController.text = loc.translate(widget.initialOrigin!);
+            
+            final originLower = widget.initialOrigin!.toLowerCase();
+            for (final entry in BusLocationService.keyPlaces.entries) {
+                if (entry.key.toLowerCase() == originLower) {
+                    setState(() {
+                        _currentLocation = entry.value;
+                    });
+                    break;
+                }
+            }
+        } else if (widget.autoDetectOrigin) {
+            // User did not provide origin but requested auto-detection (e.g. from chatbot)
+            _autoDetectLocation().then((_) {
+                 // After auto-detecting, we should also auto-trigger the route search
+                 if (widget.initialDestination != null) {
+                     _handleFindRoute();
+                 }
+            });
         } else {
             _fromController.text = '';
         }
-
+        
         // Auto-select bus if ID provided
         if (widget.initialBusId != null) {
             _handleNotificationBus(widget.initialBusId!);
@@ -145,6 +195,8 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   void dispose() {
     _positionStreamSubscription?.cancel();
     _busSubscription?.cancel();
+    _busAnimTimer?.cancel();
+    _clockUpdateTimer?.cancel();
     _fromController.dispose();
     _toController.dispose();
     _fromFocus.dispose();
@@ -171,6 +223,20 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
 
   void _onFromChanged() {
     final q = _fromController.text;
+    
+    // Sync map location instantly if it matches a known place
+    final fromText = q.trim().toLowerCase();
+    for (final entry in BusLocationService.keyPlaces.entries) {
+      if (entry.key.toLowerCase() == fromText) {
+        if (mounted) {
+          setState(() {
+            _currentLocation = entry.value;
+          });
+        }
+        break;
+      }
+    }
+
     if (q.length >= 2 && _fromFocus.hasFocus) {
       if (BusLocationService.allPlaces.any((p) => p.toLowerCase() == q.toLowerCase())) {
         setState(() { _showFromSuggestions = false; });
@@ -403,8 +469,33 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   }
 
   Future<void> _handleFindRoute() async {
-    setState(() { _showBusList = true; });
+    final fromText = _fromController.text.trim().toLowerCase();
+    LatLng? newLocation;
+    for (final entry in BusLocationService.keyPlaces.entries) {
+        if (entry.key.toLowerCase() == fromText) {
+            newLocation = entry.value;
+            break;
+        }
+    }
+
+    setState(() {
+      if (newLocation != null) _currentLocation = newLocation;
+      _showBusList = true;
+      _selectedTransferRoute = null;
+      _leg1Path = [];
+      _leg2Path = [];
+    });
     _updateBusList(_busService.buses);
+
+    // Compute transfer/direct route suggestions
+    final from = _fromController.text.trim();
+    final to   = _toController.text.trim();
+    if (from.isNotEmpty && to.isNotEmpty) {
+      final routes = _busService.findRoutes(from, to);
+      if (mounted) setState(() => _foundRoutes = routes);
+    } else {
+      if (mounted) setState(() => _foundRoutes = []);
+    }
   }
 
   void _fitBounds(List<LatLng> points) {
@@ -416,6 +507,7 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   Future<void> _selectBus(BusOption bus) async {
     setState(() {
       _selectedBus = bus;
+      _selectedTransferRoute = null;
       _showBusList = false;
       _busLocation = bus.liveBusData?.position;
     });
@@ -425,13 +517,161 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
         totalDistanceMeters: 1000, totalDurationSeconds: 600,
       );
       WidgetsBinding.instance.addPostFrameCallback((_) {
-         _fitBounds(bus.liveBusData!.route);
+         // Include user current location in the bounds to ensure it's in view
+         final pointsToFit = List<LatLng>.from(bus.liveBusData!.route)..add(_currentLocation);
+         _fitBounds(pointsToFit);
+      });
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+         if (_busLocation != null) {
+             _fitBounds([_currentLocation, _busLocation!]);
+         }
       });
     }
   }
 
+  Future<void> _selectTransferRoute(FoundRoute route) async {
+    setState(() {
+      _selectedTransferRoute = route;
+      _selectedBus = null;
+      _showBusList = false;
+      _loadingTransferMap = true;
+      _leg1Path = [];
+      _leg2Path = [];
+    });
+
+    // Resolve stop coordinates
+    final leg1Points = route.leg1Stops
+        .map((s) => _busService.getLatLngForStop(s))
+        .whereType<LatLng>()
+        .toList();
+    final leg2Points = route.leg2Stops
+        .map((s) => _busService.getLatLngForStop(s))
+        .whereType<LatLng>()
+        .toList();
+
+    final results = await Future.wait([
+      leg1Points.length >= 2 ? _fetchOSRMPath(leg1Points) : Future.value(leg1Points),
+      leg2Points.length >= 2 ? _fetchOSRMPath(leg2Points) : Future.value(leg2Points),
+    ]);
+
+    if (!mounted) return;
+
+    // Compute ETA minutes from actual path distances (~30 km/h average)
+    int calcEta(List<LatLng> path) {
+      if (path.length < 2) return 5;
+      double totalM = 0;
+      const Distance dist = Distance();
+      for (int i = 0; i < path.length - 1; i++) {
+        totalM += dist.as(LengthUnit.Meter, path[i], path[i + 1]);
+      }
+      return (totalM / (30000 / 60)).ceil().clamp(1, 999);
+    }
+
+    setState(() {
+      _leg1Path = results[0];
+      _leg2Path = results[1];
+      _loadingTransferMap = false;
+      _animPhase = 0;
+      _pauseTickCount = 0;
+      _bus1Idx = 0;
+      _bus2Idx = 0;
+      _bus1Pos = results[0].isNotEmpty ? results[0].first : null;
+      _bus2Pos = null; // hidden until transfer
+      _leg1EtaMin = calcEta(results[0]);
+      _leg2EtaMin = calcEta(results[1]);
+      _routeSelectionTime = DateTime.now();
+    });
+
+    // ── Sequential phase timer ────────────────────────────────────────────────
+    // Phase 0: blue bus moves along leg 1 until it reaches the transfer stop.
+    // Phase 1: 3-second pause at transfer ("Changing buses...").
+    // Phase 2: red bus moves from transfer stop to destination.
+    // Phase 3: brief end pause then restart from phase 0.
+    _busAnimTimer?.cancel();
+    _clockUpdateTimer?.cancel();
+    _clockUpdateTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (mounted) setState(() {});
+    });
+    _busAnimTimer = Timer.periodic(const Duration(milliseconds: 60), (_) {
+      if (!mounted) return;
+      setState(() {
+        switch (_animPhase) {
+          case 0: // ── Blue bus travelling ──
+            if (_leg1Path.isNotEmpty && _bus1Idx < _leg1Path.length - 1) {
+              _bus1Idx++;
+              _bus1Pos = _leg1Path[_bus1Idx];
+            } else {
+              // Arrived at transfer stop → pause
+              _animPhase = 1;
+              _pauseTickCount = 0;
+            }
+            break;
+
+          case 1: // ── Pause at transfer stop ──
+            _pauseTickCount++;
+            if (_pauseTickCount >= _transferPauseTicks) {
+              // Start red bus
+              _animPhase = 2;
+              _bus2Idx = 0;
+              _bus2Pos = _leg2Path.isNotEmpty ? _leg2Path.first : null;
+            }
+            break;
+
+          case 2: // ── Red bus travelling ──
+            if (_leg2Path.isNotEmpty && _bus2Idx < _leg2Path.length - 1) {
+              _bus2Idx++;
+              _bus2Pos = _leg2Path[_bus2Idx];
+            } else {
+              // Reached destination → end pause
+              _animPhase = 3;
+              _pauseTickCount = 0;
+            }
+            break;
+
+          case 3: // ── Short end pause → loop ──
+            _pauseTickCount++;
+            if (_pauseTickCount >= _endPauseTicks) {
+              _animPhase = 0;
+              _pauseTickCount = 0;
+              _bus1Idx = 0;
+              _bus2Idx = 0;
+              _bus1Pos = _leg1Path.isNotEmpty ? _leg1Path.first : null;
+              _bus2Pos = null; // hide red during leg 1
+            }
+            break;
+        }
+      });
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final allPoints = [...results[0], ...results[1]];
+      if (allPoints.isNotEmpty) _fitBounds(allPoints);
+    });
+  }
+
+  Future<List<LatLng>> _fetchOSRMPath(List<LatLng> points) async {
+    try {
+      final coords = points.map((p) => '${p.longitude},${p.latitude}').join(';');
+      final url = 'https://router.project-osrm.org/route/v1/driving/$coords?overview=full&geometries=geojson';
+      final resp = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body);
+        if (data['code'] == 'Ok') {
+          final List<dynamic> c = data['routes'][0]['geometry']['coordinates'];
+          return c.map((pt) => LatLng(pt[1].toDouble(), pt[0].toDouble())).toList();
+        }
+      }
+    } catch (_) {}
+    return points; // fallback: straight lines
+  }
+
   void _onBackPressed() {
-    if (_selectedBus != null) {
+    if (_selectedTransferRoute != null) {
+      _busAnimTimer?.cancel();
+      _clockUpdateTimer?.cancel();
+      setState(() { _selectedTransferRoute = null; _showBusList = true; });
+    } else if (_selectedBus != null) {
       setState(() { _selectedBus = null; _showBusList = true; });
     } else {
       Navigator.of(context).pop();
@@ -462,14 +702,457 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
     );
   }
 
+  // ── Transfer Route Card ────────────────────────────────────────────────────
+  Widget _buildTransferRouteCard(FoundRoute route, int index) {
+    final theme = Theme.of(context);
+    final isDirect = route.type == 'direct';
+    final leg1Start = FoundRoute.displayName(route.leg1Stops.first);
+    final leg1End   = FoundRoute.displayName(route.leg1Stops.last);
+    final leg2Start = route.leg2Stops.isNotEmpty ? FoundRoute.displayName(route.leg2Stops.first) : '';
+    final leg2End   = route.leg2Stops.isNotEmpty ? FoundRoute.displayName(route.leg2Stops.last)  : '';
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 14),
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      color: theme.cardColor,
+      child: InkWell(
+        onTap: () => _selectTransferRoute(route),
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isDirect
+                          ? Colors.green.withValues(alpha: 0.15)
+                          : Colors.orange.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      isDirect ? 'Direct Route' : 'Route Option ${index + 1}',
+                      style: TextStyle(
+                        fontSize: 11, fontWeight: FontWeight.bold,
+                        color: isDirect ? Colors.green : Colors.orange.shade800,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(Icons.chevron_right, color: Colors.grey.shade400),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _buildLegRow(
+                busName: route.bus1Name, from: leg1Start, to: leg1End,
+                color: Colors.blueAccent, icon: Icons.directions_bus_filled,
+              ),
+              if (!isDirect) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                  child: Row(children: [
+                    const SizedBox(width: 18),
+                    Container(width: 2, height: 24, color: Colors.grey.shade300),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.amber.shade300, width: 1),
+                      ),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        const Icon(Icons.transfer_within_a_station, size: 14, color: Colors.amber),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Change at ${route.transferStopDisplay}',
+                          style: TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.bold,
+                            color: Colors.amber.shade800,
+                          ),
+                        ),
+                      ]),
+                    ),
+                  ]),
+                ),
+                _buildLegRow(
+                  busName: route.bus2Name ?? '', from: leg2Start, to: leg2End,
+                  color: Colors.redAccent, icon: Icons.directions_bus,
+                ),
+              ],
+              const SizedBox(height: 10),
+              Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                Icon(Icons.map_outlined, size: 14, color: Colors.grey.shade400),
+                const SizedBox(width: 4),
+                Text('View on map', style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
+              ]),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLegRow({
+    required String busName, required String from, required String to,
+    required Color color, required IconData icon,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: color, size: 22),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(busName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const SizedBox(height: 2),
+              Row(children: [
+                Flexible(child: Text(from, style: const TextStyle(fontSize: 12))),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Icon(Icons.arrow_forward, size: 12, color: Colors.grey.shade500),
+                ),
+                Flexible(child: Text(to, style: const TextStyle(fontSize: 12))),
+              ]),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Phase-aware timing info card (shown in map overlay) ───────────────────
+  Widget _buildPhaseInfoCard(FoundRoute route) {
+    final now = DateTime.now();
+    final selectionTime = _routeSelectionTime ?? now;
+    
+    // Fixed times calculated ONCE when route was selected
+    final arriveLeg1Time = selectionTime.add(Duration(minutes: _leg1EtaMin));
+    final departLeg2Time = selectionTime.add(Duration(minutes: _leg1EtaMin + 5));
+    final arriveLeg2Time = departLeg2Time.add(Duration(minutes: _leg2EtaMin));
+
+    // Helper: "HH:MM" string
+    String clockFormat(DateTime t) {
+      return '${t.hour.toString().padLeft(2,'0')}:${t.minute.toString().padLeft(2,'0')}';
+    }
+
+    switch (_animPhase) {
+      // ── Phase 0: Blue bus heading to transfer stop ─────────────────────────
+      case 0:
+        final stepsLeft = _leg1Path.isNotEmpty ? (_leg1Path.length - 1 - _bus1Idx) : 0;
+        final stepsTotal = _leg1Path.isNotEmpty ? (_leg1Path.length - 1) : 1;
+        final remainMin = (_leg1EtaMin * stepsLeft / stepsTotal).ceil();
+        final elapsedLeg1Min = _leg1EtaMin - remainMin;
+        
+        final remainDepartMin = (_leg1EtaMin + 5) - elapsedLeg1Min;
+        final arriveClockStr = clockFormat(arriveLeg1Time);
+        final departClockStr = clockFormat(departLeg2Time);
+        
+        final departText = remainDepartMin <= 0
+            ? 'now'
+            : 'at $departClockStr (${remainDepartMin}m left)';
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Bus 1 status
+            Row(children: [
+              Container(width: 14, height: 4, color: Colors.blueAccent),
+              const SizedBox(width: 8),
+              Expanded(child: Text(route.bus1Name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
+            ]),
+            const SizedBox(height: 2),
+            Text(
+              '${FoundRoute.displayName(route.leg1Stops.first)} → ${FoundRoute.displayName(route.leg1Stops.last)}',
+              style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 6),
+            Row(children: [
+              const Icon(Icons.access_time, size: 13, color: Colors.blueAccent),
+              const SizedBox(width: 5),
+              Text(
+                remainMin <= 0
+                    ? 'Arriving at ${route.transferStopDisplay} now'
+                    : 'Arrives at ${route.transferStopDisplay}: $arriveClockStr (${remainMin}m left)',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+              ),
+            ]),
+            const Divider(height: 14),
+            // Bus 2 waiting notice
+            Row(children: [
+              Container(width: 14, height: 4, color: Colors.redAccent),
+              const SizedBox(width: 8),
+              Expanded(child: Text(route.bus2Name ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
+            ]),
+            const SizedBox(height: 2),
+            Row(children: [
+              const Icon(Icons.schedule, size: 13, color: Colors.redAccent),
+              const SizedBox(width: 5),
+              Text(
+                'Departs ${route.transferStopDisplay} $departText',
+                style: TextStyle(fontSize: 12, color: Colors.red.shade700),
+              ),
+            ]),
+          ],
+        );
+
+      // ── Phase 1: Pause at transfer — changing buses ────────────────────────
+      case 1:
+        // Bus 1 arrived, red bus departs in 5 minutes. Simulate countdown during the ~3s pause ticks.
+        final remainDepartMin = (5 * (1 - (_pauseTickCount / _transferPauseTicks))).ceil().clamp(0, 5);
+        final departClockStr = clockFormat(departLeg2Time);
+        final departText = remainDepartMin <= 0
+            ? 'now'
+            : 'at $departClockStr (${remainDepartMin}m left)';
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              const Icon(Icons.transfer_within_a_station, color: Colors.amber, size: 18),
+              const SizedBox(width: 8),
+              Expanded(child: Text(
+                'Now changing buses at ${route.transferStopDisplay}',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              )),
+            ]),
+            const SizedBox(height: 6),
+            Text(
+              '${route.bus1Name} has arrived.',
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+            ),
+            const SizedBox(height: 4),
+            Row(children: [
+              Container(width: 14, height: 4, color: Colors.redAccent),
+              const SizedBox(width: 8),
+              Expanded(child: Text(
+                '${route.bus2Name} $departText',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.redAccent),
+              )),
+            ]),
+          ],
+        );
+
+      // ── Phase 2: Red bus travelling to destination ─────────────────────────
+      case 2:
+        final stepsLeft = _leg2Path.isNotEmpty ? (_leg2Path.length - 1 - _bus2Idx) : 0;
+        final stepsTotal = _leg2Path.isNotEmpty ? (_leg2Path.length - 1) : 1;
+        final remainMin = (_leg2EtaMin * stepsLeft / stepsTotal).ceil();
+        final arriveClockStr = clockFormat(arriveLeg2Time);
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Container(width: 14, height: 4, color: Colors.redAccent),
+              const SizedBox(width: 8),
+              Expanded(child: Text(route.bus2Name ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
+            ]),
+            const SizedBox(height: 2),
+            Text(
+              '${FoundRoute.displayName(route.leg2Stops.first)} → ${FoundRoute.displayName(route.leg2Stops.last)}',
+              style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 6),
+            Row(children: [
+              const Icon(Icons.access_time, size: 13, color: Colors.redAccent),
+              const SizedBox(width: 5),
+              Text(
+                remainMin <= 0
+                    ? 'Arriving at ${FoundRoute.displayName(route.leg2Stops.last)} now'
+                    : 'Arrives at ${FoundRoute.displayName(route.leg2Stops.last)}: $arriveClockStr (${remainMin}m left)',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.redAccent),
+              ),
+            ]),
+            const SizedBox(height: 4),
+            Row(children: [
+              const Icon(Icons.check_circle_outline, size: 13, color: Colors.blueAccent),
+              const SizedBox(width: 5),
+              Text(
+                '${route.bus1Name} arrived at ${route.transferStopDisplay}',
+                style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+              ),
+            ]),
+          ],
+        );
+
+      // ── Phase 3: Journey complete ──────────────────────────────────────────
+      default:
+        return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          const Icon(Icons.check_circle, color: Colors.green, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            'Journey complete! Arrived at ${FoundRoute.displayName(route.leg2Stops.last)}',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.green),
+          ),
+        ]);
+    }
+  }
+
+  // ── Dual-Leg Transfer Map View ─────────────────────────────────────────────
+  Widget _buildTransferMap(FoundRoute route) {
+    final theme = Theme.of(context);
+    final transferLatLng = route.transferStop != null
+        ? _busService.getLatLngForStop(route.transferStop!)
+        : null;
+    final leg2EndPt = _leg2Path.isNotEmpty ? _leg2Path.last : null;
+
+    return Column(
+      children: [
+        // Legend strip
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(width: 20, height: 4, color: Colors.blueAccent),
+            const SizedBox(width: 6),
+            const Text('Bus 1', style: TextStyle(fontSize: 12)),
+            const SizedBox(width: 16),
+            const Icon(Icons.star, size: 14, color: Colors.amber),
+            const SizedBox(width: 4),
+            Text('Transfer', style: TextStyle(fontSize: 12, color: Colors.amber.shade800)),
+            const SizedBox(width: 16),
+            Container(width: 20, height: 4, color: Colors.redAccent),
+            const SizedBox(width: 6),
+            const Text('Bus 2', style: TextStyle(fontSize: 12)),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Container(
+          height: 400,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Stack(children: [
+              _loadingTransferMap
+                  ? const Center(child: CircularProgressIndicator())
+                  : FlutterMap(
+                      mapController: _mapController,
+                      options: MapOptions(
+                        initialCenter: transferLatLng ?? _currentLocation,
+                        initialZoom: 11,
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.example.yathrikan',
+                        ),
+                        if (_leg1Path.isNotEmpty)
+                          PolylineLayer(polylines: [
+                            Polyline(points: _leg1Path, strokeWidth: 5.0, color: Colors.blueAccent),
+                          ]),
+                        if (_leg2Path.isNotEmpty)
+                          PolylineLayer(polylines: [
+                            Polyline(points: _leg2Path, strokeWidth: 5.0, color: Colors.redAccent),
+                          ]),
+                        MarkerLayer(markers: [
+                          // ⭐ Transfer/change point
+                          if (transferLatLng != null)
+                            Marker(
+                              point: transferLatLng, width: 44, height: 44,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.amber, shape: BoxShape.circle,
+                                  boxShadow: [BoxShadow(color: Colors.amber.withValues(alpha: 0.5), blurRadius: 8, spreadRadius: 2)],
+                                ),
+                                child: const Icon(Icons.star, color: Colors.white, size: 24),
+                              ),
+                            ),
+                          // 🔵 Destination endpoint
+                          if (leg2EndPt != null)
+                            Marker(
+                              point: leg2EndPt, width: 34, height: 34,
+                              child: Container(
+                                decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
+                                child: const Icon(Icons.location_on, color: Colors.white, size: 20),
+                              ),
+                            ),
+                          // 🔵 Animated Bus 1 (blue) moving along leg 1
+                          if (_bus1Pos != null)
+                            Marker(
+                              point: _bus1Pos!, width: 48, height: 48,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.blueAccent,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [BoxShadow(color: Colors.blueAccent.withValues(alpha: 0.5), blurRadius: 10, spreadRadius: 3)],
+                                ),
+                                padding: const EdgeInsets.all(6),
+                                child: const Icon(Icons.directions_bus_filled, color: Colors.white, size: 26),
+                              ),
+                            ),
+                          // 🔴 Animated Bus 2 (red) moving along leg 2
+                          if (_bus2Pos != null)
+                            Marker(
+                              point: _bus2Pos!, width: 48, height: 48,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.redAccent,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [BoxShadow(color: Colors.redAccent.withValues(alpha: 0.5), blurRadius: 10, spreadRadius: 3)],
+                                ),
+                                padding: const EdgeInsets.all(6),
+                                child: const Icon(Icons.directions_bus_filled, color: Colors.white, size: 26),
+                              ),
+                            ),
+                        ]),
+                      ],
+                    ),
+              Positioned(
+                top: 12, right: 12,
+                child: FloatingActionButton.small(
+                  backgroundColor: theme.cardColor,
+                  onPressed: () {
+                    _busAnimTimer?.cancel();
+                    _clockUpdateTimer?.cancel();
+                    setState(() { _selectedTransferRoute = null; _showBusList = true; });
+                  },
+                  child: Icon(Icons.close, color: theme.iconTheme.color),
+                ),
+              ),
+              Positioned(
+                bottom: 16, left: 16, right: 16,
+                child: Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    child: _buildPhaseInfoCard(route),
+                  ),
+                ),
+              ),
+            ]),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+
     final loc = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     return PopScope(
-      canPop: _selectedBus == null,
+      canPop: _selectedBus == null && _selectedTransferRoute == null,
       onPopInvokedWithResult: (didPop, result) { if (didPop) return; _onBackPressed(); },
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
@@ -582,11 +1265,37 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
                 ),
                 const SizedBox(height: 25),
 
-                // BUS LIST
+                // ROUTE SUGGESTIONS (transfer / direct routes from the database)
+                if (_showBusList && _foundRoutes.isNotEmpty) ...[
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: Colors.grey.shade300)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Text(
+                          'Route Suggestions',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey.shade500),
+                        ),
+                      ),
+                      Expanded(child: Divider(color: Colors.grey.shade300)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ..._foundRoutes.asMap().entries.map(
+                    (e) => _buildTransferRouteCard(e.value, e.key),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+
+                // LIVE BUS LIST
                 if (_showBusList) ...[
                   Text(loc.translate("incoming_buses"), style: AppTextStyles.heading2.copyWith(fontSize: 18, color: theme.textTheme.titleLarge?.color)),
                   const SizedBox(height: 15),
-                  if (_availableBuses.isEmpty) Text(loc.translate("no_incoming_buses")),
+                  if (_availableBuses.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(loc.translate("no_incoming_buses")),
+                    ),
                   ListView.builder(
                     shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
                     itemCount: _availableBuses.length,
@@ -623,7 +1332,14 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
                   ),
                 ],
 
-                // MAP (only when a bus is selected — shows ONLY that bus)
+                // TRANSFER ROUTE MAP (when a transfer/direct route card is selected)
+                if (!_showBusList && _selectedTransferRoute != null) ...[
+                  const SizedBox(height: 10),
+                  _buildTransferMap(_selectedTransferRoute!),
+                  const SizedBox(height: 20),
+                ],
+
+                // SINGLE-BUS MAP (only when a live bus is selected — existing behaviour)
                 if (!_showBusList && _selectedBus != null) ...[
                   const SizedBox(height: 25),
                   Container(
@@ -637,7 +1353,7 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
                       child: Stack(children: [
                         FlutterMap(
                           mapController: _mapController,
-                          options: MapOptions(initialCenter: _currentLocation, initialZoom: 12),
+                          options: MapOptions(initialCenter: _currentLocation, initialZoom: 14),
                           children: [
                             TileLayer(urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', userAgentPackageName: 'com.example.yathrikan'),
                             if (_currentRoutePath != null)
