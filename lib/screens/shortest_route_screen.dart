@@ -273,16 +273,19 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
 
   void _updateBusList(List<LiveBus> buses) {
     // Resolve "From" location to coordinates
-    final fromText = _fromController.text.trim();
-    final toText = _toController.text.trim();
+    final rawFromText = _fromController.text.trim();
+    final rawToText = _toController.text.trim();
+
+    final fromText = _busService.normalizeLocationName(rawFromText);
+    final toText = _busService.normalizeLocationName(rawToText);
 
     // The user ONLY wants buses to show up if the search endpoints are exclusively:
     // Koovappally, Kanjirappally, Ponkunnam, Kottayam, Erumely
     const allowedPlaces = ['koovappally', 'kanjirappally', 'ponkunnam', 'kottayam', 'erumely', 'erumely north'];
     
     // We check if either the 'from' or 'to' text (if not empty) matches our allowed places
-    final bool isFromValid = fromText.isEmpty || fromText.toLowerCase() == 'current location' || allowedPlaces.any((p) => fromText.toLowerCase().contains(p));
-    final bool isToValid = toText.isEmpty || allowedPlaces.any((p) => toText.toLowerCase().contains(p));
+    final bool isFromValid = fromText.isEmpty || rawFromText.toLowerCase() == 'current location' || allowedPlaces.contains(fromText);
+    final bool isToValid = toText.isEmpty || allowedPlaces.contains(toText);
 
     if (!isFromValid || !isToValid) {
         setState(() {
@@ -295,14 +298,14 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
     // Case-insensitive lookup
     LatLng? fromCoords;
     for (final entry in BusLocationService.keyPlaces.entries) {
-        if (entry.key.toLowerCase() == fromText.toLowerCase()) {
+        if (_busService.normalizeLocationName(entry.key) == fromText) {
             fromCoords = entry.value;
             break;
         }
     }
     
     // Fallback if user means "Current Location"
-    if (fromCoords == null && (fromText.toLowerCase() == "current location" || fromText.isEmpty)) {
+    if (fromCoords == null && (rawFromText.toLowerCase() == "current location" || rawFromText.isEmpty)) {
         fromCoords = _currentLocation;
     }
 
@@ -310,34 +313,22 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
       if (b.status != 'RUNNING') return false;
       
       // Filter by direction/route if "To" is specified
-      // (Simple containment check as before)
-      final toText = _toController.text.trim().toLowerCase();
-      // If we are solving "Erumely -> Kottayam", we want buses bound for Kottayam.
-      // E.g. Bus To: "Kottayam" or any other 5 allowed places
       bool matchesRoute = true;
       if (toText.isNotEmpty) {
-           // Direct destination match OR route direction match
-           matchesRoute = b.to.toLowerCase() == toText || 
-                          b.routeName.toLowerCase().contains(toText);
+           const routeOrder = ['erumely', 'erumely north', 'koovappally', 'kanjirappally', 'ponkunnam', 'vazhoor', 'kottayam', 'ettumanoor', 'kuravilangad', 'bharananganam', 'pala'];
+           final fi = routeOrder.indexOf(fromText);
+           final ti = routeOrder.indexOf(toText);
            
-           // If they are searching for a waypoint like Koovappally, figure out route direction
-           if (!matchesRoute) {
-               final fromLower = fromText.toLowerCase();
-               final toLower = toText.toLowerCase();
-               if ((fromLower.contains('erumely') && toLower.contains('koovappally')) ||
-                   (fromLower.contains('koovappally') && toLower.contains('kottayam')) ||
-                   (fromLower.contains('kanjirappally') && toLower.contains('kottayam')) ||
-                   (fromLower.contains('ponkunnam') && toLower.contains('kottayam'))) {
-                    matchesRoute = b.routeName.contains('Erumely - Kottayam');
-               } else if ((fromLower.contains('kottayam') && toLower.contains('koovappally')) ||
-                          (fromLower.contains('koovappally') && toLower.contains('erumely')) ||
-                          (fromLower.contains('kottayam') && toLower.contains('kanjirappally')) ||
-                          (fromLower.contains('kottayam') && toLower.contains('ponkunnam'))) {
-                    matchesRoute = b.routeName.contains('Kottayam - Erumely');
-               } else {
-                   // Generic forward search if it's generally heading that direction across the 5 stops
-                   matchesRoute = b.route.isNotEmpty; // fallback to incoming check
-               }
+           if (fi != -1 && ti != -1 && fi < ti) {
+               matchesRoute = b.routeName.toLowerCase().contains('erumely - kottayam') || 
+                              b.routeName.toLowerCase().contains('kottayam - pala') ||
+                              b.to.toLowerCase() == toText;
+           } else if (fi != -1 && ti != -1 && fi > ti) {
+               matchesRoute = b.routeName.toLowerCase().contains('kottayam - erumely') ||
+                              b.routeName.toLowerCase().contains('pala - kottayam') ||
+                              b.to.toLowerCase() == toText;
+           } else {
+               matchesRoute = b.to.toLowerCase() == toText || b.routeName.toLowerCase().contains(toText);
            }
       }
       
@@ -490,7 +481,10 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
     // Compute transfer/direct route suggestions
     final from = _fromController.text.trim();
     final to   = _toController.text.trim();
-    if (from.isNotEmpty && to.isNotEmpty) {
+    final normFrom = _busService.normalizeLocationName(from);
+    final normTo = _busService.normalizeLocationName(to);
+
+    if (from.isNotEmpty && to.isNotEmpty && normFrom == 'koovappally' && normTo == 'pala') {
       final routes = _busService.findRoutes(from, to);
       if (mounted) setState(() => _foundRoutes = routes);
     } else {
@@ -706,10 +700,16 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   Widget _buildTransferRouteCard(FoundRoute route, int index) {
     final theme = Theme.of(context);
     final isDirect = route.type == 'direct';
-    final leg1Start = FoundRoute.displayName(route.leg1Stops.first);
-    final leg1End   = FoundRoute.displayName(route.leg1Stops.last);
-    final leg2Start = route.leg2Stops.isNotEmpty ? FoundRoute.displayName(route.leg2Stops.first) : '';
-    final leg2End   = route.leg2Stops.isNotEmpty ? FoundRoute.displayName(route.leg2Stops.last)  : '';
+    
+    // Instead of taking the very first stop of the bus (Erumely), show the user where they are getting on and off based on their search.
+    final String fromText = _fromController.text.trim();
+    final String toText = _toController.text.trim();
+    
+    final leg1Start = FoundRoute.displayName(fromText.isNotEmpty ? fromText : route.leg1Stops.first);
+    final leg1End   = isDirect ? FoundRoute.displayName(toText.isNotEmpty ? toText : route.leg1Stops.last) : FoundRoute.displayName(route.transferStop ?? '');
+    
+    final leg2Start = route.leg2Stops.isNotEmpty ? FoundRoute.displayName(route.transferStop ?? '') : '';
+    final leg2End   = route.leg2Stops.isNotEmpty ? FoundRoute.displayName(toText.isNotEmpty ? toText : route.leg2Stops.last) : '';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 14),

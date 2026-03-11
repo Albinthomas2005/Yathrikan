@@ -731,9 +731,9 @@ class BusLocationService {
   // Translate any user-typed name (English or Malayalam) to the normalised key.
   static const Map<String, String> _placeNorm = {
     // English variants
-    'erumely': 'erumely', 'koovappally': 'koovappally',
+    'erumely': 'erumely', 'koovappally': 'koovappally', 'koovapally': 'koovappally', 'koovapply': 'koovappally',
     'kanjirappally': 'kanjirappally', 'ponkunnam': 'ponkunnam',
-    'kottayam': 'kottayam', 'changanassery': 'changanassery',
+    'kottayam': 'kottayam', 'kottyam': 'kottayam', 'changanassery': 'changanassery',
     'pala': 'pala', 'ettumanoor': 'ettumanoor',
     'thalayolaparambu': 'thalayolaparambu', 'kumarakom': 'kumarakom',
     'mundakayam': 'mundakayam', 'amal jyothi': 'koovappally', 'amaljyothi': 'koovappally',
@@ -751,6 +751,9 @@ class BusLocationService {
 
   String _norm(String input) =>
       _placeNorm[input.trim()] ?? _placeNorm[input.trim().toLowerCase()] ?? input.trim().toLowerCase();
+
+  /// Public method to normalize names
+  String normalizeLocationName(String input) => _norm(input);
 
   // -----------------------------------------------------------------------
   // Bus Route Database & Transfer Algorithm
@@ -810,7 +813,7 @@ class BusLocationService {
         results.add(FoundRoute(
           type: 'direct',
           bus1Name: r['bus'] as String,
-          leg1Stops: stops.sublist(fi, ti + 1),
+          leg1Stops: stops.sublist(0, ti + 1), // Start drawing from the bus's origin
         ));
       }
     }
@@ -839,8 +842,8 @@ class BusLocationService {
                 bus1Name: r1['bus'] as String,
                 bus2Name: r2['bus'] as String,
                 transferStop: transferStop,
-                leg1Stops: s1.sublist(fi, si + 1),
-                leg2Stops: s2.sublist(ts2, ti2 + 1),
+                leg1Stops: s1.sublist(0, si + 1), // Start drawing from the bus's origin
+                leg2Stops: s2.sublist(ts2, ti2 + 1), // Start red bus at transfer
               ));
             }
           }
@@ -880,10 +883,18 @@ class BusLocationService {
       } else {
         requiredRouteName = 'Kottayam - Erumely';  // travelling toward Erumely
       }
-    } else if (fromNorm.contains('erumely') || toNorm.contains('kottayam')) {
-      requiredRouteName = 'Erumely - Kottayam';
-    } else if (fromNorm.contains('kottayam') || toNorm.contains('erumely')) {
-      requiredRouteName = 'Kottayam - Erumely';
+    } else {
+       // use route order to guess direction for unknown stops on the main route if they happen to be listed here
+       const routeOrder = ['erumely', 'erumely north', 'koovappally', 'kanjirappally', 'ponkunnam', 'vazhoor', 'kottayam', 'ettumanoor', 'kuravilangad', 'bharananganam', 'pala'];
+       final fi = routeOrder.indexOf(fromNorm);
+       final ti = routeOrder.indexOf(toNorm);
+       if (fi != -1 && ti != -1) {
+           if (fi < ti) {
+               requiredRouteName = 'Erumely - Kottayam'; 
+           } else {
+               requiredRouteName = 'Kottayam - Erumely'; 
+           }
+       }
     }
 
     // Use the 'from' stop coordinates so isIncoming checks relative to that stop,

@@ -894,7 +894,7 @@ class _AdminScreenState extends State<AdminScreen> {
                                 image: isVideo
                                     ? null
                                     : DecorationImage(
-                                        image: FileImage(File(path)),
+                                        image: NetworkImage(path),
                                         fit: BoxFit.cover,
                                         onError: (exception, stackTrace) => {},
                                       ),
