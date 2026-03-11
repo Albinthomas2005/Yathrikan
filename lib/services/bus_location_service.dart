@@ -231,7 +231,7 @@ class BusLocationService {
 
   Stream<List<LiveBus>> get busStream => _busStreamController.stream;
   List<LiveBus> get buses => List.unmodifiable(_buses);
-
+  List<LiveBus> get allLiveBuses => [..._buses, ..._mbtaBuses];
   // Erumely → Koovappally → Kottayam waypoints
   static final List<LatLng> waypoints = [
     const LatLng(9.4810562, 76.8450521), // Erumely

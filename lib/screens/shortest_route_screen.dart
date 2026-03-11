@@ -1360,10 +1360,29 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
                               PolylineLayer(polylines: [Polyline(points: _currentRoutePath!.waypoints, strokeWidth: 4.0, color: Colors.blueAccent)]),
                             MarkerLayer(markers: [
                               // User location
-                              Marker(point: _currentLocation, width: 44, height: 44,
+                              Marker(
+                                point: _currentLocation, 
+                                width: 50, 
+                                height: 50,
                                 child: Container(
-                                  decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.2), shape: BoxShape.circle),
-                                  child: const Icon(Icons.person_pin_circle, color: Colors.blueAccent, size: 36),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.2),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.person_pin, 
+                                      color: Colors.blueAccent, 
+                                      size: 38,
+                                    ),
+                                  ),
                                 ),
                               ),
                               // ONLY the selected bus

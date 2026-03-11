@@ -1,10 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/constants.dart';
 import '../services/auth_service.dart';
 import '../services/bus_location_service.dart';
-import '../models/live_bus_model.dart';
+import '../services/support_ticket_service.dart';
 import 'admin_routes_screen.dart';
 import 'analytics_screen.dart';
 
@@ -97,7 +98,7 @@ class _AdminScreenState extends State<AdminScreen> {
                           child: const Icon(
                             Icons.dashboard,
                             color: Color(0xFF0F172A),
-                            size: 20,
+                            size: 24,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -117,7 +118,7 @@ class _AdminScreenState extends State<AdminScreen> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.green.withValues(alpha: 0.2),
+                        color: const Color(0xFF1E293B),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
@@ -126,7 +127,7 @@ class _AdminScreenState extends State<AdminScreen> {
                             width: 8,
                             height: 8,
                             decoration: const BoxDecoration(
-                              color: Colors.green,
+                              color: Color(0xFF34D399),
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -136,7 +137,7 @@ class _AdminScreenState extends State<AdminScreen> {
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: Colors.green,
+                              color: const Color(0xFF34D399),
                             ),
                           ),
                         ],
@@ -151,11 +152,9 @@ class _AdminScreenState extends State<AdminScreen> {
 
                 // Metrics Grid
                 // Metrics Grid
-                StreamBuilder<List<LiveBus>>(
-                  stream: BusLocationService().busStream,
-                  initialData: BusLocationService().buses,
-                  builder: (context, snapshot) {
-                    final allBuses = snapshot.data ?? [];
+                Builder(
+                  builder: (context) {
+                    final allBuses = BusLocationService().allLiveBuses;
                     final activeBuses = allBuses.where((b) => b.status == 'RUNNING').length;
                     
                     // Dynamic calculations based on active fleet
@@ -193,6 +192,7 @@ class _AdminScreenState extends State<AdminScreen> {
                         _MetricCard(
                           icon: Icons.directions_bus,
                           iconColor: AppColors.primaryYellow,
+                          containerColor: const Color(0xFF6B5829),
                           title: 'ACTIVE BUSES',
                           value: '$activeBuses',
                           change: '+5%',
@@ -202,6 +202,7 @@ class _AdminScreenState extends State<AdminScreen> {
                         _MetricCard(
                           icon: Icons.people,
                           iconColor: const Color(0xFF60A5FA),
+                          containerColor: const Color(0xFF294168),
                           title: 'LIVE PAX',
                           value: formatNumber(livePax),
                           change: '+12%',
@@ -211,6 +212,7 @@ class _AdminScreenState extends State<AdminScreen> {
                         _MetricCard(
                           icon: Icons.attach_money,
                           iconColor: const Color(0xFF34D399),
+                          containerColor: const Color(0xFF1F4D44),
                           title: 'REVENUE',
                           value: formatMoney(revenue),
                           change: '+8%',
@@ -218,8 +220,9 @@ class _AdminScreenState extends State<AdminScreen> {
                           onTap: () => _showRevenueDetails(revenue),
                         ),
                         _MetricCard(
-                          icon: Icons.pending,
+                          icon: Icons.more_horiz,
                           iconColor: const Color(0xFFF97316),
+                          containerColor: const Color(0xFF633D29),
                           title: 'PENDING',
                           value: '$pending',
                           change: '-2%',
@@ -389,58 +392,7 @@ class _AdminScreenState extends State<AdminScreen> {
                     .animate()
                     .fadeIn(delay: 500.ms, duration: 400.ms)
                     .slideY(begin: 0.1, end: 0),
-                const SizedBox(height: 28),
 
-                // System Alerts
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'System Alerts',
-                      style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        // TODO: View all alerts
-                      },
-                      child: Text(
-                        'View All',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primaryYellow,
-                        ),
-                      ),
-                    ),
-                  ],
-                ).animate().fadeIn(delay: 600.ms, duration: 400.ms),
-                const SizedBox(height: 12),
-                const _AlertItem(
-                  icon: Icons.block,
-                  iconColor: Color(0xFFEF4444),
-                  title: 'Route Blocked at Pala',
-                  subtitle: 'Heavy traffic congestion reported 12m ago',
-                  borderColor: Color(0xFFEF4444),
-                )
-                    .animate()
-                    .fadeIn(delay: 650.ms, duration: 400.ms)
-                    .slideX(begin: -0.2, end: 0),
-                const SizedBox(height: 12),
-                const _AlertItem(
-                  icon: Icons.trending_up,
-                  iconColor: Color(0xFFF97316),
-                  title: 'High Demand in Kottayam',
-                  subtitle: 'Extra units needed for Route A1 45m ago',
-                  borderColor: Color(0xFFF97316),
-                )
-                    .animate()
-                    .fadeIn(delay: 700.ms, duration: 400.ms)
-                    .slideX(begin: -0.2, end: 0),
-                const SizedBox(height: 28),
 
                 // Quick Actions
                 Text(
@@ -484,6 +436,7 @@ class _AdminScreenState extends State<AdminScreen> {
                         Navigator.pushNamed(context, '/admin-support');
                       },
                     ),
+
                     _QuickActionButton(
                       icon: Icons.trending_up,
                       label: 'Finance',
@@ -497,7 +450,135 @@ class _AdminScreenState extends State<AdminScreen> {
                     .animate()
                     .fadeIn(delay: 800.ms, duration: 400.ms)
                     .slideY(begin: 0.1, end: 0),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
+
+                // Recent Complaints
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Recent Complaints',
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/admin-support');
+                      },
+                      child: Text(
+                        'View All',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primaryYellow,
+                        ),
+                      ),
+                    ),
+                  ],
+                ).animate().fadeIn(delay: 850.ms, duration: 400.ms),
+                const SizedBox(height: 12),
+                
+                StreamBuilder<List<Map<String, dynamic>>>(
+                  stream: SupportTicketService().pendingStream,
+                  initialData: SupportTicketService().pendingTickets,
+                  builder: (context, snapshot) {
+                    final tickets = snapshot.data ?? [];
+                    if (tickets.isEmpty) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'No active complaints.',
+                          style: GoogleFonts.inter(color: Colors.white54, fontSize: 14),
+                        ),
+                      ).animate().fadeIn(delay: 900.ms);
+                    }
+
+                    // Show top 3 most recent
+                    final displayTickets = tickets.take(3).toList();
+                    return ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: displayTickets.length,
+                      separatorBuilder: (context, index) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final ticket = displayTickets[index];
+                        final priorityColor = _getPriorityColor(ticket['priority'] as String);
+                        
+                        return Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => _showTicketDetails(ticket),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF1E293B),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border(
+                                  left: BorderSide(
+                                    color: priorityColor,
+                                    width: 3,
+                                  ),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: priorityColor.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      _getPriorityIcon(ticket['priority'] as String),
+                                      color: priorityColor,
+                                      size: 20,
+                                    ),
+                                  ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      ticket['title'] as String,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${ticket['category']} • ${ticket['userName']}',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 12,
+                                        color: Colors.white54,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(
+                                Icons.chevron_right,
+                                color: Colors.white24,
+                                size: 20,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ).animate().fadeIn(delay: (900 + (index * 50)).ms).slideX(begin: -0.1, end: 0);
+                  },
+                    );
+                  },
+                ),
+                
+                const SizedBox(height: 28),
 
                 // Logout Button
                 SizedBox(
@@ -612,11 +693,354 @@ class _AdminScreenState extends State<AdminScreen> {
       ),
     );
   }
+
+  void _showTicketDetails(Map<String, dynamic> ticket) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(20),
+        child: Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E293B),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.5),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header Area
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _getPriorityColor(ticket['priority'] as String).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        _getPriorityIcon(ticket['priority'] as String),
+                        color: _getPriorityColor(ticket['priority'] as String),
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            ticket['title'] as String,
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Text(
+                                ticket['id'] as String,
+                                style: GoogleFonts.inter(
+                                  color: Colors.white54,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: _getPriorityColor(ticket['priority'] as String).withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: _getPriorityColor(ticket['priority'] as String).withOpacity(0.5),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  ticket['priority'] as String,
+                                  style: GoogleFonts.inter(
+                                    color: _getPriorityColor(ticket['priority'] as String),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+              const Divider(color: Colors.white12, height: 1),
+              
+              // Content Area
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (ticket['busId'] != null && ticket['busId'].toString().isNotEmpty) ...[
+                      Text(
+                        'Bus Involved',
+                        style: GoogleFonts.inter(
+                          color: Colors.white54,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryYellow.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppColors.primaryYellow.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.directions_bus, color: AppColors.primaryYellow, size: 20),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                ticket['busId'] as String,
+                                style: GoogleFonts.inter(
+                                  color: AppColors.primaryYellow,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+
+                    Text(
+                      'Description',
+                      style: GoogleFonts.inter(
+                        color: Colors.white54,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0F172A),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white10),
+                      ),
+                      child: Text(
+                        ticket['description'] as String,
+                        style: GoogleFonts.inter(
+                          color: Colors.white,
+                          fontSize: 14,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+
+                    if (ticket['evidence'] != null && (ticket['evidence'] as List).isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      Text(
+                        'Attached Evidence',
+                        style: GoogleFonts.inter(
+                          color: Colors.white54,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 80,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: (ticket['evidence'] as List).length,
+                          separatorBuilder: (context, index) => const SizedBox(width: 12),
+                          itemBuilder: (context, index) {
+                            final file = (ticket['evidence'] as List)[index];
+                            final path = file['path'] as String;
+                            final isVideo = file['type'] == 'video';
+                            return Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                color: Colors.black,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.white12),
+                                image: isVideo
+                                    ? null
+                                    : DecorationImage(
+                                        image: FileImage(File(path)),
+                                        fit: BoxFit.cover,
+                                        onError: (exception, stackTrace) => {},
+                                      ),
+                              ),
+                              child: isVideo
+                                  ? const Center(
+                                      child: Icon(Icons.play_circle_fill, color: Colors.white, size: 30),
+                                    )
+                                  : null,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                    
+                    if (ticket['userName'] != null) ...[
+                      const SizedBox(height: 24),
+                      Text(
+                        'Reported By',
+                        style: GoogleFonts.inter(
+                          color: Colors.white54,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundColor: AppColors.primaryYellow.withOpacity(0.2),
+                            child: const Icon(Icons.person, color: AppColors.primaryYellow, size: 18),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            ticket['userName'] as String,
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            'User (App)',
+                            style: GoogleFonts.inter(
+                              color: Colors.white38,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              
+              const Divider(color: Colors.white12, height: 1),
+              
+              // Actions
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: Text(
+                        'Close',
+                        style: GoogleFonts.inter(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    if (!SupportTicketService().resolvedTickets.any((t) => t['id'] == ticket['id']))
+                      ElevatedButton(
+                        onPressed: () {
+                          SupportTicketService().resolveTicket(ticket['id'] as String);
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Ticket status updated to Resolved'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryYellow,
+                          foregroundColor: const Color(0xFF0F172A),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: Text(
+                          'Resolve',
+                          style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _getPriorityColor(String priority) {
+    switch (priority) {
+      case 'HIGH':
+        return const Color(0xFFEF4444);
+      case 'MEDIUM':
+        return const Color(0xFFF97316);
+      case 'LOW':
+        return const Color(0xFF10B981);
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getPriorityIcon(String priority) {
+    switch (priority) {
+      case 'HIGH':
+        return Icons.warning_rounded;
+      case 'MEDIUM':
+        return Icons.info_outline;
+      case 'LOW':
+        return Icons.check_circle_outline;
+      default:
+        return Icons.info_outline;
+    }
+  }
 }
+
 
 class _MetricCard extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
+  final Color containerColor;
   final String title;
   final String value;
   final String change;
@@ -626,6 +1050,7 @@ class _MetricCard extends StatelessWidget {
   const _MetricCard({
     required this.icon,
     required this.iconColor,
+    required this.containerColor,
     required this.title,
     required this.value,
     required this.change,
@@ -641,7 +1066,7 @@ class _MetricCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Ink(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             color: const Color(0xFF1E293B),
             borderRadius: BorderRadius.circular(16),
@@ -656,31 +1081,30 @@ class _MetricCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: iconColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
+                      color: containerColor,
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
                       icon,
                       color: iconColor,
-                      size: 18,
+                      size: 20, // Reduced from 24
                     ),
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                      horizontal: 8, // Reduced from 10
+                      vertical: 4, // Reduced from 6
                     ),
                     decoration: BoxDecoration(
-                      color: (isPositive ? Colors.green : Colors.red)
-                          .withValues(alpha: 0.2),
+                      color: const Color(0xFF2E3846),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       change,
                       style: GoogleFonts.inter(
-                        fontSize: 11,
+                        fontSize: 11, // Reduced from 12
                         fontWeight: FontWeight.w600,
-                        color: isPositive ? Colors.green : Colors.red,
+                        color: isPositive ? const Color(0xFF34D399) : const Color(0xFFEF4444),
                       ),
                     ),
                   ),
@@ -692,17 +1116,19 @@ class _MetricCard extends StatelessWidget {
                   Text(
                     title,
                     style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 11, // Reduced from 12
+                      fontWeight: FontWeight.w500,
                       color: Colors.white54,
                       letterSpacing: 0.5,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2), // Reduced from 4
                   Text(
                     value,
                     style: GoogleFonts.inter(
-                      fontSize: 22,
+                      fontSize: 20, // Reduced from 24
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
@@ -717,83 +1143,6 @@ class _MetricCard extends StatelessWidget {
   }
 }
 
-class _AlertItem extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String subtitle;
-  final Color borderColor;
-
-  const _AlertItem({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    required this.subtitle,
-    required this.borderColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(12),
-        border: Border(
-          left: BorderSide(
-            color: borderColor,
-            width: 3,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: Colors.white54,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Icon(
-            Icons.chevron_right,
-            color: Colors.white24,
-            size: 20,
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _QuickActionButton extends StatelessWidget {
   final IconData icon;

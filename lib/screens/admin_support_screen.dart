@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/constants.dart';
@@ -30,72 +31,342 @@ class _AdminSupportScreenState extends State<AdminSupportScreen>
   void _showTicketDetails(Map<String, dynamic> ticket) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          ticket['title'],
-          style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _detailRow('Ticket ID', ticket['id']),
-            const SizedBox(height: 8),
-            _detailRow('Priority', ticket['priority']),
-            const SizedBox(height: 16),
-            Text(
-              'Description:',
-              style: GoogleFonts.inter(color: Colors.white54, fontSize: 12),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              ticket['description'],
-              style: GoogleFonts.inter(color: Colors.white70),
-            ),
-            if (ticket['userName'] != null) ...[
-              const SizedBox(height: 16),
-              _detailRow('Reported By', ticket['userName']),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Close', style: GoogleFonts.inter(color: Colors.white54)),
-          ),
-          if (!_ticketService.resolvedTickets.any((t) => t['id'] == ticket['id']))
-            ElevatedButton(
-              onPressed: () {
-                _ticketService.resolveTicket(ticket['id']);
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Ticket status updated to Resolved'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryYellow,
-                foregroundColor: Colors.black,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(20),
+        child: Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E293B),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.5),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
-              child: Text('Resolve', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-            ),
-        ],
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header Area
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _getPriorityColor(ticket['priority'] as String).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        _getPriorityIcon(ticket['priority'] as String),
+                        color: _getPriorityColor(ticket['priority'] as String),
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            ticket['title'] as String,
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Text(
+                                ticket['id'] as String,
+                                style: GoogleFonts.inter(
+                                  color: Colors.white54,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: _getPriorityColor(ticket['priority'] as String).withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: _getPriorityColor(ticket['priority'] as String).withOpacity(0.5),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  ticket['priority'] as String,
+                                  style: GoogleFonts.inter(
+                                    color: _getPriorityColor(ticket['priority'] as String),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+              const Divider(color: Colors.white12, height: 1),
+              
+              // Content Area
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (ticket['busId'] != null && ticket['busId'].toString().isNotEmpty) ...[
+                      Text(
+                        'Bus Involved',
+                        style: GoogleFonts.inter(
+                          color: Colors.white54,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryYellow.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppColors.primaryYellow.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.directions_bus, color: AppColors.primaryYellow, size: 20),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                ticket['busId'] as String,
+                                style: GoogleFonts.inter(
+                                  color: AppColors.primaryYellow,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+
+                    Text(
+                      'Description',
+                      style: GoogleFonts.inter(
+                        color: Colors.white54,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0F172A),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white10),
+                      ),
+                      child: Text(
+                        ticket['description'] as String,
+                        style: GoogleFonts.inter(
+                          color: Colors.white,
+                          fontSize: 14,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+
+                    if (ticket['evidence'] != null && (ticket['evidence'] as List).isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      Text(
+                        'Attached Evidence',
+                        style: GoogleFonts.inter(
+                          color: Colors.white54,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 80,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: (ticket['evidence'] as List).length,
+                          separatorBuilder: (context, index) => const SizedBox(width: 12),
+                          itemBuilder: (context, index) {
+                            final file = (ticket['evidence'] as List)[index];
+                            final path = file['path'] as String;
+                            final isVideo = file['type'] == 'video';
+                            return Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                color: Colors.black,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.white12),
+                                image: isVideo
+                                    ? null
+                                    : DecorationImage(
+                                        image: FileImage(File(path)),
+                                        fit: BoxFit.cover,
+                                        onError: (exception, stackTrace) => {},
+                                      ),
+                              ),
+                              child: isVideo
+                                  ? const Center(
+                                      child: Icon(Icons.play_circle_fill, color: Colors.white, size: 30),
+                                    )
+                                  : null,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                    
+                    if (ticket['userName'] != null) ...[
+                      const SizedBox(height: 24),
+                      Text(
+                        'Reported By',
+                        style: GoogleFonts.inter(
+                          color: Colors.white54,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundColor: AppColors.primaryYellow.withOpacity(0.2),
+                            child: const Icon(Icons.person, color: AppColors.primaryYellow, size: 18),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            ticket['userName'] as String,
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            'User (App)',
+                            style: GoogleFonts.inter(
+                              color: Colors.white38,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              
+              const Divider(color: Colors.white12, height: 1),
+              
+              // Actions
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: Text(
+                        'Close',
+                        style: GoogleFonts.inter(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    if (!_ticketService.resolvedTickets.any((t) => t['id'] == ticket['id']))
+                      ElevatedButton(
+                        onPressed: () {
+                          _ticketService.resolveTicket(ticket['id'] as String);
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Ticket status updated to Resolved'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryYellow,
+                          foregroundColor: const Color(0xFF0F172A),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: Text(
+                          'Resolve',
+                          style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _detailRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: GoogleFonts.inter(color: Colors.white54)),
-        Text(value, style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold)),
-      ],
-    );
+  Color _getPriorityColor(String priority) {
+    switch (priority) {
+      case 'HIGH':
+        return const Color(0xFFEF4444);
+      case 'MEDIUM':
+        return const Color(0xFFF97316);
+      case 'LOW':
+        return const Color(0xFF10B981);
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getPriorityIcon(String priority) {
+    switch (priority) {
+      case 'HIGH':
+        return Icons.warning_rounded;
+      case 'MEDIUM':
+        return Icons.info_outline;
+      case 'LOW':
+        return Icons.check_circle_outline;
+      default:
+        return Icons.info_outline;
+    }
   }
 
   @override

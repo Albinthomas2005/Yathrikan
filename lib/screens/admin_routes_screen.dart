@@ -14,6 +14,8 @@ class AdminRoutesScreen extends StatefulWidget {
 class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _newBusIdController = TextEditingController();
+  final TextEditingController _deviceIdController = TextEditingController();
+  final TextEditingController _simController = TextEditingController();
   
   String _searchQuery = '';
   String? _selectedOrigin;
@@ -24,6 +26,8 @@ class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
   void dispose() {
     _searchController.dispose();
     _newBusIdController.dispose();
+    _deviceIdController.dispose();
+    _simController.dispose();
     super.dispose();
   }
 
@@ -61,8 +65,32 @@ class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
                       style: const TextStyle(color: Colors.white),
                       decoration: const InputDecoration(
                         labelText: 'Bus ID (e.g. KTM-101)',
-                        labelStyle: TextStyle(color: Colors.white70),
-                        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
+                        labelStyle: TextStyle(color: Colors.grey, fontSize: 16),
+                        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+                        focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryYellow)),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _deviceIdController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'IoT Device ID (e.g. ESP32_01)',
+                        labelStyle: TextStyle(color: Colors.grey, fontSize: 16),
+                        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+                        focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryYellow)),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _simController,
+                      keyboardType: TextInputType.phone,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'SIM Number',
+                        labelStyle: TextStyle(color: Colors.grey, fontSize: 16),
+                        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+                        focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryYellow)),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -72,8 +100,9 @@ class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
                       style: const TextStyle(color: Colors.white),
                       decoration: const InputDecoration(
                         labelText: 'Origin',
-                        labelStyle: TextStyle(color: Colors.white70),
-                        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
+                        labelStyle: TextStyle(color: Colors.grey, fontSize: 16),
+                        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+                        focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryYellow)),
                       ),
                       items: cities.map((city) {
                         return DropdownMenuItem(
@@ -92,8 +121,9 @@ class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
                       style: const TextStyle(color: Colors.white),
                       decoration: const InputDecoration(
                         labelText: 'Destination',
-                        labelStyle: TextStyle(color: Colors.white70),
-                        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
+                        labelStyle: TextStyle(color: Colors.grey, fontSize: 16),
+                        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+                        focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryYellow)),
                       ),
                       items: cities.map((city) {
                         return DropdownMenuItem(
@@ -116,18 +146,19 @@ class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
                 ElevatedButton(
                   onPressed: () {
                     if (_newBusIdController.text.isNotEmpty &&
+                        _deviceIdController.text.isNotEmpty &&
                         _selectedOrigin != null &&
                         _selectedDestination != null &&
                         _selectedOrigin != _selectedDestination) {
                       
-                      // Construct route name
-                      final routeName = '$_selectedOrigin - $_selectedDestination';
+                      // Construct route name and append IoT logic
+                      final routeName = '$_selectedOrigin - $_selectedDestination (IoT: ${_deviceIdController.text})';
                       
                       // Create a new bus 
                       // Note: Lat/Lon will be auto-corrected by BusLocationService based on Origin
                       final newBus = LiveBus(
                         busId: _newBusIdController.text.toUpperCase(),
-                        busName: "Bus ${_newBusIdController.text}", // Default name
+                        busName: "Bus ${_newBusIdController.text}",
                         routeName: routeName,
                         lat: 9.5916, // Temporary, will snap to Origin
                         lon: 76.5222,

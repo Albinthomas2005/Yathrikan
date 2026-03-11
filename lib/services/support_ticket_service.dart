@@ -7,45 +7,7 @@ class SupportTicketService {
   SupportTicketService._internal();
 
   // State
-  final List<Map<String, dynamic>> _pendingTickets = [
-    {
-      'id': '#BW-10294',
-      'title': 'Route Delay',
-      'description':
-          'Bus 402 on the Downtown route is consistently 20 minutes late every morning. I\'ve been late ...',
-      'priority': 'HIGH',
-      'userName': null,
-      'upvotes': 1,
-      'category': 'Timing Issue',
-      'busId': 'KL-00-AA-0000',
-      'evidence': [], // List of file paths
-      'timestamp': DateTime.now().subtract(const Duration(hours: 2)),
-    },
-    {
-      'id': '#BW-10311',
-      'title': 'Driver Conduct',
-      'description':
-          'The driver was extremely rude when I asked for a stop. He drove past the designated station...',
-      'priority': 'MEDIUM',
-      'userName': 'Sarah M.',
-      'category': 'Staff Behavior',
-      'busId': 'KL-35-A-5566',
-      'evidence': [],
-      'timestamp': DateTime.now().subtract(const Duration(days: 1)),
-    },
-    {
-      'id': '#BW-10325',
-      'title': 'App Error',
-      'description':
-          'Unable to recharge my wallet using Apple Pay. It keeps saying \'Transaction Failed\' but the...',
-      'priority': 'LOW',
-      'userName': 'Anonymous',
-      'category': 'Other',
-      'busId': null,
-      'evidence': [],
-      'timestamp': DateTime.now().subtract(const Duration(days: 2)),
-    },
-  ];
+  final List<Map<String, dynamic>> _pendingTickets = [];
 
   final List<Map<String, dynamic>> _inProgressTickets = [];
   final List<Map<String, dynamic>> _resolvedTickets = [];
