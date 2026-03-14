@@ -75,7 +75,7 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   bool _showBusList = true;
   List<BusOption> _availableBuses = [];
   BusOption? _selectedBus;
-  LatLng _currentLocation = const LatLng(9.586, 76.826); // Default Amal Jyothi, will update
+  LatLng _currentLocation = const LatLng(9.525651, 76.827199); // Default Koovappally, will update
   bool _isLocationLoaded = false;
   bool _isLocating = false; // true while the GPS button is fetching location
 
@@ -144,6 +144,7 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
                     setState(() {
                         _currentLocation = entry.value;
                     });
+                    _busService.updateUserLocation(entry.value, entry.key);
                     break;
                 }
             }
@@ -232,6 +233,7 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
           setState(() {
             _currentLocation = entry.value;
           });
+          _busService.updateUserLocation(entry.value, entry.key);
         }
         break;
       }
@@ -279,6 +281,7 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
     final fromText = _busService.normalizeLocationName(rawFromText);
     final toText = _busService.normalizeLocationName(rawToText);
 
+ HEAD
     // The user ONLY wants buses to show up if the search endpoints are exclusively:
     // Koovappally, Kanjirappally, Ponkunnam, Kottayam, Erumely
     const allowedPlaces = ['koovappally', 'kanjirappally', 'ponkunnam', 'kottayam', 'erumely', 'erumely north'];
@@ -296,6 +299,9 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
     }
 
     // Case-insensitive lookup
+
+    // Case-insensitive lookup for "From" coords
+// 47db6fe3c (added live location using iot)
     LatLng? fromCoords;
     for (final entry in BusLocationService.keyPlaces.entries) {
         if (_busService.normalizeLocationName(entry.key) == fromText) {
@@ -311,7 +317,7 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
 
     final incoming = buses.where((b) {
       if (b.status != 'RUNNING') return false;
-      
+       HEAD
       // Filter by direction/route if "To" is specified
       bool matchesRoute = true;
       if (toText.isNotEmpty) {
@@ -330,12 +336,43 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
            } else {
                matchesRoute = b.to.toLowerCase() == toText || b.routeName.toLowerCase().contains(toText);
            }
+
+      final toLower = toText.trim().toLowerCase();
+      final fromLower = fromText.trim().toLowerCase();
+      bool matchesRoute = true;
+      if (toLower.isNotEmpty) {
+           // Direct destination match OR route name contains destination
+           matchesRoute = b.to.toLowerCase() == toLower || 
+                          b.routeName.toLowerCase().contains(toLower) ||
+                          b.routeName.toLowerCase().contains(fromLower);
+           
+           if (!matchesRoute) {
+               // Direction-based matching for main route stops
+               if ((fromLower.contains('erumely') && toLower.contains('koovappally')) ||
+                   (fromLower.contains('koovappally') && toLower.contains('kottayam')) ||
+                   (fromLower.contains('kanjirappally') && toLower.contains('kottayam')) ||
+                   (fromLower.contains('ponkunnam') && toLower.contains('kottayam'))) {
+                    matchesRoute = b.routeName.contains('Erumely - Kottayam') ||
+                                   (b.from.toLowerCase().contains('erumely') && b.to.toLowerCase().contains('kottayam'));
+               } else if ((fromLower.contains('kottayam') && toLower.contains('koovappally')) ||
+                          (fromLower.contains('koovappally') && toLower.contains('erumely')) ||
+                          (fromLower.contains('kottayam') && toLower.contains('kanjirappally')) ||
+                          (fromLower.contains('kottayam') && toLower.contains('ponkunnam'))) {
+                    matchesRoute = b.routeName.contains('Kottayam - Erumely') ||
+                                   (b.from.toLowerCase().contains('kottayam') && b.to.toLowerCase().contains('erumely'));
+               } else {
+                   // For admin-added buses: match by from/to city names directly
+                   matchesRoute = (b.from.toLowerCase().contains(fromLower) || fromLower.isEmpty) &&
+                                  (b.to.toLowerCase().contains(toLower) || toLower.isEmpty);
+               }
+          }
+     //47db6fe3c (added live location using iot)
       }
       
       if (!matchesRoute) return false;
 
       // Check if incoming relative to the "From" location
-      return _busService.isIncoming(b, relativeTo: fromCoords); // fromCoords can be null
+      return _busService.isIncoming(b, relativeTo: fromCoords);
     }).toList();
 
     incoming.sort((a, b) {
@@ -444,6 +481,8 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
     });
 
     setState(() { _fromController.text = nearest; });
+    _busService.updateUserLocation(_currentLocation, nearest);
+    
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Location detected: $nearest'), duration: const Duration(seconds: 2)),
@@ -1390,8 +1429,8 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
                                 Marker(point: _busLocation!, width: 48, height: 48,
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      color: Colors.amber, shape: BoxShape.circle,
-                                      boxShadow: [BoxShadow(color: Colors.amber.withValues(alpha: 0.5), blurRadius: 8, spreadRadius: 2)],
+                                      color: Colors.blueAccent, shape: BoxShape.circle,
+                                      boxShadow: [BoxShadow(color: Colors.blueAccent.withValues(alpha: 0.5), blurRadius: 8, spreadRadius: 2)],
                                     ),
                                     padding: const EdgeInsets.all(6),
                                     child: const Icon(Icons.directions_bus_filled, color: Colors.white, size: 24),

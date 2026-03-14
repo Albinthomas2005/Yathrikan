@@ -22,8 +22,8 @@ class _FullMapScreenState extends State<FullMapScreen> {
   StreamSubscription<List<LiveBus>>? _busLocationStream;
   StreamSubscription<Position>? _positionStream;
 
-  // Kottayam default location
-  LatLng _currentLocation = const LatLng(9.5916, 76.5222);
+  // Koovappally default location
+  LatLng _currentLocation = const LatLng(9.525651, 76.827199);
   bool _isLoadingLocation = true;
   List<Marker> _busMarkers = [];
 
@@ -97,51 +97,77 @@ class _FullMapScreenState extends State<FullMapScreen> {
     );
   }
 
+  bool _iotCentered = false; // true after first auto-center to IoT marker
+
   void _initializeLiveBusTracking() {
     _busLocationStream = _busLocationService.busStream.listen((buses) {
       if (mounted) {
         setState(() {
           _busMarkers = buses.map((bus) => _createBusMarker(bus)).toList();
         });
+        // Auto-center map to IoT bus on first appearance
+        if (!_iotCentered) {
+          final iot = buses.where((b) => b.isFirebaseIot && b.directPosition != null).firstOrNull;
+          if (iot != null) {
+            _iotCentered = true;
+            _mapController.move(iot.directPosition!, 14.0);
+            debugPrint('🗺️ Map centered to IoT bus at ${iot.directPosition}');
+          }
+        }
       }
     });
   }
 
   Marker _createBusMarker(LiveBus bus) {
+    final bool isIot = bus.isFirebaseIot;
+
     Color busColor;
-    if (bus.speedKmph < 15) {
+    Color borderColor;
+    IconData icon;
+
+    if (isIot) {
+      // IoT bus: bright red bus icon with glow — easy to spot as live tracked
+      busColor = Colors.redAccent;
+      borderColor = Colors.red.shade800;
+      icon = Icons.directions_bus;
+    } else if (bus.speedKmph < 15) {
       busColor = Colors.green;
+      borderColor = Colors.green;
+      icon = Icons.directions_bus;
     } else if (bus.speedKmph < 35) {
       busColor = AppColors.primaryYellow;
+      borderColor = AppColors.primaryYellow;
+      icon = Icons.directions_bus;
     } else {
       busColor = Colors.orange;
+      borderColor = Colors.orange;
+      icon = Icons.directions_bus;
     }
 
     return Marker(
       point: LatLng(bus.lat, bus.lon),
-      width: 40,
-      height: 40,
+      width: isIot ? 52 : 40,
+      height: isIot ? 52 : 40,
       child: GestureDetector(
         onTap: () => _showBusInfo(bus),
-        child: Transform.rotate(
-          angle: bus.headingDeg * math.pi / 180,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 4,
-                )
-              ],
-            ),
-            padding: const EdgeInsets.all(5),
-            child: Icon(
-              Icons.directions_bus,
-              color: busColor,
-              size: 20,
-            ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            border: Border.all(color: borderColor, width: isIot ? 2.5 : 0),
+            boxShadow: [
+              BoxShadow(
+                color: busColor.withValues(alpha: isIot ? 0.6 : 0.3),
+                blurRadius: isIot ? 10 : 4,
+                spreadRadius: isIot ? 3 : 0,
+              )
+            ],
+          ),
+          padding: const EdgeInsets.all(5),
+          child: Icon(
+            icon,
+            color: busColor,
+            size: isIot ? 24 : 20,
           ),
         ),
       ),
@@ -334,9 +360,9 @@ class _FullMapScreenState extends State<FullMapScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildInfoTile(
-                      isMbta ? 'Source' : 'Type',
-                      isMbta ? 'MBTA Live' : 'Kerala Bus',
-                      isMbta ? Icons.wifi : Icons.map_outlined,
+                      isMbta ? 'Source' : (bus.isFirebaseIot ? 'Source' : 'Type'),
+                      isMbta ? 'MBTA Live' : (bus.isFirebaseIot ? '🛰️ IoT Live' : 'Kerala Bus'),
+                      isMbta ? Icons.wifi : (bus.isFirebaseIot ? Icons.wifi : Icons.map_outlined),
                     ),
                   ),
                 ],

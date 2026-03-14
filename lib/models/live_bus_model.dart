@@ -12,8 +12,16 @@ class LiveBus {
   double speedMps;
   String status;
   double headingDeg;
-  /// When set, overrides route-based position (used for MBTA live buses)
+  /// When set, overrides route-based position (used for MBTA & IoT live buses)
   LatLng? directPosition;
+
+  /// True if this bus's location is updated from the Firebase IoT GPS node
+  bool isFirebaseIot;
+
+  /// Firebase/IoT device ID (e.g. "ESP32_01") — used to build the path
+  /// /<deviceId>/gps.json in Firebase Realtime Database.
+  /// Empty string means no specific device is bound.
+  String deviceId;
 
   LiveBus({
     required this.busId,
@@ -28,6 +36,8 @@ class LiveBus {
     this.status = 'RUNNING',
     this.headingDeg = 0.0,
     this.directPosition,
+    this.isFirebaseIot = false,
+    this.deviceId = '',
     // legacy ignored params
     double? lat,
     double? lon,

@@ -45,6 +45,9 @@ class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
     _selectedOrigin = null;
     _selectedDestination = null;
     _newBusIdController.clear();
+    bool _useFirebaseIot = false;
+    bool _isTesting = false;
+    String? _testResult;
 
     final cities = _busService.availableCities;
 
@@ -135,6 +138,70 @@ class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
                         setDialogState(() => _selectedDestination = value);
                       },
                     ),
+                    const SizedBox(height: 16),
+                    Theme(
+                      data: ThemeData(
+                        unselectedWidgetColor: Colors.grey,
+                      ),
+                      child: SwitchListTile(
+                        title: Text(
+                          'Use Firebase IoT Tracker',
+                          style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
+                        ),
+                        subtitle: Text(
+                          'Tracks actual location via /gps',
+                          style: GoogleFonts.inter(color: Colors.white54, fontSize: 12),
+                        ),
+                        value: _useFirebaseIot,
+                        activeColor: AppColors.primaryYellow,
+                        contentPadding: EdgeInsets.zero,
+                        onChanged: (val) {
+                          setDialogState(() {
+                            _useFirebaseIot = val;
+                          });
+                        },
+                      ),
+                    ),
+                    if (_useFirebaseIot) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: _isTesting ? null : () async {
+                                setDialogState(() => _isTesting = true);
+                                final success = await _busService.testConnection(_deviceIdController.text.trim());
+                                setDialogState(() {
+                                  _isTesting = false;
+                                  _testResult = success ? 'Connection Successful! ✅' : 'Connection Failed! ❌';
+                                });
+                              },
+                              icon: _isTesting 
+                                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                                : const Icon(Icons.satellite_alt, size: 18),
+                              label: Text(_isTesting ? 'Testing...' : 'Test Connection'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF334155),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_testResult != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          _testResult!,
+                          style: GoogleFonts.inter(
+                            color: _testResult!.contains('✅') ? Colors.green : Colors.redAccent,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ],
                   ],
                 ),
               ),
@@ -144,36 +211,38 @@ class _AdminRoutesScreenState extends State<AdminRoutesScreen> {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (_newBusIdController.text.isNotEmpty &&
                         _deviceIdController.text.isNotEmpty &&
                         _selectedOrigin != null &&
                         _selectedDestination != null &&
                         _selectedOrigin != _selectedDestination) {
                       
-                      // Construct route name and append IoT logic
-                      final routeName = '$_selectedOrigin - $_selectedDestination (IoT: ${_deviceIdController.text})';
-                      
-                      // Create a new bus 
-                      // Note: Lat/Lon will be auto-corrected by BusLocationService based on Origin
+                      final busId = _newBusIdController.text.toUpperCase();
+                      final busName = 'Bus $busId';
+
                       final newBus = LiveBus(
-                        busId: _newBusIdController.text.toUpperCase(),
-                        busName: "Bus ${_newBusIdController.text}",
-                        routeName: routeName,
-                        lat: 9.5916, // Temporary, will snap to Origin
-                        lon: 76.5222,
-                        speedKmph: 40, // Set meaningful speed so it moves
+                        busId: busId,
+                        busName: busName,
+                        routeName: '$_selectedOrigin - $_selectedDestination',
+                        from: _selectedOrigin!,
+                        to: _selectedDestination!,
+                        speedMps: 11.0, // ~40 km/h
                         headingDeg: 0,
-                        lastUpdated: DateTime.now(),
-                        status: 'RUNNING', // Start as RUNNING
+                        status: 'RUNNING',
+                        isFirebaseIot: _useFirebaseIot,
+                        deviceId: _deviceIdController.text.trim(),
                       );
-                      
-                      _busService.addBus(newBus);
-                      
+
+                      // Close dialog first, then add (addBus is async)
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Bus Added & Started Successfully')),
-                      );
+                      await _busService.addBus(newBus);
+
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Bus $busId added & started')),
+                        );
+                      }
                     } else if (_selectedOrigin == _selectedDestination) {
                        ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Origin and Destination cannot be same')),
@@ -383,6 +452,40 @@ class _BusCard extends StatelessWidget {
                   ),
                 ),
               ),
+              
+              const SizedBox(width: 8),
+
+              if (bus.isFirebaseIot)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: BusLocationService().isDeviceOnline(bus.deviceId) 
+                      ? Colors.green.withOpacity(0.2) 
+                      : Colors.red.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: BusLocationService().isDeviceOnline(bus.deviceId) ? Colors.green : Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        BusLocationService().isDeviceOnline(bus.deviceId) ? "ONLINE" : "OFFLINE",
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.bold,
+                          color: BusLocationService().isDeviceOnline(bus.deviceId) ? Colors.green : Colors.red,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               
               const Spacer(),
 

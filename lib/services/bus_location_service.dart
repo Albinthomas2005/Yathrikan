@@ -54,9 +54,12 @@ class BusLocationService {
   Timer? _updateTimer;
   Timer? _mbtaTimer;
   Timer? _mbtaLerpTimer;
+  Timer? _firebaseIotTimer;
   final NotificationService _notificationService = NotificationService();
   final Map<String, DateTime> _lastNotificationTime = {};
   final Map<String, DateTime> _lastWarningTime = {};
+  /// Track last seen time for IoT devices to determine online status
+  final Map<String, DateTime> _iotLastSeen = {};
 
   // MBTA API key
   static const String _mbtaApiKey = 'ddec6fb4aadf4f4db40509fc75891796';
@@ -236,7 +239,7 @@ class BusLocationService {
   static final List<LatLng> waypoints = [
     const LatLng(9.4810562, 76.8450521), // Erumely
     const LatLng(9.5005000, 76.8500000), // Erumely North
-    const LatLng(9.5425371, 76.8201976), // Koovappally
+    const LatLng(9.525651, 76.827199), // Koovappally
     const LatLng(9.5594567, 76.7873550), // Kanjirappally
     const LatLng(9.5656117, 76.7546495), // Ponkunnam
     const LatLng(9.6040000, 76.6730000), // Vazhoor
@@ -252,8 +255,23 @@ class BusLocationService {
 
   late List<LatLng> _interpolatedRoute;
   late List<LatLng> _interpolatedRouteReturn;
-  LatLng _userLocation = const LatLng(9.586, 76.826); // Default: Amal Jyothi (will update)
+  LatLng _userLocation = const LatLng(9.525651, 76.827199); // Default: Koovappally (will update)
   LatLng get userLocation => _userLocation;
+  
+  void updateUserLocation(LatLng location, [String? placeName]) {
+      _userLocation = location;
+      if (placeName != null) {
+        _currentUserPlace = placeName;
+      } else {
+        _identifyNearestPlace(location);
+      }
+      // Re-calculate the cached index
+      if (_initialized) {
+        _userRouteIndex = _userIndex(_interpolatedRoute);
+        _userRouteIndexReturn = _userIndex(_interpolatedRouteReturn);
+      }
+      debugPrint("Updated user location to $_currentUserPlace ($location)");
+  }
   
   bool _initialized = false;
 
@@ -270,7 +288,7 @@ class BusLocationService {
     'Kanjirappally': LatLng(9.5594567, 76.7873550),
     'Erumely': LatLng(9.4810562, 76.8450521),
     'Erumely North': LatLng(9.5005, 76.8500),
-    'Koovappally': LatLng(9.5425371, 76.8201976),
+    'Koovappally': LatLng(9.525651, 76.827199),
     'Ponkunnam': LatLng(9.5656117, 76.7546495),
     'Vazhoor': LatLng(9.6040, 76.6730),
     'Amal Jyothi': LatLng(9.586, 76.826),
@@ -322,7 +340,7 @@ class BusLocationService {
     'Tiruvalla','Pathanamthitta','Alappuzha',
   ];
 
-  String _currentUserPlace = "Amal Jyothi"; // Default
+  String _currentUserPlace = "Koovappally"; // Default
 
   /// Fetch actual road geometry from OSRM
   Future<List<LatLng>> _fetchOSRMRoute(List<LatLng> points) async {
@@ -435,71 +453,158 @@ class BusLocationService {
     _mbtaLerpTimer = Timer.periodic(const Duration(milliseconds: 300), (_) {
       _lerpMbtaBuses();
     });
+
+    // Start Firebase IoT live data polling (every 2s)
+    _firebaseIotTimer?.cancel();
+    _fetchFirebaseIoT(); // first fetch immediately
+    _firebaseIotTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      _fetchFirebaseIoT();
+    });
+  }
+
+  /// Firebase Realtime Database base URL
+  static const String _firebaseBase =
+      'https://yathrikan-mini-default-rtdb.firebaseio.com';
+
+  /// Holds the "always-on" IoT live position from the root /gps node.
+  /// Shown on map even without an admin bus being added.
+  LiveBus? _permanentIotBus;
+
+  /// Creates / updates the permanent IoT marker (root /gps path).
+  /// Called once at startup and then on every poll via _fetchFirebaseIoT.
+  void _upsertPermanentIotMarker(double lat, double lng) {
+    const id = 'IOT-LIVE-GPS';
+    final pos = LatLng(lat, lng);
+
+    if (_permanentIotBus == null) {
+      _permanentIotBus = LiveBus(
+        busId: id,
+        busName: '🛰️ IoT Live Bus',
+        routeName: 'Live GPS Tracker',
+        from: 'GPS Device',
+        to: 'GPS Device',
+        status: 'RUNNING',
+        isFirebaseIot: true,
+        deviceId: '',
+        directPosition: pos,
+      );
+      // Insert at front so it's easy to find
+      _buses.insert(0, _permanentIotBus!);
+    } else {
+      _permanentIotBus!.directPosition = pos;
+    }
+  }
+
+  /// Polls Firebase for IoT bus positions.
+  /// Strategy for each bus:
+  ///   1. Try /<deviceId>/gps.json  (per-device, multi-bus setup)
+  ///   2. If null/missing, fall back to /gps.json  (root, single-device setup)
+  /// Also always updates the permanent root-/gps marker so the position is
+  /// visible on the map even without an admin-added bus.
+  Future<void> _fetchFirebaseIoT() async {
+    // ── Always poll root /gps for the permanent IoT marker ──────────────────
+    try {
+      final rootResp = await http
+          .get(Uri.parse('$_firebaseBase/gps.json'))
+          .timeout(const Duration(seconds: 5));
+      if (rootResp.statusCode == 200) {
+        final d = json.decode(rootResp.body);
+        if (d != null) {
+          final lat = (d['lat'] ?? d['latitude'] as num?)?.toDouble();
+          final lng = (d['lng'] ?? d['lon'] ?? d['longitude'] as num?)?.toDouble();
+          
+          if (lat != null && lng != null) {
+            _upsertPermanentIotMarker(lat, lng);
+            _iotLastSeen['IOT-LIVE-GPS'] = DateTime.now();
+            debugPrint('📡 IoT root GPS: $lat, $lng');
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Firebase root /gps fetch error: $e');
+    }
+
+    // ── Per-admin-added IoT bus: try device path, fallback to root ───────────
+    final iotBuses = _buses.where((b) => b.isFirebaseIot && b.deviceId.isNotEmpty).toList();
+
+    bool anyUpdated = _permanentIotBus != null;
+    for (final bus in iotBuses) {
+      try {
+        // Stage 1: device-specific path
+        LatLng? newPos;
+        final devicePath = '$_firebaseBase/${bus.deviceId}/gps.json';
+        final resp1 = await http
+            .get(Uri.parse(devicePath))
+            .timeout(const Duration(seconds: 5));
+        if (resp1.statusCode == 200) {
+          final d = json.decode(resp1.body);
+          if (d != null) {
+            final lat = (d['lat'] ?? d['latitude'] as num?)?.toDouble();
+            final lng = (d['lng'] ?? d['lon'] ?? d['longitude'] as num?)?.toDouble();
+            
+            if (lat != null && lng != null) {
+              newPos = LatLng(lat, lng);
+              _iotLastSeen[bus.deviceId] = DateTime.now();
+              debugPrint('📡 IoT [${bus.busId}] device path: $lat, $lng');
+            }
+          }
+        }
+
+        // Stage 2: fallback to root /gps if device path returned nothing
+        if (newPos == null) {
+          final resp2 = await http
+              .get(Uri.parse('$_firebaseBase/gps.json'))
+              .timeout(const Duration(seconds: 5));
+          if (resp2.statusCode == 200) {
+            final d = json.decode(resp2.body);
+            if (d != null) {
+              final lat = (d['lat'] ?? d['latitude'] as num?)?.toDouble();
+              final lng = (d['lng'] ?? d['lon'] ?? d['longitude'] as num?)?.toDouble();
+              
+              if (lat != null && lng != null) {
+                newPos = LatLng(lat, lng);
+                _iotLastSeen[bus.deviceId] = DateTime.now();
+                debugPrint('📡 IoT [${bus.busId}] fallback /gps: $lat, $lng');
+              }
+            }
+          }
+        }
+
+        if (newPos != null) {
+          bus.directPosition = newPos;
+          anyUpdated = true;
+        }
+      } catch (e) {
+        debugPrint('Firebase IoT fetch error for ${bus.busId}: $e');
+      }
+    }
+
+    if (anyUpdated) {
+      _busStreamController.add([...List.from(_buses), ...List.from(_mbtaBuses)]);
+    }
   }
 
   void _updateBuses() {
-    const tolerance = 8; // index tolerance (~100m at 12m/point)
     for (final bus in _buses) {
       if (bus.route.isNotEmpty && bus.status == 'RUNNING') {
-        final prevIdx = bus.index;
-        // Move forward along route
-        final step = (bus.speedMps * 3 / 12.0).round().clamp(1, 5);
-        bus.index = (bus.index + step) % bus.route.length;
+        if (!bus.isFirebaseIot) {
+          // Move forward along route
+          final step = (bus.speedMps * 3 / 12.0).round().clamp(1, 5);
+          bus.index = (bus.index + step) % bus.route.length;
+        }
 
-        // Check if bus just crossed the user's location
         // We need to use the cached index relevant to this bus's route
         final userIdx = _getUserIndexForBus(bus);
-        
-        final crossedUser = prevIdx < userIdx &&
-            bus.index >= userIdx &&
-            (bus.index - userIdx).abs() <= tolerance;
-
-        // Also check wrapping (bus was near end, user near start)
-        final nearUser = (bus.index - userIdx).abs() <= tolerance;
 
         // Ensure we only notify for tracked buses if tracking is active
         final isTracked = _trackedBusIds.contains(bus.busId);
 
-        if (isTracked && (crossedUser || nearUser)) {
-          final now = DateTime.now();
-          final lastTime = _lastNotificationTime[bus.busId];
-          
-          // Cooldown: Only notify if never notified or last notification was > 20 mins ago
-          if (lastTime == null || now.difference(lastTime).inMinutes >= 20) {
-            _lastNotificationTime[bus.busId] = now;
-            
-            SharedPreferences.getInstance().then((prefs) {
-                final lang = prefs.getString('languageCode') ?? 'en';
-                final loc = AppLocalizations(Locale(lang));
-                
-                final transName = loc.translate(bus.busName);
-                final transFrom = loc.translate(bus.from);
-                final transTo = loc.translate(bus.to);
-                final transPlace = loc.translate(_currentUserPlace);
-                
-                String title = loc.translate('push_bus_here_title').replaceAll('{0}', transName);
-                String body = loc.translate('push_bus_here_body')
-                    .replaceAll('{0}', transFrom)
-                    .replaceAll('{1}', transTo)
-                    .replaceAll('{2}', bus.busId)
-                    .replaceAll('{3}', transPlace);
+        // ── 1-minute range warning ──────────────────────────────────────────
+        // Only notify when the bus is approaching and is ~1 min away (30-80 steps).
+        // A linear difference (without modulo) ensures we don't notify for buses
+        // that have already passed but mathematically "wrapped around".
+        final stepsToUser = userIdx - bus.index;
 
-                _notificationService.showNotification(
-                  id: bus.busId.hashCode,
-                  title: title,
-                  body: body,
-                  payload: '${bus.busId}|${bus.to}',
-                );
-            });
-            debugPrint('🔔 Notification: ${bus.busId} arrived at $_currentUserPlace');
-          }
-        }
-
-        // ── 1-minute early warning ──────────────────────────────────────────
-        // At ~12m per index point and bus speed ~8-14 m/s:
-        //   1 min = 60s. Steps ahead ≈ speed(m/s) * 60 / 12 ≈ 40-70 points.
-        //   We use a fixed window of 30-80 points (~360m-960m) as "≈1 min away".
-        final stepsToUser = (userIdx - bus.index) % bus.route.length;
         if (isTracked && stepsToUser >= 30 && stepsToUser <= 80) {
           final now = DateTime.now();
           final lastWarn = _lastWarningTime[bus.busId];
@@ -522,7 +627,7 @@ class BusLocationService {
                     .replaceAll('{2}', transPlace);
 
                 _notificationService.showNotification(
-                  id: bus.busId.hashCode + 1,
+                  id: bus.busId.hashCode,
                   title: title,
                   body: body,
                   payload: '${bus.busId}|${bus.to}',
@@ -699,12 +804,79 @@ class BusLocationService {
   List<String> get availableCities => keyPlaces.keys.toList();
 
   // Bus management
-  void addBus(LiveBus bus) {
-    if (bus.route.isEmpty && _interpolatedRoute.isNotEmpty) {
-      bus.route = _interpolatedRoute;
-    }
+
+  /// Registers a newly added bus and, for admin-added buses with explicit
+  /// from/to cities, fetches an OSRM road route between those cities so the
+  /// bus follows real roads on the map.
+  Future<void> addBus(LiveBus bus) async {
     _buses.add(bus);
     _busStreamController.add([...List.from(_buses), ...List.from(_mbtaBuses)]);
+
+    // Resolve from/to city coordinates
+    final fromCoords = keyPlaces[bus.from];
+    final toCoords   = keyPlaces[bus.to];
+
+    if (fromCoords != null && toCoords != null && bus.from != bus.to) {
+      // Position bus at origin while road route loads
+      bus.directPosition = fromCoords;
+      _busStreamController.add([...List.from(_buses), ...List.from(_mbtaBuses)]);
+
+      // Fetch real road geometry for this bus
+      final roadRoute = await _fetchOSRMRoute([fromCoords, toCoords]);
+      if (roadRoute.isNotEmpty) {
+        bus.route = roadRoute;
+        bus.index = 0;
+        // Clear directPosition so position() now uses route array
+        if (!bus.isFirebaseIot) {
+          bus.directPosition = null;
+        }
+        debugPrint('🛣️ Admin bus ${bus.busId}: loaded ${roadRoute.length} road pts (${bus.from} → ${bus.to})');
+      }
+    } else if (bus.route.isEmpty && _interpolatedRoute.isNotEmpty) {
+      // Fallback: use the default main route
+      bus.route = _interpolatedRoute;
+    }
+
+    // Register this bus's route in the search database
+    _addRouteToDatabase(bus.busName, bus.from, bus.to);
+
+    _busStreamController.add([...List.from(_buses), ...List.from(_mbtaBuses)]);
+  }
+
+  /// Verifies if a device ID exists and has valid GPS data in Firebase.
+  Future<bool> testConnection(String deviceId) async {
+    try {
+      final path = deviceId.isEmpty ? 'gps.json' : '$deviceId/gps.json';
+      final url = '$_firebaseBase/$path';
+      debugPrint('🔍 Testing IoT connection: $url');
+      
+      final resp = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
+      debugPrint('📡 Response status: ${resp.statusCode}');
+      
+      if (resp.statusCode == 200) {
+        final d = json.decode(resp.body);
+        debugPrint('📡 Response body: $d');
+        
+        if (d == null) return false;
+        
+        // Be flexible with keys (lat/latitude, lng/lon/longitude)
+        final hasLat = d['lat'] != null || d['latitude'] != null;
+        final hasLng = d['lng'] != null || d['lon'] != null || d['longitude'] != null;
+        
+        return hasLat && hasLng;
+      }
+    } catch (e) {
+      debugPrint('❌ Connection test failed: $e');
+    }
+    return false;
+  }
+
+  /// Returns true if the device has sent data in the last 60 seconds.
+  bool isDeviceOnline(String deviceId) {
+    if (deviceId.isEmpty) deviceId = 'IOT-LIVE-GPS';
+    final lastSeen = _iotLastSeen[deviceId];
+    if (lastSeen == null) return false;
+    return DateTime.now().difference(lastSeen).inSeconds < 60;
   }
 
   void removeBus(String busId) {
@@ -760,7 +932,8 @@ class BusLocationService {
   // -----------------------------------------------------------------------
 
   /// All known bus routes as ordered stop lists (normalised lower-case).
-  static const List<Map<String, dynamic>> busRouteDatabase = [
+  /// Non-const so admin-added buses can append their routes at runtime.
+  static final List<Map<String, dynamic>> busRouteDatabase = [
     {
       'bus': 'Erumely Express',
       'route': ['erumely', 'erumely north', 'koovappally', 'kanjirappally', 'ponkunnam', 'vazhoor', 'kottayam'],
@@ -794,6 +967,24 @@ class BusLocationService {
       'route': ['kottayam', 'ettumanoor', 'kuravilangad', 'bharananganam', 'pala'],
     },
   ];
+
+  /// Adds a new entry to the live route database so the bus shows in
+  /// shortest-route search. Builds a 2-stop route [from→to].
+  void _addRouteToDatabase(String busName, String fromCity, String toCity) {
+    final fromNorm = _norm(fromCity);
+    final toNorm   = _norm(toCity);
+    if (fromNorm == toNorm) return;
+
+    // Avoid duplicating the same bus name
+    final alreadyExists = busRouteDatabase.any((r) => r['bus'] == busName);
+    if (alreadyExists) return;
+
+    busRouteDatabase.add({
+      'bus': busName,
+      'route': [fromNorm, toNorm],
+    });
+    debugPrint('📋 Added "$busName" ($fromNorm → $toNorm) to route database');
+  }
 
   /// Finds direct and 1-transfer bus routes between [start] and [end].
   /// Returns a list of [FoundRoute] (empty if nothing found).
@@ -974,22 +1165,13 @@ class BusLocationService {
 
 
 
-  void updateUserLocation(LatLng newLocation) {
-    _userLocation = newLocation;
-    _identifyNearestPlace(newLocation);
-    
-    
-    // Recalculate usage indices if routes are ready
-    if (_initialized) {
-      _userRouteIndex = _userIndex(_interpolatedRoute);
-      _userRouteIndexReturn = _userIndex(_interpolatedRouteReturn);
-    }
-  }
+
 
   void dispose() {
     _updateTimer?.cancel();
     _mbtaTimer?.cancel();
     _mbtaLerpTimer?.cancel();
+    _firebaseIotTimer?.cancel();
     _busStreamController.close();
   }
 }
