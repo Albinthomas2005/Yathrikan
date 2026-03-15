@@ -1,12 +1,29 @@
 import 'package:latlong2/latlong.dart';
 
+/// A single stop on a bus route, with a display name and GPS coordinates.
+class BusStop {
+  String name;
+  LatLng position;
+
+  BusStop({required this.name, required this.position});
+
+  @override
+  String toString() => name;
+}
+
 class LiveBus {
   final String busId;
-  final String busName;
+  String busName;
   final String routeName;
   final String from;
   final String to;
   List<LatLng> route;
+
+  /// Number plate in format KL-ERU-2005 — primary identifier shown on cards.
+  String numberPlate;
+
+  /// Ordered list of stops with GPS coordinates, from origin to destination.
+  List<BusStop> stops;
 
   int index;
   double speedMps;
@@ -38,12 +55,15 @@ class LiveBus {
     this.directPosition,
     this.isFirebaseIot = false,
     this.deviceId = '',
+    this.numberPlate = '',
+    List<BusStop>? stops,
     // legacy ignored params
     double? lat,
     double? lon,
     DateTime? lastUpdated,
   }) :
     route = route ?? [],
+    stops = stops ?? [],
     speedMps = speedMps ?? (speedKmph != null ? speedKmph / 3.6 : 10.0);
 
   LatLng get position {

@@ -1,6 +1,7 @@
 class Bus {
   final String id;
   final String busNumber;
+  final String busName;
   final String routeName;
   final String startTime;
   final String endTime;
@@ -12,6 +13,7 @@ class Bus {
   Bus({
     required this.id,
     required this.busNumber,
+    required this.busName,
     required this.routeName,
     required this.startTime,
     required this.endTime,
@@ -26,6 +28,7 @@ class Bus {
     return {
       'id': id,
       'busNumber': busNumber,
+      'busName': busName,
       'routeName': routeName,
       'startTime': startTime,
       'endTime': endTime,
@@ -41,6 +44,7 @@ class Bus {
     return Bus(
       id: json['id'] ?? '',
       busNumber: json['busNumber'] ?? '',
+      busName: json['busName'] ?? '',
       routeName: json['routeName'] ?? '',
       startTime: json['startTime'] ?? '',
       endTime: json['endTime'] ?? '',
@@ -70,6 +74,7 @@ class Bus {
     return Bus(
       id: id ?? this.id,
       busNumber: busNumber ?? this.busNumber,
+      busName: busName ?? this.busName,
       routeName: routeName ?? this.routeName,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
