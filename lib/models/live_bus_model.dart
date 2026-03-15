@@ -7,6 +7,21 @@ class BusStop {
 
   BusStop({required this.name, required this.position});
 
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'lat': position.latitude,
+      'lng': position.longitude,
+    };
+  }
+
+  factory BusStop.fromMap(Map<String, dynamic> map) {
+    return BusStop(
+      name: map['name'],
+      position: LatLng(map['lat'], map['lng']),
+    );
+  }
+
   @override
   String toString() => name;
 }
@@ -65,6 +80,46 @@ class LiveBus {
     route = route ?? [],
     stops = stops ?? [],
     speedMps = speedMps ?? (speedKmph != null ? speedKmph / 3.6 : 10.0);
+
+  Map<String, dynamic> toMap() {
+    return {
+      'busId': busId,
+      'busName': busName,
+      'routeName': routeName,
+      'from': from,
+      'to': to,
+      'route': route.map((e) => {'lat': e.latitude, 'lng': e.longitude}).toList(),
+      'numberPlate': numberPlate,
+      'stops': stops.map((e) => e.toMap()).toList(),
+      'index': index,
+      'speedMps': speedMps,
+      'status': status,
+      'headingDeg': headingDeg,
+      'directPosition': directPosition != null ? {'lat': directPosition!.latitude, 'lng': directPosition!.longitude} : null,
+      'isFirebaseIot': isFirebaseIot,
+      'deviceId': deviceId,
+    };
+  }
+
+  factory LiveBus.fromMap(Map<String, dynamic> map) {
+    return LiveBus(
+      busId: map['busId'],
+      busName: map['busName'],
+      routeName: map['routeName'],
+      from: map['from'] ?? 'Erumely',
+      to: map['to'] ?? 'Kottayam',
+      route: (map['route'] as List?)?.map((e) => LatLng(e['lat'], e['lng'])).toList(),
+      numberPlate: map['numberPlate'] ?? '',
+      stops: (map['stops'] as List?)?.map((e) => BusStop.fromMap(e)).toList(),
+      index: map['index'] ?? 0,
+      speedMps: map['speedMps'],
+      status: map['status'] ?? 'RUNNING',
+      headingDeg: map['headingDeg'] ?? 0.0,
+      directPosition: map['directPosition'] != null ? LatLng(map['directPosition']['lat'], map['directPosition']['lng']) : null,
+      isFirebaseIot: map['isFirebaseIot'] ?? false,
+      deviceId: map['deviceId'] ?? '',
+    );
+  }
 
   LatLng get position {
     if (directPosition != null) return directPosition!;

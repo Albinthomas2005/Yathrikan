@@ -175,7 +175,6 @@ class _FullMapScreenState extends State<FullMapScreen> {
   }
 
   void _showBusInfo(LiveBus bus) {
-    final bool isMbta = bus.busId.startsWith('MBTA-');
     final bool isRunning = bus.status == 'RUNNING';
     final statusColor = isRunning ? Colors.green : Colors.orange;
 
@@ -360,9 +359,9 @@ class _FullMapScreenState extends State<FullMapScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildInfoTile(
-                      isMbta ? 'Source' : (bus.isFirebaseIot ? 'Source' : 'Type'),
-                      isMbta ? 'MBTA Live' : (bus.isFirebaseIot ? '🛰️ IoT Live' : 'Kerala Bus'),
-                      isMbta ? Icons.wifi : (bus.isFirebaseIot ? Icons.wifi : Icons.map_outlined),
+                      bus.isFirebaseIot ? 'Source' : 'Type',
+                      bus.isFirebaseIot ? '🛰️ IoT Live' : 'Kerala Bus',
+                      bus.isFirebaseIot ? Icons.wifi : Icons.map_outlined,
                     ),
                   ),
                 ],

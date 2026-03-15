@@ -317,25 +317,8 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
     final incoming = buses.where((b) {
       if (b.status != 'RUNNING') return false;
 
-      // Filter by direction/route if "To" is specified
-      bool matchesRoute = true;
-      if (toText.isNotEmpty) {
-           const routeOrder = ['erumely', 'erumely north', 'koovappally', 'kanjirappally', 'ponkunnam', 'vazhoor', 'kottayam', 'ettumanoor', 'kuravilangad', 'bharananganam', 'pala'];
-           final fi = routeOrder.indexOf(fromText);
-           final ti = routeOrder.indexOf(toText);
-           
-           if (fi != -1 && ti != -1 && fi < ti) {
-               matchesRoute = b.routeName.toLowerCase().contains('erumely - kottayam') || 
-                              b.routeName.toLowerCase().contains('kottayam - pala') ||
-                              b.to.toLowerCase() == toText;
-           } else if (fi != -1 && ti != -1 && fi > ti) {
-               matchesRoute = b.routeName.toLowerCase().contains('kottayam - erumely') ||
-                              b.routeName.toLowerCase().contains('pala - kottayam') ||
-                              b.to.toLowerCase() == toText;
-           } else {
-               matchesRoute = b.to.toLowerCase() == toText || b.routeName.toLowerCase().contains(toText);
-           }
-      }
+      // Filter by direction/route using the service's route logic
+      bool matchesRoute = _busService.servesSearchPath(b, fromText, toText);
       
       if (!matchesRoute) return false;
 
