@@ -95,8 +95,19 @@ class BusLocationService {
 
   late List<LatLng> _interpolatedRoute;
   late List<LatLng> _interpolatedRouteReturn;
-  LatLng _userLocation = const LatLng(9.525651, 76.827199); // Default: Koovappally (will update)
+  LatLng _userLocation = const LatLng(9.52583, 76.82662); // Default: Koovappally
   LatLng get userLocation => _userLocation;
+
+  /// Origin of the current search, used for markers and proximity notifications.
+  LatLng? _searchOrigin;
+  String? _searchOriginName;
+  LatLng? get searchOrigin => _searchOrigin;
+
+  void setSearchOrigin(LatLng? location, String? name) {
+    _searchOrigin = location;
+    _searchOriginName = name;
+    debugPrint("Search origin set to: $name ($location)");
+  }
   
   void updateUserLocation(LatLng location, [String? placeName]) {
       _userLocation = location;
@@ -128,7 +139,7 @@ class BusLocationService {
     'Kanjirappally': LatLng(9.5594567, 76.7873550),
     'Erumely': LatLng(9.4810562, 76.8450521),
     'Erumely North': LatLng(9.5005, 76.8500),
-    'Koovappally': LatLng(9.525651, 76.827199),
+    'Koovappally': LatLng(9.52583, 76.82662),
     'Ponkunnam': LatLng(9.5656117, 76.7546495),
     'Vazhoor': LatLng(9.6040, 76.6730),
     'Amal Jyothi': LatLng(9.52816, 76.82379),
@@ -476,17 +487,18 @@ class BusLocationService {
           }
         }
 
-        // ── 1-minute range warning ──────────────────────────────────────────
-        // Only notify when the bus is approaching and is ~1 min away (30-80 steps).
-        final stepsToUser = userIdx - bus.index;
-
-        if (isTracked && stepsToUser >= 30 && stepsToUser <= 80) {
-          final now = DateTime.now();
-          final lastWarn = _lastWarningTime[bus.busId];
-          if (lastWarn == null || now.difference(lastWarn).inMinutes >= 20) {
-            _lastWarningTime[bus.busId] = now;
-            _sendBusNotification(bus, 'push_bus_warning_title', 'push_bus_warning_body');
-            debugPrint('🔔 Warning: ${bus.busId} ~1 min from $_currentUserPlace');
+        // ── Proximity to search origin (if set) ──────────────────────────────
+        if (_searchOrigin != null) {
+          final originIdx = _userIndex(bus.route, location: _searchOrigin!);
+          final stepsToOrigin = originIdx - bus.index;
+          if (stepsToOrigin >= 30 && stepsToOrigin <= 80) {
+            final now = DateTime.now();
+            final lastWarn = _lastWarningTime['${bus.busId}_origin'];
+            if (lastWarn == null || now.difference(lastWarn).inMinutes >= 20) {
+              _lastWarningTime['${bus.busId}_origin'] = now;
+              _sendBusNotification(bus, 'push_bus_warning_title', 'push_bus_warning_body', customPlace: _searchOriginName);
+              debugPrint('🔔 Warning: ${bus.busId} ~1 min from search origin $_searchOriginName');
+            }
           }
         }
       }
@@ -494,7 +506,7 @@ class BusLocationService {
     _busStreamController.add(List.from(_buses));
   }
 
-  void _sendBusNotification(LiveBus bus, String titleKey, String bodyKey) {
+  void _sendBusNotification(LiveBus bus, String titleKey, String bodyKey, {String? customPlace}) {
     SharedPreferences.getInstance().then((prefs) {
       final lang = prefs.getString('languageCode') ?? 'en';
       final loc = AppLocalizations(Locale(lang));
@@ -502,7 +514,7 @@ class BusLocationService {
       final transName = loc.translate(bus.busName);
       final transFrom = loc.translate(bus.from);
       final transTo = loc.translate(bus.to);
-      final transPlace = loc.translate(_currentUserPlace);
+      final transPlace = customPlace != null ? loc.translate(customPlace) : loc.translate(_currentUserPlace);
       
       String title = loc.translate(titleKey).replaceAll('{0}', transName);
       String body = loc.translate(bodyKey)

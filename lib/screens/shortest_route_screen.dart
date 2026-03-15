@@ -78,6 +78,7 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
   LatLng _currentLocation = const LatLng(9.525651, 76.827199); // Default Koovappally, will update
   bool _isLocationLoaded = false;
   bool _isLocating = false; // true while the GPS button is fetching location
+  LatLng? _searchOrigin; // Coordinate of the search 'from' location
 
   // Autocomplete state
   List<String> _fromSuggestions = [];
@@ -460,7 +461,13 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
     }
 
     setState(() {
-      if (newLocation != null) _currentLocation = newLocation;
+      if (newLocation != null) {
+        _currentLocation = newLocation;
+        _searchOrigin = newLocation;
+      } else {
+        _searchOrigin = null;
+      }
+      _busService.setSearchOrigin(_searchOrigin, fromText.isEmpty ? null : fromText);
       _showBusList = true;
       _selectedTransferRoute = null;
       _leg1Path = [];
@@ -1052,6 +1059,18 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
                             Polyline(points: _leg2Path, strokeWidth: 5.0, color: Colors.redAccent),
                           ]),
                         MarkerLayer(markers: [
+                          // 🏁 Search Origin
+                          if (_searchOrigin != null)
+                            Marker(
+                              point: _searchOrigin!, width: 44, height: 44,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white, shape: BoxShape.circle,
+                                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 6)],
+                                ),
+                                child: const Icon(Icons.person_pin_circle, color: Colors.blueAccent, size: 30),
+                              ),
+                            ),
                           // ⭐ Transfer/change point
                           if (transferLatLng != null)
                             Marker(
@@ -1349,6 +1368,18 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
                             if (_currentRoutePath != null)
                               PolylineLayer(polylines: [Polyline(points: _currentRoutePath!.waypoints, strokeWidth: 4.0, color: Colors.blueAccent)]),
                             MarkerLayer(markers: [
+                              // 🏁 Search Origin
+                              if (_searchOrigin != null)
+                                Marker(
+                                  point: _searchOrigin!, width: 44, height: 44,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white, shape: BoxShape.circle,
+                                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 6)],
+                                    ),
+                                    child: const Icon(Icons.person_pin_circle, color: Colors.blueAccent, size: 30),
+                                  ),
+                                ),
                               // User location
                               Marker(
                                 point: _currentLocation, 
