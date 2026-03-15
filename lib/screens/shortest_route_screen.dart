@@ -281,7 +281,6 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
     final fromText = _busService.normalizeLocationName(rawFromText);
     final toText = _busService.normalizeLocationName(rawToText);
 
- HEAD
     // The user ONLY wants buses to show up if the search endpoints are exclusively:
     // Koovappally, Kanjirappally, Ponkunnam, Kottayam, Erumely
     const allowedPlaces = ['koovappally', 'kanjirappally', 'ponkunnam', 'kottayam', 'erumely', 'erumely north'];
@@ -317,7 +316,7 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
 
     final incoming = buses.where((b) {
       if (b.status != 'RUNNING') return false;
-       HEAD
+
       // Filter by direction/route if "To" is specified
       bool matchesRoute = true;
       if (toText.isNotEmpty) {
@@ -336,37 +335,6 @@ class _ShortestRouteScreenState extends State<ShortestRouteScreen> {
            } else {
                matchesRoute = b.to.toLowerCase() == toText || b.routeName.toLowerCase().contains(toText);
            }
-
-      final toLower = toText.trim().toLowerCase();
-      final fromLower = fromText.trim().toLowerCase();
-      bool matchesRoute = true;
-      if (toLower.isNotEmpty) {
-           // Direct destination match OR route name contains destination
-           matchesRoute = b.to.toLowerCase() == toLower || 
-                          b.routeName.toLowerCase().contains(toLower) ||
-                          b.routeName.toLowerCase().contains(fromLower);
-           
-           if (!matchesRoute) {
-               // Direction-based matching for main route stops
-               if ((fromLower.contains('erumely') && toLower.contains('koovappally')) ||
-                   (fromLower.contains('koovappally') && toLower.contains('kottayam')) ||
-                   (fromLower.contains('kanjirappally') && toLower.contains('kottayam')) ||
-                   (fromLower.contains('ponkunnam') && toLower.contains('kottayam'))) {
-                    matchesRoute = b.routeName.contains('Erumely - Kottayam') ||
-                                   (b.from.toLowerCase().contains('erumely') && b.to.toLowerCase().contains('kottayam'));
-               } else if ((fromLower.contains('kottayam') && toLower.contains('koovappally')) ||
-                          (fromLower.contains('koovappally') && toLower.contains('erumely')) ||
-                          (fromLower.contains('kottayam') && toLower.contains('kanjirappally')) ||
-                          (fromLower.contains('kottayam') && toLower.contains('ponkunnam'))) {
-                    matchesRoute = b.routeName.contains('Kottayam - Erumely') ||
-                                   (b.from.toLowerCase().contains('kottayam') && b.to.toLowerCase().contains('erumely'));
-               } else {
-                   // For admin-added buses: match by from/to city names directly
-                   matchesRoute = (b.from.toLowerCase().contains(fromLower) || fromLower.isEmpty) &&
-                                  (b.to.toLowerCase().contains(toLower) || toLower.isEmpty);
-               }
-          }
-     //47db6fe3c (added live location using iot)
       }
       
       if (!matchesRoute) return false;
